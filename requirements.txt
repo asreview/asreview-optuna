@@ -1,4 +1,4 @@
 optuna
 asreview
-asreviewcontrib-insights
+asreview-insights
 optuna-dashboard
