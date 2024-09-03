@@ -1,0 +1,38 @@
+---
+name: optuna
+name_long: Optimization runs for ASReview
+
+scripts:
+  - get_plot.py
+
+docs:
+  - README.md
+
+---
+
+{# This is a template for the optuna method #}
+
+# version {{ version }}
+
+# Create folder structure.
+mkdir {{ output_folder }}
+mkdir {{ output_folder }}/simulation
+
+{% for dataset in datasets %}
+
+##################################
+### DATASET: {{ dataset.input_file_stem }}
+##################################
+
+{% endfor %}
+
+# Create the start_dashboard.sh file
+cat <<EOL > start_dashboard.sh
+#!/bin/bash
+optuna-dashboard sqlite:///output/db.sqlite3 --host 0.0.0.0
+EOL
+chmod +x start_dashboard.sh
+
+# Create the start_dashboard.bat file
+echo @echo off > start_dashboard.bat
+echo optuna-dashboard sqlite:///output/db.sqlite3 --host 0.0.0.0 >> start_dashboard.bat
