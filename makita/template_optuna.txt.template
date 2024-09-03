@@ -10,7 +10,7 @@ docs:
 
 ---
 
-{# This is a template for the optuna method #}
+{# This is a template for the optuna template #}
 
 # version {{ version }}
 
@@ -24,15 +24,27 @@ mkdir {{ output_folder }}/simulation
 ### DATASET: {{ dataset.input_file_stem }}
 ##################################
 
+mkdir {{ output_folder }}/simulation/{{ dataset.input_file_stem }}/
+
 {% endfor %}
 
-# Create the start_dashboard.sh file
+# Run the optuna hyperopt script
+python -m ./scripts/optuna.py "{{ output_folder }}" "db.sqlite3" 100 {{ classifier }}
+
+# Create the start_dashboard script for both Batch and Bash files.
+
+@echo off
+if "%OS%"=="Windows_NT" (
+    echo @echo off > start_dashboard.bat
+    echo optuna-dashboard sqlite:///output/db.sqlite3 --host 0.0.0.0 >> start_dashboard.bat
+    echo start_dashboard.bat has been created.
+    exit
+)
+
+#!/bin/bash
 cat <<EOL > start_dashboard.sh
 #!/bin/bash
 optuna-dashboard sqlite:///output/db.sqlite3 --host 0.0.0.0
 EOL
-chmod +x start_dashboard.sh
 
-# Create the start_dashboard.bat file
-echo @echo off > start_dashboard.bat
-echo optuna-dashboard sqlite:///output/db.sqlite3 --host 0.0.0.0 >> start_dashboard.bat
+chmod +x start_dashboard.sh
