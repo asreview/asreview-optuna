@@ -16,7 +16,7 @@ def start_optimization(output_folder: str, database_name: str, n_trials: int, cl
             loss_value = _run_simulation(trial, output_folder, classifier_name, fp_dataset)
             loss_values.append(loss_value)
         
-        return loss_values
+        return *loss_values
 
     study = optuna.create_study(storage=f"sqlite:///{database_name}", 
                                 study_name=classifier_name,
