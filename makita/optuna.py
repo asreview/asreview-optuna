@@ -27,9 +27,11 @@ def start_optimization(output_folder: str, database_name: str, n_trials: int, cl
 
 def _run_simulation(trial : int, output_folder : str, classifier : str, fp_dataset : str):
 
+    project_path = f"{output_folder}/simulation/{fp_dataset}/simulation_{trial}.asreview"
+
     command = [
         "python", "-m", "asreview", "simulate", fp_dataset, 
-        "-s", f"{output_folder}/simulation/{dataset}/simulation_{trial}.asreview", 
+        "-s", project_path, 
         "-m", classifier
     ]
 
