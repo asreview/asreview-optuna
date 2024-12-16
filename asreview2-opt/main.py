@@ -10,7 +10,8 @@ import optuna
 
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 STUDY_NAME = "ASReview2.x " + datetime.now().strftime("%Y-%m-%d at %H.%M.%S")
-NUMBER_OF_STUDIES = 5
+NUMBER_OF_STUDIES = 260
+OPTUNA_TRIALS = 100
 
 # list of studies
 studies = pd.read_json("synergy_studies_1000.jsonl", lines=True).head(
@@ -102,5 +103,5 @@ if __name__ == "__main__":
         direction="minimize",
         sampler=sampler,
     )
-    study.optimize(objective, n_trials=5)
+    study.optimize(objective, n_trials=OPTUNA_TRIALS)
     print(f"Best value: {study.best_value} (params: {study.best_params})")
