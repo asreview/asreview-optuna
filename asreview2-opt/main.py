@@ -71,7 +71,7 @@ def process_row(row, alpha, ratio):
         balance_strategy=blc,
         query_strategy=MaxQuery(),
         feature_extraction=Tfidf(),
-        n_query=n_query
+        n_query=n_query,
     )
 
     # Set priors
