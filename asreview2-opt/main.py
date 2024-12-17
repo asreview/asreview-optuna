@@ -103,7 +103,7 @@ def objective(trial):
     alpha = trial.suggest_float("alpha", 1e-3, 100, log=True)
 
     # Use normal distribution for ratio (ratio effect is linear)
-    ratio = trial.suggest_float("ratio", 0.0, 30.0)
+    ratio = trial.suggest_float("ratio", 1.0, 30.0)
 
     if PARALLELIZE_OBJECTIVE:
         return run_parallel(studies, alpha=alpha, ratio=ratio)
