@@ -62,7 +62,7 @@ def process_row(row, alpha, ratio):
     blc = Balanced(ratio=ratio)
 
     # Setup simulation
-    n_query = 1 if row['dataset_id'] != "Walker_2018" else 100
+    n_query = 1 if row['dataset_id'] != "Walker_2018" else 50
     
     simulate = asreview.Simulate(
         fm=fm,
