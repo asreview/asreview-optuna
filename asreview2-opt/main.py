@@ -18,26 +18,25 @@ from asreview.models.query import MaxQuery
 # Study variables
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 STUDY_NAME = "ASReview2.x " + datetime.now().strftime("%Y-%m-%d at %H.%M.%S")
-NUMBER_OF_STUDIES = 260
+N_STUDIES = 260
 
 # Optuna variables
-OPTUNA_TRIALS = 100
-OPTUNA_TIMEOUT = 260000  # seconds
+OPTUNA_N_TRIALS = 500
+OPTUNA_TIMEOUT = None  # in seconds
 
 # Early stopping condition variables
-MIN_TRIALS = 20
+MIN_TRIALS = 100
+N_HISTORY = 5
 STOPPING_THRESHOLD = 0.001
 
 # list of studies
-studies = pd.read_json("synergy_studies_1000.jsonl", lines=True).head(
-    n=NUMBER_OF_STUDIES
-)
+studies = pd.read_json("synergy_studies_1000.jsonl", lines=True).head(n=N_STUDIES)
 
 
 # Function to run the loop in parallel
 def run_parallel(studies, *args, **kwargs):
     losses = []
-    with ProcessPoolExecutor(max_workers=mp.cpu_count() - 1) as executor:
+    with ProcessPoolExecutor(max_workers=mp.cpu_count() - 2) as executor:
         # Submit tasks
         futures = {
             executor.submit(process_row, row, *args, **kwargs): i
@@ -96,30 +95,30 @@ def objective(trial):
 
 
 class StopWhenOptimumReached:
-    def __init__(self, min_trials: int, threshold: int):
+    def __init__(self, min_trials: int, threshold: float, n_history: int):
         self.min_trials = min_trials
         self.threshold = threshold
+        self.n_history = n_history
 
     def __call__(
         self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial
     ) -> None:
         # If there are more than min_trials completed, check early stopping condition
-        if trial.number > self.min_trials:
-            # Take previous min_trials trials (hence min_trials + 1)
-            prev_5_trials = study.trials[1 : self.min_trials + 1]
-
-            # Calculate mean loss value of the previous min_trials trials
-            mean_value = np.mean([prev_trial.value for prev_trial in prev_5_trials])
+        if trial.number >= self.min_trials:
+            # Take latest n_history trial loss values
+            prev_trial_losses = [
+                prev_trial.value for prev_trial in study.trials[-self.n_history :]
+            ]
 
             # If the difference is smaller than threshold, we stop the entire study
-            if abs(mean_value - trial.value) < self.threshold:
+            if max(prev_trial_losses) - min(prev_trial_losses) < self.threshold:
                 study.stop()
 
 
 if __name__ == "__main__":
     sampler = optuna.samplers.TPESampler()
     study_stop_cb = StopWhenOptimumReached(
-        min_trials=MIN_TRIALS, threshold=STOPPING_THRESHOLD
+        min_trials=MIN_TRIALS, threshold=STOPPING_THRESHOLD, n_history=N_HISTORY
     )
 
     study = optuna.create_study(
@@ -130,7 +129,7 @@ if __name__ == "__main__":
     )
     study.optimize(
         objective,
-        n_trials=OPTUNA_TRIALS,
+        n_trials=OPTUNA_N_TRIALS,
         timeout=OPTUNA_TIMEOUT,
         callbacks=[study_stop_cb],
     )
