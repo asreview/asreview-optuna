@@ -73,7 +73,7 @@ def process_row(row, params, ratio):
     blc = Balanced(ratio=ratio)
 
     # Create classifier with params
-    clf = optuna_studies_models[CLASSIFIER_TYPE](params)
+    clf = optuna_studies_models[CLASSIFIER_TYPE](**params)
 
     # Setup simulation
     n_query = 1 if row["dataset_id"] != "Walker_2018" else 50
