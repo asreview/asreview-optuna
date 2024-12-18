@@ -22,16 +22,16 @@ from asreview.models.query import MaxQuery
 
 # Study variables
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
-N_STUDIES = 2
+N_STUDIES = 260
 CLASSIFIER_TYPE = (
-    "random_forest"  # Options: "naive_bayes", "logistic", "svm", "random_forest"
+    "naive_bayes"  # Options: "naive_bayes", "logistic", "svm", "random_forest"
 )
 STUDY_NAME = (
     "ASReview2 " + CLASSIFIER_TYPE + datetime.now().strftime(" %Y-%m-%d at %H.%M.%S")
 )
 
 # Optuna variables
-OPTUNA_N_TRIALS = 5
+OPTUNA_N_TRIALS = 500
 OPTUNA_TIMEOUT = None  # in seconds
 
 # Early stopping condition variables
