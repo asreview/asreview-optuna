@@ -35,6 +35,41 @@ STOPPING_THRESHOLD = 0.001
 # list of studies
 studies = pd.read_json("synergy_studies_1000.jsonl", lines=True).head(n=N_STUDIES)
 
+# Sorter list that is ordered from largest to smallest dataset
+studies_sorter = [
+    "Walker_2018",
+    "Brouwer_2019",
+    "van_Dis_2020",
+    "Hall_2012",
+    "Wassenaar_2017",
+    "Leenaars_2020",
+    "Radjenovic_2013",
+    "Leenaars_2019",
+    "Moran_2021",
+    "Bos_2018",
+    "van_de_Schoot_2018",
+    "Wolters_2018",
+    "Appenzeller-Herzog_2019",
+    "Muthu_2021",
+    "Smid_2020",
+    "van_der_Waal_2022",
+    "Chou_2003",
+    "Chou_2004",
+    "Jeyaraman_2020",
+    "Menon_2022",
+    "Oud_2018",
+    "Meijboom_2021",
+    "van_der_Valk_2021",
+    "Nelson_2002",
+    "Sep_2021",
+    "Donners_2021",
+]
+
+# Sort using the key parameter
+studies = studies.sort_values(
+    "dataset_id", key=lambda x: x.map({val: i for i, val in enumerate(studies_sorter)})
+)
+
 
 # Function to run the loop in parallel
 def run_parallel(studies, *args, **kwargs):
