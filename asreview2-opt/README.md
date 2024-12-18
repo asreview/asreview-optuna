@@ -50,7 +50,7 @@
     3. Deattach from the tmux environment using `ctrl` `+` `b` followed by `d` (you can always reattach using `tmux attach -t optuna`)
 12. Create a tmux environment for the dashboard `tmux new -s dashboard`
     In the `dashboard` tmux env run the following commands to start the study:
-    2. `optuna-dashboard sqlite:///db.sqlite3 --host 0.0.0.0`
-    3. Deattach from the tmux environment using `ctrl` `+` `b` followed by `d` (you can always reattach using `tmux attach -t dashboard`)
+    1. `optuna-dashboard sqlite:///db.sqlite3 --host 0.0.0.0`
+    2. Deattach from the tmux environment using `ctrl` `+` `b` followed by `d` (you can always reattach using `tmux attach -t dashboard`)
 13. You are all set! Check the dashboard on your local machine through a browser: `[Exoscale instance ip]:8080`
 14. You can see CPU usage using `htop`
