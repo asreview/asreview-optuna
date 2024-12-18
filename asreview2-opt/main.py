@@ -26,10 +26,8 @@ N_STUDIES = 260
 CLASSIFIER_TYPE = (
     "naive_bayes"  # Options: "naive_bayes", "logistic", "svm", "random_forest"
 )
-STUDY_NAME = (
-    "ASReview2 " + CLASSIFIER_TYPE + datetime.now().strftime(" %Y-%m-%d at %H.%M.%S")
-)
-PARALLELIZE_OBJECTIVE = False
+STUDY_NAME = "ASReview2 " + datetime.now().strftime("%Y-%m-%d at %H.%M.%S")
+PARALLELIZE_OBJECTIVE = True
 
 # Optuna variables
 OPTUNA_N_TRIALS = 500
@@ -129,7 +127,7 @@ def objective(trial):
 
     if CLASSIFIER_TYPE == "naive_bayes":
         # Use logarithmic normal distribution for alpha (alpha effect is non-linear)
-        alpha = trial.suggest_float("alpha", 1e-3, 100, log=True)
+        alpha = trial.suggest_float("alpha", 0.1, 100, log=True)
         params = {"alpha": alpha}
 
     elif CLASSIFIER_TYPE == "logistic":
