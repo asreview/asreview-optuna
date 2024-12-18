@@ -47,7 +47,7 @@
     In the `optuna` tmux env run the following commands to start the study:
     1. `source .venv/bin/activate`
     2. `python3 main.py`
-    3. Deattach from the tmux environment using `ctrl` `+` `b` followed by `d` (you can always reattach using `tmux attach -t optuna`)
+    3. Detach from the tmux environment using `ctrl` `+` `b` followed by `d` (you can always reattach using `tmux attach -t optuna`)
 12. Create a tmux environment for the dashboard `tmux new -s dashboard`
     In the `dashboard` tmux env run the following commands to start the study:
     1. `optuna-dashboard sqlite:///db.sqlite3 --host 0.0.0.0`
