@@ -29,10 +29,12 @@ CLASSIFIER_TYPE = (
 STUDY_NAME = (
     "ASReview2 " + CLASSIFIER_TYPE + datetime.now().strftime(" %Y-%m-%d at %H.%M.%S")
 )
+PARALLELIZE_OBJECTIVE = False
 
 # Optuna variables
 OPTUNA_N_TRIALS = 500
 OPTUNA_TIMEOUT = None  # in seconds
+OPTUNA_N_JOBS = 1 if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 2
 
 # Early stopping condition variables
 MIN_TRIALS = 100
@@ -57,6 +59,15 @@ def run_parallel(studies, *args, **kwargs):
             result = future.result()
             if result is not None:
                 losses.append(result)
+    return np.mean(losses)
+
+
+# Function to run the loop in parallel
+def run_sequential(studies, *args, **kwargs):
+    losses = []
+    for _, row in studies.iterrows():
+        losses.append(process_row(row, *args, **kwargs))
+
     return np.mean(losses)
 
 
@@ -151,7 +162,10 @@ def objective(trial):
     else:
         raise ValueError(f"Unsupported CLASSIFIER_TYPE: {CLASSIFIER_TYPE}")
 
-    return run_parallel(studies, params=params, ratio=ratio)
+    if PARALLELIZE_OBJECTIVE:
+        return run_parallel(studies, params=params, ratio=ratio)
+    else:
+        return run_sequential(studies, params=params, ratio=ratio)
 
 
 class StopWhenOptimumReached:
@@ -187,10 +201,13 @@ if __name__ == "__main__":
         direction="minimize",
         sampler=sampler,
     )
+
     study.optimize(
         objective,
         n_trials=OPTUNA_N_TRIALS,
         timeout=OPTUNA_TIMEOUT,
         callbacks=[study_stop_cb],
+        n_jobs=OPTUNA_N_JOBS,
     )
+
     print(f"Best value: {study.best_value} (params: {study.best_params})")
