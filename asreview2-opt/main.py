@@ -11,15 +11,16 @@ import pandas as pd
 import asreview
 from asreview.metrics import loss
 from asreview.models.balance import Balanced
-from asreview.models.classifiers import NaiveBayesClassifier
 from asreview.models.feature_extraction import Tfidf
 from asreview.models.query import MaxQuery
+from models import optuna_studies_params, optuna_studies_models
 
 # Study variables
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
-STUDY_NAME = "ASReview2.x " + datetime.now().strftime("%Y-%m-%d at %H.%M.%S")
 N_STUDIES = 260
-PARALLELIZE_OBJECTIVE = False
+CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
+STUDY_NAME = "ASReview2 " + datetime.now().strftime("%Y-%m-%d at %H.%M.%S")
+PARALLELIZE_OBJECTIVE = True
 
 # Optuna variables
 OPTUNA_N_TRIALS = 500
@@ -97,15 +98,17 @@ def run_sequential(studies, *args, **kwargs):
 
 
 # Function to process each row
-def process_row(row, alpha, ratio):
+def process_row(row, params, ratio):
     with open(PICKLE_FOLDER_PATH / f"{row['dataset_id']}.pkl", "rb") as f:
         fm, labels = pickle.load(f)
 
     priors = row["prior_inclusions"] + row["prior_exclusions"]
 
-    # Create classifier and balancer with optuna value
-    clf = NaiveBayesClassifier(alpha=alpha)
+    # Create balancer with optuna value
     blc = Balanced(ratio=ratio)
+
+    # Create classifier with params
+    clf = optuna_studies_models[CLASSIFIER_TYPE](**params)
 
     # Setup simulation
     n_query = 1 if row["dataset_id"] != "Walker_2018" else 50
@@ -134,16 +137,14 @@ def process_row(row, alpha, ratio):
 
 
 def objective(trial):
-    # Use logarithmic normal distribution for alpha (alpha effect is non-linear)
-    alpha = trial.suggest_float("alpha", 1e-3, 100, log=True)
-
     # Use normal distribution for ratio (ratio effect is linear)
-    ratio = trial.suggest_float("ratio", 1.0, 30.0)
+    ratio = trial.suggest_float("ratio", 1.0, 10.0)
+    params = optuna_studies_params[CLASSIFIER_TYPE](trial)
 
     if PARALLELIZE_OBJECTIVE:
-        return run_parallel(studies, alpha=alpha, ratio=ratio)
+        return run_parallel(studies, params=params, ratio=ratio)
     else:
-        return run_sequential(studies, alpha=alpha, ratio=ratio)
+        return run_sequential(studies, params=params, ratio=ratio)
 
 
 class StopWhenOptimumReached:
