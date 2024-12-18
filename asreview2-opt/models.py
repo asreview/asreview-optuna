@@ -28,7 +28,7 @@ def svm_params(trial: optuna.trial.FrozenTrial):
     kernel = trial.suggest_categorical("kernel", ["linear", "rbf"])
 
     # Only set gamma to a value if we use rbf kernel
-    gamma = 'scale'
+    gamma = "scale"
     if kernel == "rbf":
         # Use logarithmic normal distribution for gamma (gamma effect is non-linear)
         gamma = trial.suggest_float("gamma", 1e-4, 10, log=True)
@@ -50,7 +50,6 @@ optuna_studies_params = {
     "svm": svm_params,
     "rf": random_forest_params,
 }
-
 
 
 optuna_studies_models = {
