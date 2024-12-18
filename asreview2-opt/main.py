@@ -11,17 +11,27 @@ import pandas as pd
 import asreview
 from asreview.metrics import loss
 from asreview.models.balance import Balanced
-from asreview.models.classifiers import NaiveBayesClassifier
+from asreview.models.classifiers import (
+    NaiveBayesClassifier,
+    LogisticClassifier,
+    SVMClassifier,
+    RandomForestClassifier,
+)
 from asreview.models.feature_extraction import Tfidf
 from asreview.models.query import MaxQuery
 
 # Study variables
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
-STUDY_NAME = "ASReview2.x " + datetime.now().strftime("%Y-%m-%d at %H.%M.%S")
-N_STUDIES = 260
+N_STUDIES = 2
+CLASSIFIER_TYPE = (
+    "random_forest"  # Options: "naive_bayes", "logistic", "svm", "random_forest"
+)
+STUDY_NAME = (
+    "ASReview2 " + CLASSIFIER_TYPE + datetime.now().strftime(" %Y-%m-%d at %H.%M.%S")
+)
 
 # Optuna variables
-OPTUNA_N_TRIALS = 500
+OPTUNA_N_TRIALS = 5
 OPTUNA_TIMEOUT = None  # in seconds
 
 # Early stopping condition variables
@@ -51,19 +61,34 @@ def run_parallel(studies, *args, **kwargs):
 
 
 # Function to process each row
-def process_row(row, alpha, ratio):
+def process_row(row, params, ratio):
     with open(PICKLE_FOLDER_PATH / f"{row['dataset_id']}.pkl", "rb") as f:
         fm, labels = pickle.load(f)
 
     priors = row["prior_inclusions"] + row["prior_exclusions"]
 
-    # Create classifier and balancer with optuna value
-    clf = NaiveBayesClassifier(alpha=alpha)
+    # Create classifier based on CLASSIFIER_TYPE
+    if CLASSIFIER_TYPE == "naive_bayes":
+        clf = NaiveBayesClassifier(alpha=params["alpha"])
+    elif CLASSIFIER_TYPE == "logistic":
+        clf = LogisticClassifier(C=params["C"])
+    elif CLASSIFIER_TYPE == "svm":
+        clf = SVMClassifier(
+            C=params["C"], kernel=params["kernel"], gamma=params["gamma"]
+        )
+    elif CLASSIFIER_TYPE == "random_forest":
+        clf = RandomForestClassifier(
+            n_estimators=params["n_estimators"], max_features=params["max_features"]
+        )
+    else:
+        raise ValueError(f"Unsupported CLASSIFIER_TYPE: {CLASSIFIER_TYPE}")
+
+    # Create balancer with optuna value
     blc = Balanced(ratio=ratio)
 
     # Setup simulation
-    n_query = 1 if row['dataset_id'] != "Walker_2018" else 50
-    
+    n_query = 1 if row["dataset_id"] != "Walker_2018" else 50
+
     simulate = asreview.Simulate(
         fm=fm,
         labels=labels,
@@ -88,13 +113,45 @@ def process_row(row, alpha, ratio):
 
 
 def objective(trial):
-    # Use logarithmic normal distribution for alpha (alpha effect is non-linear)
-    alpha = trial.suggest_float("alpha", 1e-3, 100, log=True)
-
     # Use normal distribution for ratio (ratio effect is linear)
     ratio = trial.suggest_float("ratio", 1.0, 30.0)
 
-    return run_parallel(studies, alpha=alpha, ratio=ratio)
+    if CLASSIFIER_TYPE == "naive_bayes":
+        # Use logarithmic normal distribution for alpha (alpha effect is non-linear)
+        alpha = trial.suggest_float("alpha", 1e-3, 100, log=True)
+        params = {"alpha": alpha}
+
+    elif CLASSIFIER_TYPE == "logistic":
+        # Use logarithmic normal distribution for C (C effect is non-linear)
+        C = trial.suggest_float("C", 1e-3, 100, log=True)
+        params = {"C": C}
+
+    elif CLASSIFIER_TYPE == "svm":
+        # Use logarithmic normal distribution for C (C effect is non-linear)
+        C = trial.suggest_float("C", 1e-3, 100, log=True)
+
+        # Use categorical for kernel
+        kernel = trial.suggest_categorical("kernel", ["linear", "rbf"])
+
+        # Only set gamma to a value if we use rbf kernel
+        gamma = None
+        if kernel == "rbf":
+            # Use logarithmic normal distribution for gamma (gamma effect is non-linear)
+            gamma = trial.suggest_float("gamma", 1e-4, 10, log=True)
+        params = {"C": C, "kernel": kernel, "gamma": gamma}
+
+    elif CLASSIFIER_TYPE == "random_forest":
+        # Use normal distribution for n_estimators (n_estimators effect is linear)
+        n_estimators = trial.suggest_int("n_estimators", 50, 500)
+
+        # Use normal distribution for max_features (max_features effect is linear)
+        max_features = trial.suggest_int("max_depth", 2, 20)
+        params = {"n_estimators": n_estimators, "max_features": max_features}
+
+    else:
+        raise ValueError(f"Unsupported CLASSIFIER_TYPE: {CLASSIFIER_TYPE}")
+
+    return run_parallel(studies, params=params, ratio=ratio)
 
 
 class StopWhenOptimumReached:
