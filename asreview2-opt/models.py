@@ -52,27 +52,10 @@ optuna_studies_params = {
 }
 
 
-def naive_bayes_model(params):
-    return NaiveBayesClassifier(alpha=params["alpha"])
-
-
-def logistic_model(params):
-    return LogisticClassifier(C=params["C"])
-
-
-def svm_model(params):
-    return SVMClassifier(C=params["C"], kernel=params["kernel"], gamma=params["gamma"])
-
-
-def random_forest_model(params):
-    return RandomForestClassifier(
-        n_estimators=params["n_estimators"], max_features=params["max_features"]
-    )
-
 
 optuna_studies_models = {
-    "nb": naive_bayes_model,
-    "log": logistic_model,
-    "svm": svm_model,
-    "rf": random_forest_model,
+    "nb": NaiveBayesClassifier,
+    "log": LogisticClassifier,
+    "svm": SVMClassifier,
+    "rf": RandomForestClassifier,
 }
