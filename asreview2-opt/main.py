@@ -19,10 +19,12 @@ from asreview.models.query import MaxQuery
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 STUDY_NAME = "ASReview2.x " + datetime.now().strftime("%Y-%m-%d at %H.%M.%S")
 N_STUDIES = 260
+PARALLELIZE_OBJECTIVE = False
 
 # Optuna variables
 OPTUNA_N_TRIALS = 500
 OPTUNA_TIMEOUT = None  # in seconds
+OPTUNA_N_JOBS = 1 if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 2
 
 # Early stopping condition variables
 MIN_TRIALS = 100
@@ -50,6 +52,15 @@ def run_parallel(studies, *args, **kwargs):
     return np.mean(losses)
 
 
+# Function to run the loop in parallel
+def run_sequential(studies, *args, **kwargs):
+    losses = []
+    for _, row in studies.iterrows():
+        losses.append(process_row(row, *args, **kwargs))
+
+    return np.mean(losses)
+
+
 # Function to process each row
 def process_row(row, alpha, ratio):
     with open(PICKLE_FOLDER_PATH / f"{row['dataset_id']}.pkl", "rb") as f:
@@ -62,8 +73,8 @@ def process_row(row, alpha, ratio):
     blc = Balanced(ratio=ratio)
 
     # Setup simulation
-    n_query = 1 if row['dataset_id'] != "Walker_2018" else 50
-    
+    n_query = 1 if row["dataset_id"] != "Walker_2018" else 50
+
     simulate = asreview.Simulate(
         fm=fm,
         labels=labels,
@@ -94,7 +105,10 @@ def objective(trial):
     # Use normal distribution for ratio (ratio effect is linear)
     ratio = trial.suggest_float("ratio", 1.0, 30.0)
 
-    return run_parallel(studies, alpha=alpha, ratio=ratio)
+    if PARALLELIZE_OBJECTIVE:
+        return run_parallel(studies, alpha=alpha, ratio=ratio)
+    else:
+        return run_sequential(studies, alpha=alpha, ratio=ratio)
 
 
 class StopWhenOptimumReached:
@@ -130,10 +144,13 @@ if __name__ == "__main__":
         direction="minimize",
         sampler=sampler,
     )
+
     study.optimize(
         objective,
         n_trials=OPTUNA_N_TRIALS,
         timeout=OPTUNA_TIMEOUT,
         callbacks=[study_stop_cb],
+        n_jobs=OPTUNA_N_JOBS,
     )
+
     print(f"Best value: {study.best_value} (params: {study.best_params})")
