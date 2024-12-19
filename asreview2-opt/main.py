@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import optuna
 import pandas as pd
+import synergy_dataset as sd
 
 import asreview
 from asreview.metrics import loss
@@ -32,43 +33,23 @@ MIN_TRIALS = 100
 N_HISTORY = 5
 STOPPING_THRESHOLD = 0.001
 
-# list of studies
-studies = pd.read_json("synergy_studies_1000.jsonl", lines=True).head(n=N_STUDIES)
 
-# Sorter list that is ordered from largest to smallest dataset
-studies_sorter = [
-    "Walker_2018",
-    "Brouwer_2019",
-    "van_Dis_2020",
-    "Hall_2012",
-    "Wassenaar_2017",
-    "Leenaars_2020",
-    "Radjenovic_2013",
-    "Leenaars_2019",
-    "Moran_2021",
-    "Bos_2018",
-    "van_de_Schoot_2018",
-    "Wolters_2018",
-    "Appenzeller-Herzog_2019",
-    "Muthu_2021",
-    "Smid_2020",
-    "van_der_Waal_2022",
-    "Chou_2003",
-    "Chou_2004",
-    "Jeyaraman_2020",
-    "Menon_2022",
-    "Oud_2018",
-    "Meijboom_2021",
-    "van_der_Valk_2021",
-    "Nelson_2002",
-    "Sep_2021",
-    "Donners_2021",
-]
+def n_query(results, n_records):
+    if len(results) >= max(1000, round(0.1 * n_records)):
+        return 100
+    elif len(results) >= max(500, round(0.05 * n_records)):
+        return 10
+    else:
+        return 1
 
-# Sort using the key parameter
-studies = studies.sort_values(
-    "dataset_id", key=lambda x: x.map({val: i for i, val in enumerate(studies_sorter)})
-)
+
+def sort_studies(studies, dataset_sizes):
+    studies_sorter = sorted(dataset_sizes.items(), key=lambda x: x[1], reverse=True)
+
+    return studies.sort_values(
+        "dataset_id",
+        key=lambda x: x.map({val[0]: i for i, val in enumerate(studies_sorter)}),
+    )
 
 
 # Function to run the loop in parallel
@@ -110,9 +91,6 @@ def process_row(row, params, ratio):
     # Create classifier with params
     clf = optuna_studies_models[CLASSIFIER_TYPE](**params)
 
-    # Setup simulation
-    n_query = 1 if row["dataset_id"] != "Walker_2018" else 50
-
     simulate = asreview.Simulate(
         fm=fm,
         labels=labels,
@@ -120,7 +98,7 @@ def process_row(row, params, ratio):
         balance_strategy=blc,
         query_strategy=MaxQuery(),
         feature_extraction=Tfidf(),
-        n_query=n_query,
+        n_query=lambda x: n_query(x, dataset_sizes[row['dataset_id']]),
     )
 
     # Set priors
@@ -169,6 +147,20 @@ class StopWhenOptimumReached:
 
 
 if __name__ == "__main__":
+    dataset_sizes = {
+        dataset.name: dataset.metadata["data"]["n_records"]
+        for dataset in sd.iter_datasets()
+    }
+
+    # list of studies
+    studies = pd.read_json("synergy_studies_1000.jsonl", lines=True).head(n=N_STUDIES)
+
+    studies = (
+        sort_studies(studies=studies, dataset_sizes=dataset_sizes)
+        .groupby("dataset_id")
+        .head(2)
+    )
+
     sampler = optuna.samplers.TPESampler()
     study_stop_cb = StopWhenOptimumReached(
         min_trials=MIN_TRIALS, threshold=STOPPING_THRESHOLD, n_history=N_HISTORY
