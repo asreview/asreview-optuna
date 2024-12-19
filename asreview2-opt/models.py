@@ -40,7 +40,7 @@ def random_forest_params(trial: optuna.trial.FrozenTrial):
     n_estimators = trial.suggest_int("n_estimators", 50, 500)
 
     # Use normal distribution for max_features (max_features effect is linear)
-    max_features = trial.suggest_int("max_depth", 2, 20)
+    max_features = trial.suggest_int("max_features", 2, 20)
     return {"n_estimators": n_estimators, "max_features": max_features}
 
 
