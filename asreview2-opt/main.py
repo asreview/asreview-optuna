@@ -1,3 +1,4 @@
+from collections import defaultdict
 import multiprocessing as mp
 import pickle
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -32,6 +33,11 @@ OPTUNA_N_JOBS = 1 if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 2
 MIN_TRIALS = 100
 N_HISTORY = 5
 STOPPING_THRESHOLD = 0.001
+
+dataset_sizes = {
+    dataset.name: dataset.metadata["data"]["n_records"]
+    for dataset in sd.iter_datasets()
+}
 
 
 def n_query(results, n_records):
@@ -73,7 +79,7 @@ def sort_studies(studies, dataset_sizes):
 
 # Function to run the loop in parallel
 def run_parallel(studies, *args, **kwargs):
-    losses = []
+    losses = defaultdict(list)
     with ProcessPoolExecutor(max_workers=mp.cpu_count() - 2) as executor:
         # Submit tasks
         futures = {
@@ -82,19 +88,20 @@ def run_parallel(studies, *args, **kwargs):
         }
         # Collect results
         for future in as_completed(futures):
-            result = future.result()
+            dataset_id, result = future.result()
             if result is not None:
-                losses.append(result)
-    return np.mean(losses)
+                losses[dataset_id].append(result)
+    return losses
 
 
 # Function to run the loop in parallel
 def run_sequential(studies, *args, **kwargs):
-    losses = []
+    losses = defaultdict(list)
     for _, row in studies.iterrows():
-        losses.append(process_row(row, *args, **kwargs))
+        dataset_id, result = process_row(row, *args, **kwargs)
+        losses[dataset_id].append(result)
 
-    return np.mean(losses)
+    return losses
 
 
 # Function to process each row
@@ -117,7 +124,7 @@ def process_row(row, params, ratio):
         balance_strategy=blc,
         query_strategy=MaxQuery(),
         feature_extraction=Tfidf(),
-        n_query=lambda x: n_query(x, dataset_sizes[row['dataset_id']]),
+        n_query=lambda x: n_query(x, dataset_sizes[row["dataset_id"]]),
     )
 
     # Set priors
@@ -130,7 +137,7 @@ def process_row(row, params, ratio):
     padded_results = list(simulate._results["label"]) + [0] * (
         len(simulate.labels) - len(simulate._results["label"])
     )
-    return loss(padded_results)
+    return row["dataset_id"], loss(padded_results)
 
 
 def objective(trial):
@@ -139,9 +146,17 @@ def objective(trial):
     params = optuna_studies_params[CLASSIFIER_TYPE](trial)
 
     if PARALLELIZE_OBJECTIVE:
-        return run_parallel(studies, params=params, ratio=ratio)
+        result = run_parallel(studies, params=params, ratio=ratio)
     else:
-        return run_sequential(studies, params=params, ratio=ratio)
+        result = run_sequential(studies, params=params, ratio=ratio)
+
+    all_losses = []
+    for i, dataset_id in enumerate(dataset_sizes.keys()):
+        losses = result[dataset_id] if dataset_id in result else [0]
+        trial.report(np.mean(losses), i)
+        all_losses += losses
+
+    return np.mean(all_losses)
 
 
 class StopWhenOptimumReached:
@@ -166,11 +181,6 @@ class StopWhenOptimumReached:
 
 
 if __name__ == "__main__":
-    dataset_sizes = {
-        dataset.name: dataset.metadata["data"]["n_records"]
-        for dataset in sd.iter_datasets()
-    }
-
     # list of studies
     studies = pd.read_json("synergy_studies_1000.jsonl", lines=True).head(n=N_STUDIES)
 
