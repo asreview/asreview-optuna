@@ -43,6 +43,25 @@ def n_query(results, n_records):
         return 1
 
 
+def n_query_extreme(results, n_records):
+    if n_records >= 10000:
+        if len(results) >= 10000:
+            return 10**5  # finish the run
+        if len(results) >= 1000:
+            return 1000
+        elif len(results) >= 100:
+            return 25
+        else:
+            return 1
+    else:
+        if len(results) >= 1000:
+            return 100
+        elif len(results) >= 100:
+            return 5
+        else:
+            return 1
+
+
 def sort_studies(studies, dataset_sizes):
     studies_sorter = sorted(dataset_sizes.items(), key=lambda x: x[1], reverse=True)
 
