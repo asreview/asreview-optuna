@@ -135,7 +135,7 @@ def process_row(row, params, ratio):
 
 def objective(trial):
     # Use normal distribution for ratio (ratio effect is linear)
-    ratio = trial.suggest_float("ratio", 1.0, 10.0)
+    ratio = trial.suggest_float("ratio", 1.0, 5.0)
     params = optuna_studies_params[CLASSIFIER_TYPE](trial)
 
     if PARALLELIZE_OBJECTIVE:
