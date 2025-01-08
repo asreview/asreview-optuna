@@ -53,7 +53,7 @@ def random_forest_custom_params(trial: optuna.trial.FrozenTrial):
     min_samples_split = trial.suggest_int("min_samples_split", 2, 5)
     min_samples_leaf = trial.suggest_int("min_samples_leaf", 1, 3)
     min_weight_fraction_leaf = 0.0
-    max_features = trial.suggest_categorical("max_features", ["sqrt", "log2", None])
+    max_features = trial.suggest_categorical("max_features", ["sqrt", "log2"])
     max_leaf_nodes = None
     min_impurity_decrease = 0.0
     random_state = None

@@ -196,7 +196,7 @@ if __name__ == "__main__":
         "criterion": ["gini", "entropy"],
         "min_samples_split": [2, 3, 4, 5],
         "min_samples_leaf": [1, 2, 3],
-        "max_features": ["sqrt", "log2", None]
+        "max_features": ["sqrt", "log2"]
     }
     sampler = optuna.samplers.GridSampler(search_space)
     study_stop_cb = StopWhenOptimumReached(
