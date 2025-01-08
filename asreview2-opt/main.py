@@ -20,7 +20,7 @@ from models import optuna_studies_params, optuna_studies_models
 # Study variables
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 N_STUDIES = 260
-CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
+CLASSIFIER_TYPE = "rf_c"  # Options: "nb", "log", "svm", "rf"
 STUDY_NAME = "ASReview2 " + datetime.now().strftime("%Y-%m-%d at %H.%M.%S")
 PARALLELIZE_OBJECTIVE = True
 
@@ -142,7 +142,8 @@ def process_row(row, params, ratio):
 
 def objective(trial):
     # Use normal distribution for ratio (ratio effect is linear)
-    ratio = trial.suggest_float("ratio", 1.0, 5.0)
+    #ratio = trial.suggest_float("ratio", 1.0, 5.0)
+    ratio = 1.5
     params = optuna_studies_params[CLASSIFIER_TYPE](trial)
 
     if PARALLELIZE_OBJECTIVE:
@@ -190,7 +191,14 @@ if __name__ == "__main__":
         .head(2)
     )
 
-    sampler = optuna.samplers.TPESampler()
+    search_space = {
+        "n_estimators": [100, 150, 200],
+        "criterion": ["gini", "entropy"],
+        "min_samples_split": [2, 3, 4, 5],
+        "min_samples_leaf": [1, 2, 3],
+        "max_features": ["sqrt", "log2", None]
+    }
+    sampler = optuna.samplers.GridSampler(search_space)
     study_stop_cb = StopWhenOptimumReached(
         min_trials=MIN_TRIALS, threshold=STOPPING_THRESHOLD, n_history=N_HISTORY
     )
