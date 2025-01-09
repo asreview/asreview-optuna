@@ -2,7 +2,6 @@ from collections import defaultdict
 import multiprocessing as mp
 import pickle
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -18,10 +17,10 @@ from asreview.models.query import MaxQuery
 from models import optuna_studies_params, optuna_studies_models
 
 # Study variables
+VERSION = 1
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 N_STUDIES = 260
 CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
-STUDY_NAME = "ASReview2 " + datetime.now().strftime("%Y-%m-%d at %H.%M.%S")
 PARALLELIZE_OBJECTIVE = True
 
 # Optuna variables
@@ -197,7 +196,7 @@ if __name__ == "__main__":
 
     study = optuna.create_study(
         storage="sqlite:///db.sqlite3",  # Specify the storage URL here.
-        study_name=STUDY_NAME,
+        study_name=f"ASReview2-{CLASSIFIER_TYPE}-{len(studies)}-{VERSION}",
         direction="minimize",
         sampler=sampler,
     )
