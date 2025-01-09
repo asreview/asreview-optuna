@@ -7,6 +7,8 @@ from asreview.models.classifiers import (
     RandomForestClassifier,
 )
 
+from custom_models import CustomRandomForestClassifier
+
 
 def naive_bayes_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for alpha (alpha effect is non-linear)
@@ -44,11 +46,42 @@ def random_forest_params(trial: optuna.trial.FrozenTrial):
     return {"n_estimators": n_estimators, "max_features": max_features}
 
 
+def random_forest_custom_params(trial: optuna.trial.FrozenTrial):
+    n_estimators = trial.suggest_int("n_estimators", 100, 200)
+    criterion = trial.suggest_categorical("criterion", ["gini", "entropy"])
+    max_depth = None
+    min_samples_split = trial.suggest_int("min_samples_split", 2, 5)
+    min_samples_leaf = trial.suggest_int("min_samples_leaf", 1, 3)
+    min_weight_fraction_leaf = 0.0
+    max_features = trial.suggest_categorical("max_features", ["sqrt", "log2"])
+    max_leaf_nodes = None
+    min_impurity_decrease = 0.0
+    random_state = None
+    ccp_alpha = 0.0
+    monotonic_cst = None
+
+    return {
+        "n_estimators": n_estimators,
+        "criterion": criterion,
+        "max_depth": max_depth,
+        "min_samples_split": min_samples_split,
+        "min_samples_leaf": min_samples_leaf,
+        "min_weight_fraction_leaf": min_weight_fraction_leaf,
+        "max_features": max_features,
+        "max_leaf_nodes": max_leaf_nodes,
+        "min_impurity_decrease": min_impurity_decrease,
+        "random_state": random_state,
+        "ccp_alpha": ccp_alpha,
+        "monotonic_cst": monotonic_cst,
+    }
+
+
 optuna_studies_params = {
     "nb": naive_bayes_params,
     "log": logistic_params,
     "svm": svm_params,
     "rf": random_forest_params,
+    "rf_c": random_forest_custom_params,
 }
 
 
@@ -57,4 +90,5 @@ optuna_studies_models = {
     "log": LogisticClassifier,
     "svm": SVMClassifier,
     "rf": RandomForestClassifier,
+    "rf_c": CustomRandomForestClassifier,
 }
