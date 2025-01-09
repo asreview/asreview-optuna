@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 import multiprocessing as mp
 import pickle
@@ -203,7 +204,7 @@ if __name__ == "__main__":
     )
 
     study = optuna.create_study(
-        storage="sqlite:///db.sqlite3",  # Specify the storage URL here.
+        storage=os.getenv("DB_URI", "sqlite:///db.sqlite3"),  # Specify the storage URL here.
         study_name=f"ASReview2-{CLASSIFIER_TYPE}-{len(studies)}-{VERSION}",
         direction="minimize",
         sampler=sampler,
