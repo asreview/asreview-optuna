@@ -21,13 +21,13 @@ from models import optuna_studies_params, optuna_studies_models
 VERSION = 1
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 N_STUDIES = 260
-CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
-PARALLELIZE_OBJECTIVE = True
+CLASSIFIER_TYPE = "log"  # Options: "nb", "log", "svm", "rf"
+PARALLELIZE_OBJECTIVE = False
 
 # Optuna variables
 OPTUNA_N_TRIALS = 500
 OPTUNA_TIMEOUT = None  # in seconds
-OPTUNA_N_JOBS = 1 if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 2
+OPTUNA_N_JOBS = 1 #if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 2
 
 # Early stopping condition variables
 MIN_TRIALS = 100
@@ -124,7 +124,7 @@ def process_row(row, params, ratio):
         balance_strategy=blc,
         query_strategy=MaxQuery(),
         feature_extraction=Tfidf(),
-        n_query=lambda x: n_query(x, dataset_sizes[row["dataset_id"]]),
+        n_query=lambda x: n_query_extreme(x, dataset_sizes[row["dataset_id"]]),
     )
 
     # Set priors
