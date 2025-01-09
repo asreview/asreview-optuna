@@ -124,7 +124,7 @@ def process_row(row, params, ratio):
         balance_strategy=blc,
         query_strategy=MaxQuery(),
         feature_extraction=Tfidf(),
-        n_query=lambda x: n_query(x, dataset_sizes[row["dataset_id"]]),
+        n_query=lambda x: n_query_extreme(x, dataset_sizes[row["dataset_id"]]),
     )
 
     # Set priors
