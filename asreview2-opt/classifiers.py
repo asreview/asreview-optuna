@@ -44,7 +44,7 @@ def random_forest_params(trial: optuna.trial.FrozenTrial):
     return {"n_estimators": n_estimators, "max_features": max_features}
 
 
-optuna_studies_params = {
+classifier_params = {
     "nb": naive_bayes_params,
     "log": logistic_params,
     "svm": svm_params,
@@ -52,7 +52,7 @@ optuna_studies_params = {
 }
 
 
-optuna_studies_models = {
+classifiers = {
     "nb": NaiveBayesClassifier,
     "log": LogisticClassifier,
     "svm": SVMClassifier,
