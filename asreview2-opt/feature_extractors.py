@@ -10,9 +10,9 @@ def tfidf_params(trial: optuna.trial.FrozenTrial):
 
     min_df = trial.suggest_int("tfidf__min_df", 1, 10)
 
-    ngram_range = trial.suggest_categorical(
-        "tfidf__ngram_range", [(1, 1), (1, 2), (1, 3)]
-    )
+    # trial.suggest_categorical does not support tuples, so choose max_ngram_range first, then create a tuple.
+    max_ngram_range = trial.suggest_int("tfidf__max_ngram_range", 1, 3)
+    ngram_range = (1, max_ngram_range)
 
     sublinear_tf = trial.suggest_categorical("tfidf__sublinear_tf", [True, False])
 
