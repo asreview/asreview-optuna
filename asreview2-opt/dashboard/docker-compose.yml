@@ -1,0 +1,16 @@
+services:
+  optuna-dashboard:
+    image: ghcr.io/optuna/optuna-dashboard:latest
+    ports:
+      - "8080:8080"
+    command: ["postgresql+psycopg2://[username]:[PWD]@[DB_ADDRESS]"]
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./htpasswd:/etc/nginx/.htpasswd
+    depends_on:
+      - optuna-dashboard
