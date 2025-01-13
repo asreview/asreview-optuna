@@ -11,7 +11,7 @@ from asreview.models.classifiers import (
 def naive_bayes_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for alpha (alpha effect is non-linear)
     #alpha = trial.suggest_float("alpha", 0.1, 100, log=True)
-    alpha = 0.8
+    alpha = trial.suggest_float("nb__alpha", 1.0, 15.0)
     return {"alpha": alpha}
 
 
