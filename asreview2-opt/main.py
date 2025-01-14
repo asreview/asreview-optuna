@@ -221,6 +221,7 @@ if __name__ == "__main__":
         study_name=f"ASReview2-{CLASSIFIER_TYPE}-{len(studies)}-{VERSION}",
         direction="minimize",
         sampler=sampler,
+        load_if_exists=True,
     )
 
     study.optimize(
