@@ -32,7 +32,7 @@ OPTUNA_TIMEOUT = None  # in seconds
 OPTUNA_N_JOBS = 1 #if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 2
 
 # Early stopping condition variables
-MIN_TRIALS = 100
+MIN_TRIALS = 1000
 N_HISTORY = 5
 STOPPING_THRESHOLD = 0.001
 
@@ -221,6 +221,7 @@ if __name__ == "__main__":
         study_name=f"ASReview2-{CLASSIFIER_TYPE}-{len(studies)}-{VERSION}",
         direction="minimize",
         sampler=sampler,
+        load_if_exists=True,
     )
 
     study.optimize(
