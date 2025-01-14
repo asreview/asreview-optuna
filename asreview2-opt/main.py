@@ -13,15 +13,17 @@ import synergy_dataset as sd
 import asreview
 from asreview.metrics import loss
 from asreview.models.balance import Balanced
-from asreview.models.feature_extraction import Tfidf
 from asreview.models.query import MaxQuery
-from models import optuna_studies_params, optuna_studies_models
+from classifiers import classifier_params, classifiers
+from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
 VERSION = 1
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 N_STUDIES = 260
 CLASSIFIER_TYPE = "log"  # Options: "nb", "log", "svm", "rf"
+FEATURE_EXTRACTOR_TYPE = "tfidf"
+PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = False
 
 # Optuna variables
@@ -105,17 +107,28 @@ def run_sequential(studies, *args, **kwargs):
 
 
 # Function to process each row
-def process_row(row, params, ratio):
-    with open(PICKLE_FOLDER_PATH / f"{row['dataset_id']}.pkl", "rb") as f:
-        fm, labels = pickle.load(f)
+def process_row(row, clf_params, fe_params, ratio):
+    # If True, use pre processed feature matrices. Else determine fm on the fly
+    if PRE_PROCESSED_FMS:
+        with open(PICKLE_FOLDER_PATH / f"{row['dataset_id']}.pkl", "rb") as f:
+            fm, labels = pickle.load(f)
+    else:
+        df = sd.Dataset(row["dataset_id"]).to_frame().reset_index()
+        fe = feature_extractors[FEATURE_EXTRACTOR_TYPE](**fe_params)
+
+        fm = fe.fit_transform(
+            df["title"].fillna("").values, df["abstract"].fillna("").values
+        )
+        labels = df["label_included"]
 
     priors = row["prior_inclusions"] + row["prior_exclusions"]
 
     # Create balancer with optuna value
     blc = Balanced(ratio=ratio)
 
-    # Create classifier with params
-    clf = optuna_studies_models[CLASSIFIER_TYPE](**params)
+    # Create classifier and feature extractor with params
+    clf = classifiers[CLASSIFIER_TYPE](**clf_params)
+    fe = feature_extractors[FEATURE_EXTRACTOR_TYPE](**fe_params)
 
     simulate = asreview.Simulate(
         fm=fm,
@@ -123,7 +136,7 @@ def process_row(row, params, ratio):
         classifier=clf,
         balance_strategy=blc,
         query_strategy=MaxQuery(),
-        feature_extraction=Tfidf(),
+        feature_extraction=fe,
         n_query=lambda x: n_query_extreme(x, dataset_sizes[row["dataset_id"]]),
     )
 
@@ -142,13 +155,19 @@ def process_row(row, params, ratio):
 
 def objective(trial):
     # Use normal distribution for ratio (ratio effect is linear)
-    ratio = trial.suggest_float("ratio", 1.0, 5.0)
-    params = optuna_studies_params[CLASSIFIER_TYPE](trial)
+    # ratio = trial.suggest_float("ratio", 1.0, 5.0)
+    ratio = 1.5
+    clf_params = classifier_params[CLASSIFIER_TYPE](trial)
+    fe_params = feature_extractor_params[FEATURE_EXTRACTOR_TYPE](trial)
 
     if PARALLELIZE_OBJECTIVE:
-        result = run_parallel(studies, params=params, ratio=ratio)
+        result = run_parallel(
+            studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
+        )
     else:
-        result = run_sequential(studies, params=params, ratio=ratio)
+        result = run_sequential(
+            studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
+        )
 
     all_losses = []
     for i, dataset_id in enumerate(dataset_sizes.keys()):
@@ -196,7 +215,9 @@ if __name__ == "__main__":
     )
 
     study = optuna.create_study(
-        storage=os.getenv("DB_URI", "sqlite:///db.sqlite3"),  # Specify the storage URL here.
+        storage=os.getenv(
+            "DB_URI", "sqlite:///db.sqlite3"
+        ),  # Specify the storage URL here.
         study_name=f"ASReview2-{CLASSIFIER_TYPE}-{len(studies)}-{VERSION}",
         direction="minimize",
         sampler=sampler,
