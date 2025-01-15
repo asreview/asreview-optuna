@@ -1,4 +1,6 @@
 import os
+
+os.environ["OMP_NUM_THREADS"] = "1"
 from collections import defaultdict
 import multiprocessing as mp
 import pickle
@@ -18,18 +20,18 @@ from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
-VERSION = 2
+VERSION = 3
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 N_STUDIES = 260
 CLASSIFIER_TYPE = "log"  # Options: "nb", "log", "svm", "rf"
 FEATURE_EXTRACTOR_TYPE = "tfidf"
 PRE_PROCESSED_FMS = False  # False = on the fly
-PARALLELIZE_OBJECTIVE = False
+PARALLELIZE_OBJECTIVE = True
 
 # Optuna variables
 OPTUNA_N_TRIALS = 500
 OPTUNA_TIMEOUT = None  # in seconds
-OPTUNA_N_JOBS = 1 #if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 2
+OPTUNA_N_JOBS = 1 if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 1
 
 # Early stopping condition variables
 MIN_TRIALS = 1000
@@ -82,7 +84,7 @@ def sort_studies(studies, dataset_sizes):
 # Function to run the loop in parallel
 def run_parallel(studies, *args, **kwargs):
     losses = defaultdict(list)
-    with ProcessPoolExecutor(max_workers=mp.cpu_count() - 2) as executor:
+    with ProcessPoolExecutor(max_workers=mp.cpu_count() - 1) as executor:
         # Submit tasks
         futures = {
             executor.submit(process_row, row, *args, **kwargs): i
