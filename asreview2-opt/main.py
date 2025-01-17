@@ -14,6 +14,7 @@ import asreview
 from asreview.metrics import loss
 from asreview.models.balance import Balanced
 from asreview.models.query import MaxQuery
+from asreview.learner import ActiveLearningCycle
 from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
@@ -22,7 +23,7 @@ VERSION = 2
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 N_STUDIES = 260
 CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "tfidf"
+FEATURE_EXTRACTOR_TYPE = "tfidf" # Options: "tfidf", "onehot"
 PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
 
@@ -108,19 +109,6 @@ def run_sequential(studies, *args, **kwargs):
 
 # Function to process each row
 def process_row(row, clf_params, fe_params, ratio):
-    # If True, use pre processed feature matrices. Else determine fm on the fly
-    if PRE_PROCESSED_FMS:
-        with open(PICKLE_FOLDER_PATH / f"{row['dataset_id']}.pkl", "rb") as f:
-            fm, labels = pickle.load(f)
-    else:
-        df = sd.Dataset(row["dataset_id"]).to_frame().reset_index()
-        fe = feature_extractors[FEATURE_EXTRACTOR_TYPE](**fe_params)
-
-        fm = fe.fit_transform(
-            df["title"].fillna("").values, df["abstract"].fillna("").values
-        )
-        labels = df["label_included"]
-
     priors = row["prior_inclusions"] + row["prior_exclusions"]
 
     # Create balancer with optuna value
@@ -130,18 +118,37 @@ def process_row(row, clf_params, fe_params, ratio):
     clf = classifiers[CLASSIFIER_TYPE](**clf_params)
     fe = feature_extractors[FEATURE_EXTRACTOR_TYPE](**fe_params)
 
+    if PRE_PROCESSED_FMS:
+        with open(PICKLE_FOLDER_PATH / f"{row['dataset_id']}.pkl", "rb") as f:
+            X, labels = pickle.load(f)
+
+        alc = ActiveLearningCycle(
+            query_strategy=MaxQuery(),
+            classifier=clf,
+            balance_strategy=blc,
+            n_query=lambda x: n_query(x, dataset_sizes[row["dataset_id"]]),
+        )
+    else:
+        X = sd.Dataset(row["dataset_id"]).to_frame().reset_index()
+        labels = X["label_included"]
+        fe = feature_extractors[FEATURE_EXTRACTOR_TYPE](**fe_params)
+
+        alc = ActiveLearningCycle(
+            query_strategy=MaxQuery(),
+            classifier=clf,
+            balance_strategy=blc,
+            feature_extraction=fe,
+            n_query=lambda x: n_query(x, dataset_sizes[row["dataset_id"]]),
+        )
+
     simulate = asreview.Simulate(
-        fm=fm,
+        X=X,
         labels=labels,
-        classifier=clf,
-        balance_strategy=blc,
-        query_strategy=MaxQuery(),
-        feature_extraction=fe,
-        n_query=lambda x: n_query(x, dataset_sizes[row["dataset_id"]]),
+        learners=[alc],
     )
 
     # Set priors
-    simulate.label(priors, prior=True)
+    simulate.label(priors)
 
     # Start simulation
     simulate.review()
@@ -155,8 +162,8 @@ def process_row(row, clf_params, fe_params, ratio):
 
 def objective(trial):
     # Use normal distribution for ratio (ratio effect is linear)
-    # ratio = trial.suggest_float("ratio", 1.0, 5.0)
-    ratio = 1.5
+    ratio = trial.suggest_float("ratio", 1.0, 5.0)
+    # ratio = 1.5
     clf_params = classifier_params[CLASSIFIER_TYPE](trial)
     fe_params = feature_extractor_params[FEATURE_EXTRACTOR_TYPE](trial)
 

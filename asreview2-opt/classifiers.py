@@ -17,31 +17,31 @@ def naive_bayes_params(trial: optuna.trial.FrozenTrial):
 
 def logistic_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for C (C effect is non-linear)
-    C = trial.suggest_float("C", 1e-3, 100, log=True)
+    C = trial.suggest_float("log__C", 1e-3, 100, log=True)
     return {"C": C, "solver": "lbfgs"}
 
 
 def svm_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for C (C effect is non-linear)
-    C = trial.suggest_float("C", 1e-3, 100, log=True)
+    C = trial.suggest_float("svm__C", 1e-3, 100, log=True)
 
     # Use categorical for kernel
-    kernel = trial.suggest_categorical("kernel", ["linear", "rbf"])
+    kernel = trial.suggest_categorical("svm__kernel", ["linear", "rbf"])
 
     # Only set gamma to a value if we use rbf kernel
     gamma = "scale"
     if kernel == "rbf":
         # Use logarithmic normal distribution for gamma (gamma effect is non-linear)
-        gamma = trial.suggest_float("gamma", 1e-4, 10, log=True)
+        gamma = trial.suggest_float("svm__gamma", 1e-4, 10, log=True)
     return {"C": C, "kernel": kernel, "gamma": gamma}
 
 
 def random_forest_params(trial: optuna.trial.FrozenTrial):
     # Use normal distribution for n_estimators (n_estimators effect is linear)
-    n_estimators = trial.suggest_int("n_estimators", 50, 500)
+    n_estimators = trial.suggest_int("rf__n_estimators", 50, 500)
 
     # Use normal distribution for max_features (max_features effect is linear)
-    max_features = trial.suggest_int("max_features", 2, 20)
+    max_features = trial.suggest_int("rf__max_features", 2, 20)
     return {"n_estimators": n_estimators, "max_features": max_features}
 
 
