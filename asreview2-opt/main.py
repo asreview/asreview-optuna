@@ -19,7 +19,7 @@ from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
-VERSION = 2
+VERSION = 3
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 N_STUDIES = 260
 CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
