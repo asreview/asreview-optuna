@@ -15,9 +15,7 @@ folder_pickle_files.mkdir(parents=True, exist_ok=True)
 for dataset in sd.iter_datasets():
     df = dataset.to_frame().reset_index()
 
-    X = Tfidf().fit_transform(
-        df["title"].fillna("").values, df["abstract"].fillna("").values
-    )
+    X = Tfidf().fit_transform(df)
 
     with open(folder_pickle_files / f"{dataset.name}.pkl", "wb") as f:
         pickle.dump((X, df["label_included"]), f)
