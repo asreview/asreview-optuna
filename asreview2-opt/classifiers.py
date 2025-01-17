@@ -16,7 +16,7 @@ def naive_bayes_params(trial: optuna.trial.FrozenTrial):
 
 def logistic_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for C (C effect is non-linear)
-    C = trial.suggest_float("log__C", 0.1, 2, log=True)
+    C = trial.suggest_float("log__C", 0.01, 10, log=True)
 
     solver = "lbfgs"
 
