@@ -23,7 +23,7 @@ VERSION = 1
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 N_STUDIES = 260
 CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "tfidf"
+FEATURE_EXTRACTOR_TYPE = "tfidf" # Options: "tfidf", "onehot"
 PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
 
