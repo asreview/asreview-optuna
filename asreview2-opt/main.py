@@ -47,7 +47,7 @@ def load_dataset(dataset_id):
     if dataset_id == "Moran_2021":
         return pd.read_csv("Moran_2021_corrected.csv")
 
-    return sd.load_dataset(dataset_id).to_frame()
+    return sd.load_dataset(dataset_id).to_frame().reset_index()
 
 
 
