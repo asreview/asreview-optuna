@@ -1,0 +1,70 @@
+---
+- name: Setup ASReview Optuna Environment
+  hosts: localhost
+  become: yes
+  vars:
+    repo_url: "https://github.com/asreview/asreview-optuna.git"
+    repo_dir: "asreview-optuna/asreview2-opt"
+
+  tasks:
+
+    - name: Ensure the system is updated
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Reboot the system
+      reboot:
+        msg: "Rebooting after upgrade"
+        connect_timeout: 30
+
+    - name: Clone the repository
+      git:
+        repo: "{{ repo_url }}"
+        dest: "/home/{{ ansible_user }}/asreview-optuna"
+        update: yes
+        version: "{{ branch_name }}"
+      become: no
+
+    - name: Install python3.12-venv
+      apt:
+        name: python3.12-venv
+        state: present
+
+    - name: Create Python virtual environment
+      ansible.builtin.command:
+        cmd: "python3 -m venv .venv"
+        chdir: "/home/{{ ansible_user }}/{{ repo_dir }}"
+      become: no
+
+    - name: Activate virtual environment and install requirements
+      shell: |
+        source .venv/bin/activate
+        pip3 install -r requirements.txt
+      args:
+        chdir: "/home/{{ ansible_user }}/{{ repo_dir }}"
+      become: no
+
+    - name: Create dataset pickles
+      ansible.builtin.command:
+        cmd: "python3 feature_matrices.py"
+        chdir: "/home/{{ ansible_user }}/{{ repo_dir }}"
+      become: no
+
+    - name: Set DB_URI environment variable
+      lineinfile:
+        path: "/home/{{ ansible_user }}/.bashrc"
+        line: "export DB_URI={{ db_uri }}"
+        create: yes
+      become: no
+
+    - name: Create a tmux session for Optuna
+      shell: |
+        tmux new -d -s optuna "bash -c 'cd {{ repo_dir }} && source .venv/bin/activate && python3 main.py'"
+      args:
+        chdir: "/home/{{ ansible_user }}/{{ repo_dir }}"
+      become: no
+
+    - name: Display setup completion message
+      debug:
+        msg: "ASReview Optuna environment is set up. Access the dashboard at http://[Exoscale instance IP]:8080. Use 'tmux attach -t optuna' to manage the Optuna session."

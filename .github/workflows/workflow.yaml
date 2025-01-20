@@ -1,0 +1,31 @@
+name: Deploy ASReview2 Optuna Environment
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Install Ansible
+      run: |
+        sudo apt update
+        sudo apt install -y ansible
+
+    - name: Set Up SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo "StrictHostKeyChecking=no" >> ~/.ssh/config
+
+    - name: Run Ansible Playbook
+      run: |
+        ansible-playbook asreview2-optuna/ansible/ansible_optuna_playbook.yml \
+          --extra-vars "branch_name=${{ github.ref_name }} exo_api_key=${{ secrets.EXO_API_KEY }} db_uri=${{ secrets.DB_API }}"
