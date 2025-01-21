@@ -20,23 +20,21 @@ jobs:
 
     - name: Install Exoscale CLI
       run: |
-        curl -L https://github.com/exoscale/cli/releases/latest/download/exo-linux-amd64 -o exo
-        chmod +x exo
-        sudo mv exo /usr/local/bin/
+        curl -fsSL https://raw.githubusercontent.com/exoscale/cli/master/install-latest.sh | sh
 
-    - name: Authenticate with Exoscale
+    - name: Create exo config toml file
       env:
         EXOSCALE_API_KEY: ${{ secrets.EXOSCALE_API_KEY }}
         EXOSCALE_API_SECRET: ${{ secrets.EXOSCALE_API_SECRET }}
       run: |
-        echo "Authenticating with Exoscale..."
-        exo config init --api-key "$EXOSCALE_API_KEY" --api-secret "$EXOSCALE_API_SECRET"
+        echo 'defaultaccount = "github-actions"' > $HOME/.config/exoscale/config.toml
+        echo '[[accounts]]' >> $HOME/.config/exoscale/config.toml
+        echo 'key = "$EXOSCALE_API_KEY"' >> $HOME/.config/exoscale/config.toml
+        echo 'name = "github-actions"' >> $HOME/.config/exoscale/config.toml
+        echo 'secret = "$EXOSCALE_API_SECRET"' >> $HOME/.config/exoscale/config.toml
 
     - name: Find and Start Stopped Instance
       id: start-instance
-      env:
-        EXOSCALE_API_KEY: ${{ secrets.EXOSCALE_API_KEY }}
-        EXOSCALE_API_SECRET: ${{ secrets.EXOSCALE_API_SECRET }}
       run: |
         INSTANCE_NAME=$(exo compute instance list --output-format=json | jq -r '.[] | select(.name | test("^asreview2-optuna-")) | select(.state == "Stopped") | .name' | head -n 1)
 
