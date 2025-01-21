@@ -1,4 +1,4 @@
-name: Deploy ASReview2 Optuna Environment
+name: Deploy ASReview Optuna Environment
 
 on:
   push:
@@ -13,19 +13,74 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v3
 
-    - name: Install Ansible
+    - name: Install Dependencies
       run: |
         sudo apt update
-        sudo apt install -y ansible
+        sudo apt install -y ansible jq curl
 
-    - name: Set Up SSH
+    - name: Install Exoscale CLI
+      run: |
+        curl -L https://github.com/exoscale/cli/releases/latest/download/exo-linux-amd64 -o exo
+        chmod +x exo
+        sudo mv exo /usr/local/bin/
+
+    - name: Authenticate with Exoscale
+      env:
+        EXOSCALE_API_KEY: ${{ secrets.EXOSCALE_API_KEY }}
+        EXOSCALE_API_SECRET: ${{ secrets.EXOSCALE_API_SECRET }}
+      run: |
+        echo "Authenticating with Exoscale..."
+        exo config init --api-key "$EXOSCALE_API_KEY" --api-secret "$EXOSCALE_API_SECRET"
+
+    - name: Find and Start Stopped Instance
+      id: start-instance
+      env:
+        EXOSCALE_API_KEY: ${{ secrets.EXOSCALE_API_KEY }}
+        EXOSCALE_API_SECRET: ${{ secrets.EXOSCALE_API_SECRET }}
+      run: |
+        INSTANCE_NAME=$(exo compute instance list --output-format=json | jq -r '.[] | select(.name | test("^asreview2-optuna-")) | select(.state == "Stopped") | .name' | head -n 1)
+
+        if [ -z "$INSTANCE_NAME" ]; then
+          echo "No stopped instance found with name pattern 'asreview2-optuna-*'. Exiting."
+          exit 1
+        fi
+
+        echo "Found stopped instance: $INSTANCE_NAME"
+        echo "instance_name=$INSTANCE_NAME" >> $GITHUB_ENV
+
+        echo "Starting instance $INSTANCE_NAME..."
+        exo compute instance start "$INSTANCE_NAME"
+
+        while true; do
+          STATE=$(exo compute instance show "$INSTANCE_NAME" --output-format=json | jq -r '.state')
+          if [ "$STATE" == "Running" ]; then
+            echo "Instance $INSTANCE_NAME is now running."
+            break
+          fi
+          echo "Waiting for instance to start..."
+          sleep 5
+        done
+
+        INSTANCE_IP=$(exo compute instance show "$INSTANCE_NAME" --output-format=json | jq -r '.ip')
+
+        if [ -z "$INSTANCE_IP" ]; then
+          echo "Failed to retrieve IP address for instance $INSTANCE_NAME. Exiting."
+          exit 1
+        fi
+
+        echo "Instance IP: $INSTANCE_IP"
+        echo "instance_ip=$INSTANCE_IP" >> $GITHUB_ENV
+
+    - name: Set Up SSH Private Key
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        echo "StrictHostKeyChecking=no" >> ~/.ssh/config
 
-    - name: Run Ansible Playbook
+    - name: Deploy Ansible Playbook
+      env:
+        ANSIBLE_HOST_KEY_CHECKING: "False"
       run: |
-        ansible-playbook asreview2-optuna/ansible/ansible_optuna_playbook.yml \
-          --extra-vars "branch_name=${{ github.ref_name }} exo_api_key=${{ secrets.EXO_API_KEY }} db_uri=${{ secrets.DB_API }}"
+        ansible-playbook ansible_optuna_playbook.yml \
+          --extra-vars "branch_name=${{ github.ref_name }} db_uri=${{ secrets.DB_URI }} ansible_host=${{ env.instance_ip }}" \
+          -u root --private-key ~/.ssh/id_rsa
