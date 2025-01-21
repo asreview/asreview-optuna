@@ -35,7 +35,7 @@ OPTUNA_N_JOBS = 1 if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 2
 # Early stopping condition variables
 MIN_TRIALS = 100
 N_HISTORY = 5
-STOPPING_THRESHOLD = 0.001
+STOPPING_THRESHOLD = 0.0001
 
 dataset_sizes = {
     dataset.name: dataset.metadata["data"]["n_records"]
@@ -126,7 +126,7 @@ def process_row(row, clf_params, fe_params, ratio):
             query_strategy=MaxQuery(),
             classifier=clf,
             balance_strategy=blc,
-            n_query=lambda x: n_query(x, dataset_sizes[row["dataset_id"]]),
+            n_query=lambda x: n_query_extreme(x, dataset_sizes[row["dataset_id"]]),
         )
     else:
         X = sd.Dataset(row["dataset_id"]).to_frame().reset_index()
@@ -138,7 +138,7 @@ def process_row(row, clf_params, fe_params, ratio):
             classifier=clf,
             balance_strategy=blc,
             feature_extraction=fe,
-            n_query=lambda x: n_query(x, dataset_sizes[row["dataset_id"]]),
+            n_query=lambda x: n_query_extreme(x, dataset_sizes[row["dataset_id"]]),
         )
 
     simulate = asreview.Simulate(
