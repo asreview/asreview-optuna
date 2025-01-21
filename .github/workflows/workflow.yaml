@@ -83,4 +83,4 @@ jobs:
       run: |
         ansible-playbook ansible_optuna_playbook.yml \
           --extra-vars "branch_name=${{ github.ref_name }} db_uri=${{ secrets.DB_URI }} ansible_host=${{ env.instance_ip }}" \
-          -u root --private-key ~/.ssh/id_rsa
+          -u ubuntu --private-key ~/.ssh/id_rsa
