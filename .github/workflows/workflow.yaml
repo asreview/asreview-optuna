@@ -17,56 +17,99 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y ansible jq curl
-
-    - name: Install Exoscale CLI
-      run: |
-        curl -fsSL https://raw.githubusercontent.com/exoscale/cli/master/install-latest.sh | sh
-
-    - name: Create exo config toml file
-      env:
-        EXOSCALE_API_KEY: ${{ secrets.EXOSCALE_API_KEY }}
-        EXOSCALE_API_SECRET: ${{ secrets.EXOSCALE_API_SECRET }}
-      run: |
-        echo 'defaultaccount = "github-actions"' > $HOME/.config/exoscale/config.toml
-        echo '[[accounts]]' >> $HOME/.config/exoscale/config.toml
-        echo 'key = "$EXOSCALE_API_KEY"' >> $HOME/.config/exoscale/config.toml
-        echo 'name = "github-actions"' >> $HOME/.config/exoscale/config.toml
-        echo 'secret = "$EXOSCALE_API_SECRET"' >> $HOME/.config/exoscale/config.toml
+    
+    - name: Setup Exoscale CLI
+      uses: nhedger/setup-exoscale@v3
+      with:
+        account: github-actions
+        zone: de-fra-1
+        key: ${{ secrets.EXOSCALE_API_KEY }}
+        secret: ${{ secrets.EXOSCALE_API_SECRET }}
 
     - name: Find and Start Stopped Instance
       id: start-instance
       run: |
-        INSTANCE_NAME=$(exo compute instance list --output-format=json | jq -r '.[] | select(.name | test("^asreview2-optuna-")) | select(.state == "Stopped") | .name' | head -n 1)
+        set +e
+        
+        COUNT=0
+        SUCCESS=false
 
-        if [ -z "$INSTANCE_NAME" ]; then
-          echo "No stopped instance found with name pattern 'asreview2-optuna-*'. Exiting."
-          exit 1
-        fi
+        while [ $COUNT -lt 5 ]; do
+          INSTANCE_NAME=$(exo compute instance list --output-format=json | jq -r '.[] | select(.name | test("^asreview2-optuna-")) | select(.state == "stopped") | .name' | head -n 1)
 
-        echo "Found stopped instance: $INSTANCE_NAME"
-        echo "instance_name=$INSTANCE_NAME" >> $GITHUB_ENV
-
-        echo "Starting instance $INSTANCE_NAME..."
-        exo compute instance start "$INSTANCE_NAME"
-
-        while true; do
-          STATE=$(exo compute instance show "$INSTANCE_NAME" --output-format=json | jq -r '.state')
-          if [ "$STATE" == "Running" ]; then
-            echo "Instance $INSTANCE_NAME is now running."
-            break
+          if [ -n "$INSTANCE_NAME" ]; then
+              SUCCESS=true
+              break
           fi
-          echo "Waiting for instance to start..."
+
+          COUNT=$((COUNT + 1))
+          echo "Attempt $COUNT of 5 failed. Retrying in 5 seconds..."
           sleep 5
         done
 
-        INSTANCE_IP=$(exo compute instance show "$INSTANCE_NAME" --output-format=json | jq -r '.ip')
+        if [ "$SUCCESS" = true ]; then
+            echo "Instance name: $INSTANCE_NAME"
+        else
+            echo "Failed to retrieve instance name after 5 attempts."
+            exit 1
+        fi
+
+        echo "instance_name=$INSTANCE_NAME" >> $GITHUB_ENV
+
+        echo "Starting instance $INSTANCE_NAME..."
+
+        COUNT=0
+        SUCCESS=false
+
+        while [ $COUNT -lt 5 ]; do
+          exo compute instance start -f "$INSTANCE_NAME"
+
+          EXIT_STATUS=$?
+
+          if [ $EXIT_STATUS -eq 0 ]; then
+              SUCCESS=true
+              break
+          fi
+          COUNT=$((COUNT + 1))
+          echo "Attempt $COUNT of 5 failed. Retrying in 5 seconds..."
+          sleep 5
+        done
+
+        if [ "$SUCCESS" = true ]; then
+            echo "Instance started successfully."
+        else
+            echo "Failed to start the instance after 5 attempts."
+            exit 1
+        fi
+
+        COUNT=0
+        SUCCESS=false
+
+        while [ $COUNT -lt 5 ]; do
+          INSTANCE_IP=$(exo compute instance show "$INSTANCE_NAME" --output-format=json | jq -r '.ip_address')
+          
+          if [ -n "$INSTANCE_IP" ]; then
+              SUCCESS=true
+              break
+          fi
+          
+          COUNT=$((COUNT + 1))
+          echo "Attempt $COUNT of 5 failed. Retrying in 5 seconds..."
+          sleep 5
+        done
+
+        if [ "$SUCCESS" = true ]; then
+            echo "Instance IP: $INSTANCE_IP"
+        else
+            echo "Failed to retrieve the instance IP after 5 attempts."
+            exit 1
+        fi
 
         if [ -z "$INSTANCE_IP" ]; then
           echo "Failed to retrieve IP address for instance $INSTANCE_NAME. Exiting."
           exit 1
         fi
 
-        echo "Instance IP: $INSTANCE_IP"
         echo "instance_ip=$INSTANCE_IP" >> $GITHUB_ENV
 
     - name: Set Up SSH Private Key
@@ -74,11 +117,18 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
+    
+    - name: Create Ansible Inventory File
+      run: |
+        echo "[asreview2]" > inventory.ini
+        echo "${{ env.instance_ip }}" >> inventory.ini
 
     - name: Deploy Ansible Playbook
       env:
         ANSIBLE_HOST_KEY_CHECKING: "False"
       run: |
-        ansible-playbook ansible_optuna_playbook.yml \
-          --extra-vars "branch_name=${{ github.ref_name }} db_uri=${{ secrets.DB_URI }} ansible_host=${{ env.instance_ip }}" \
-          -u ubuntu --private-key ~/.ssh/id_rsa
+        echo "Sleep to ensure exo server is up..."
+        sleep 10
+        ansible-playbook ./asreview2-optuna/ansible/ansible_optuna_playbook.yml \
+          --extra-vars "branch_name=${{ github.ref_name }} db_uri=${{ secrets.DB_API }}" \
+          -u ubuntu --private-key ~/.ssh/id_rsa -i inventory.ini 
