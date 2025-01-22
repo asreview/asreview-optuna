@@ -20,10 +20,10 @@ from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
 VERSION = 1
+STUDY_SET = "full"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
-N_STUDIES = 260
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "tfidf" # Options: "tfidf", "onehot"
+FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot"
 PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
 
@@ -41,6 +41,13 @@ dataset_sizes = {
     dataset.name: dataset.metadata["data"]["n_records"]
     for dataset in sd.iter_datasets()
 }
+
+
+def load_dataset(dataset_id):
+    if dataset_id == "Moran_2021":
+        return pd.read_csv(Path("datasets", "Moran_2021_corrected_shuffled_raw.csv"))
+
+    return sd.load_dataset(dataset_id).to_frame().reset_index()
 
 
 def n_query(results, n_records):
@@ -69,15 +76,6 @@ def n_query_extreme(results, n_records):
             return 5
         else:
             return 1
-
-
-def sort_studies(studies, dataset_sizes):
-    studies_sorter = sorted(dataset_sizes.items(), key=lambda x: x[1], reverse=True)
-
-    return studies.sort_values(
-        "dataset_id",
-        key=lambda x: x.map({val[0]: i for i, val in enumerate(studies_sorter)}),
-    )
 
 
 # Function to run the loop in parallel
@@ -126,10 +124,11 @@ def process_row(row, clf_params, fe_params, ratio):
             query_strategy=MaxQuery(),
             classifier=clf,
             balance_strategy=blc,
-            n_query=lambda x: n_query_extreme(x, dataset_sizes[row["dataset_id"]]),
+            n_query=lambda results: n_query_extreme(results, X.shape[0]),
         )
     else:
-        X = sd.Dataset(row["dataset_id"]).to_frame().reset_index()
+        X = load_dataset(row["dataset_id"])
+
         labels = X["label_included"]
         fe = feature_extractors[FEATURE_EXTRACTOR_TYPE](**fe_params)
 
@@ -138,7 +137,7 @@ def process_row(row, clf_params, fe_params, ratio):
             classifier=clf,
             balance_strategy=blc,
             feature_extraction=fe,
-            n_query=lambda x: n_query_extreme(x, dataset_sizes[row["dataset_id"]]),
+            n_query=lambda results: n_query_extreme(results, X.shape[0]),
         )
 
     simulate = asreview.Simulate(
@@ -160,29 +159,32 @@ def process_row(row, clf_params, fe_params, ratio):
     return row["dataset_id"], loss(padded_results)
 
 
-def objective(trial):
-    # Use normal distribution for ratio (ratio effect is linear)
-    ratio = trial.suggest_float("ratio", 1.0, 5.0)
-    # ratio = 1.5
-    clf_params = classifier_params[CLASSIFIER_TYPE](trial)
-    fe_params = feature_extractor_params[FEATURE_EXTRACTOR_TYPE](trial)
+def objective_report(report_order):
+    def objective(trial):
+        # Use normal distribution for ratio (ratio effect is linear)
+        ratio = trial.suggest_float("ratio", 1.0, 5.0)
+        # ratio = 1.5
+        clf_params = classifier_params[CLASSIFIER_TYPE](trial)
+        fe_params = feature_extractor_params[FEATURE_EXTRACTOR_TYPE](trial)
 
-    if PARALLELIZE_OBJECTIVE:
-        result = run_parallel(
-            studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
-        )
-    else:
-        result = run_sequential(
-            studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
-        )
+        if PARALLELIZE_OBJECTIVE:
+            result = run_parallel(
+                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
+            )
+        else:
+            result = run_sequential(
+                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
+            )
 
-    all_losses = []
-    for i, dataset_id in enumerate(dataset_sizes.keys()):
-        losses = result[dataset_id] if dataset_id in result else [0]
-        trial.report(np.mean(losses), i)
-        all_losses += losses
+        all_losses = []
+        for i, dataset_id in enumerate(report_order):
+            losses = result[dataset_id] if dataset_id in result else [0]
+            trial.report(np.mean(losses), i)
+            all_losses += losses
 
-    return np.mean(all_losses)
+        return np.mean(all_losses)
+
+    return objective
 
 
 class StopWhenOptimumReached:
@@ -208,13 +210,8 @@ class StopWhenOptimumReached:
 
 if __name__ == "__main__":
     # list of studies
-    studies = pd.read_json("synergy_studies_1000.jsonl", lines=True).head(n=N_STUDIES)
-
-    studies = (
-        sort_studies(studies=studies, dataset_sizes=dataset_sizes)
-        .groupby("dataset_id")
-        .head(2)
-    )
+    studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True)
+    unique_datasets = sorted(set([s["dataset_id"] for s in studies]))
 
     sampler = optuna.samplers.TPESampler()
     study_stop_cb = StopWhenOptimumReached(
@@ -225,14 +222,14 @@ if __name__ == "__main__":
         storage=os.getenv(
             "DB_URI", "sqlite:///db.sqlite3"
         ),  # Specify the storage URL here.
-        study_name=f"ASReview2-{CLASSIFIER_TYPE}-{len(studies)}-{VERSION}",
+        study_name=f"ASReview2-{STUDY_SET}-{CLASSIFIER_TYPE}-{VERSION}",
         direction="minimize",
         sampler=sampler,
         load_if_exists=True,
     )
 
     study.optimize(
-        objective,
+        objective_report(unique_datasets),
         n_trials=OPTUNA_N_TRIALS,
         timeout=OPTUNA_TIMEOUT,
         callbacks=[study_stop_cb],
