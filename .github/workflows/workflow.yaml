@@ -17,7 +17,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y ansible jq curl
-    
+
     - name: Setup Exoscale CLI
       uses: nhedger/setup-exoscale@v3
       with:
@@ -30,83 +30,75 @@ jobs:
       id: start-instance
       run: |
         set +e
-        
+        INSTANCE_NAME=""
         COUNT=0
-        SUCCESS=false
 
         while [ $COUNT -lt 5 ]; do
-          INSTANCE_NAME=$(exo compute instance list --output-format=json | jq -r '.[] | select(.name | test("^asreview2-optuna-")) | select(.state == "stopped") | .name' | head -n 1)
+          INSTANCE_NAME=$(exo compute instance list --output-format=json | \
+            jq -r '.[] | select(.name | test("^asreview2-optuna-")) | select(.state == "stopped") | .name' | head -n 1)
 
           if [ -n "$INSTANCE_NAME" ]; then
-              SUCCESS=true
-              break
+            echo "Found stopped instance: $INSTANCE_NAME"
+            break
           fi
 
           COUNT=$((COUNT + 1))
-          echo "Attempt $COUNT of 5 failed. Retrying in 5 seconds..."
+          echo "Attempt $COUNT of 5 to find a stopped instance failed. Retrying in 5 seconds..."
           sleep 5
         done
 
-        if [ "$SUCCESS" = true ]; then
-            echo "Instance name: $INSTANCE_NAME"
-        else
-            echo "Failed to retrieve instance name after 5 attempts."
-            exit 1
+        if [ -z "$INSTANCE_NAME" ]; then
+          echo "Failed to find any stopped instances after 5 attempts."
+          exit 1
         fi
 
         echo "instance_name=$INSTANCE_NAME" >> $GITHUB_ENV
 
-        echo "Starting instance $INSTANCE_NAME..."
-
+    - name: Start the Instance
+      run: |
+        set +e
         COUNT=0
         SUCCESS=false
 
         while [ $COUNT -lt 5 ]; do
-          exo compute instance start -f "$INSTANCE_NAME"
-
-          EXIT_STATUS=$?
-
-          if [ $EXIT_STATUS -eq 0 ]; then
-              SUCCESS=true
-              break
+          echo "Attempting to start instance: ${{ env.instance_name }}"
+          exo compute instance start -f "${{ env.instance_name }}"
+          if [ $? -eq 0 ]; then
+            SUCCESS=true
+            break
           fi
+
           COUNT=$((COUNT + 1))
-          echo "Attempt $COUNT of 5 failed. Retrying in 5 seconds..."
+          echo "Attempt $COUNT of 5 to start instance failed. Retrying in 5 seconds..."
           sleep 5
         done
 
-        if [ "$SUCCESS" = true ]; then
-            echo "Instance started successfully."
-        else
-            echo "Failed to start the instance after 5 attempts."
-            exit 1
+        if [ "$SUCCESS" != "true" ]; then
+          echo "Failed to start the instance after 5 attempts."
+          exit 1
         fi
 
+    - name: Retrieve Instance IP
+      run: |
+        set +e
         COUNT=0
-        SUCCESS=false
+        INSTANCE_IP=""
 
         while [ $COUNT -lt 5 ]; do
-          INSTANCE_IP=$(exo compute instance show "$INSTANCE_NAME" --output-format=json | jq -r '.ip_address')
-          
+          INSTANCE_IP=$(exo compute instance show "${{ env.instance_name }}" --output-format=json | jq -r '.ip_address')
+
           if [ -n "$INSTANCE_IP" ]; then
-              SUCCESS=true
-              break
+            echo "Retrieved IP: $INSTANCE_IP"
+            break
           fi
-          
+
           COUNT=$((COUNT + 1))
-          echo "Attempt $COUNT of 5 failed. Retrying in 5 seconds..."
+          echo "Attempt $COUNT of 5 to retrieve instance IP failed. Retrying in 5 seconds..."
           sleep 5
         done
-
-        if [ "$SUCCESS" = true ]; then
-            echo "Instance IP: $INSTANCE_IP"
-        else
-            echo "Failed to retrieve the instance IP after 5 attempts."
-            exit 1
-        fi
 
         if [ -z "$INSTANCE_IP" ]; then
-          echo "Failed to retrieve IP address for instance $INSTANCE_NAME. Exiting."
+          echo "Failed to retrieve IP address for instance after 5 attempts."
           exit 1
         fi
 
@@ -117,7 +109,7 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-    
+
     - name: Create Ansible Inventory File
       run: |
         echo "[asreview2]" > inventory.ini
@@ -127,8 +119,8 @@ jobs:
       env:
         ANSIBLE_HOST_KEY_CHECKING: "False"
       run: |
-        echo "Sleep to ensure exo server is up..."
+        echo "Sleeping to ensure instance is ready..."
         sleep 10
         ansible-playbook ./asreview2-optuna/ansible/ansible_optuna_playbook.yml \
           --extra-vars "branch_name=${{ github.ref_name }} db_uri=${{ secrets.DB_API }}" \
-          -u ubuntu --private-key ~/.ssh/id_rsa -i inventory.ini 
+          -u ubuntu --private-key ~/.ssh/id_rsa -i inventory.ini
