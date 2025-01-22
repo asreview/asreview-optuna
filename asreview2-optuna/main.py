@@ -23,7 +23,7 @@ VERSION = 1
 STUDY_SET = "full"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "tfidf" # Options: "tfidf", "onehot"
+FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot"
 PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
 
@@ -42,13 +42,12 @@ dataset_sizes = {
     for dataset in sd.iter_datasets()
 }
 
-def load_dataset(dataset_id):
 
+def load_dataset(dataset_id):
     if dataset_id == "Moran_2021":
-        return pd.read_csv("Moran_2021_corrected.csv")
+        return pd.read_csv(Path("datasets", "Moran_2021_corrected_shuffled_raw.csv"))
 
     return sd.load_dataset(dataset_id).to_frame().reset_index()
-
 
 
 def n_query(results, n_records):
@@ -128,7 +127,6 @@ def process_row(row, clf_params, fe_params, ratio):
             n_query=lambda results: n_query(results, X.shape[0]),
         )
     else:
-
         X = load_dataset(row["dataset_id"])
 
         labels = X["label_included"]
@@ -162,7 +160,6 @@ def process_row(row, clf_params, fe_params, ratio):
 
 
 def objective_report(report_order):
-
     def objective(trial):
         # Use normal distribution for ratio (ratio effect is linear)
         ratio = trial.suggest_float("ratio", 1.0, 5.0)
