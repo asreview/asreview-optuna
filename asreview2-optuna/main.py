@@ -30,10 +30,10 @@ PARALLELIZE_OBJECTIVE = True
 # Optuna variables
 OPTUNA_N_TRIALS = 500
 OPTUNA_TIMEOUT = None  # in seconds
-OPTUNA_N_JOBS = 1 if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 2
+OPTUNA_N_JOBS = 1 if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 1
 
 # Early stopping condition variables
-MIN_TRIALS = 100
+MIN_TRIALS = 400
 N_HISTORY = 5
 STOPPING_THRESHOLD = 0.0001
 
@@ -47,7 +47,7 @@ def load_dataset(dataset_id):
     if dataset_id == "Moran_2021":
         return pd.read_csv(Path("datasets", "Moran_2021_corrected_shuffled_raw.csv"))
 
-    return sd.load_dataset(dataset_id).to_frame().reset_index()
+    return sd.Dataset(dataset_id).to_frame().reset_index()
 
 
 def n_query(results, n_records):
@@ -81,7 +81,7 @@ def n_query_extreme(results, n_records):
 # Function to run the loop in parallel
 def run_parallel(studies, *args, **kwargs):
     losses = defaultdict(list)
-    with ProcessPoolExecutor(max_workers=mp.cpu_count() - 2) as executor:
+    with ProcessPoolExecutor(max_workers=mp.cpu_count() - 1) as executor:
         # Submit tasks
         futures = {
             executor.submit(process_row, row, *args, **kwargs): i
@@ -211,7 +211,7 @@ class StopWhenOptimumReached:
 if __name__ == "__main__":
     # list of studies
     studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True)
-    unique_datasets = sorted(set([s["dataset_id"] for s in studies]))
+    report_order = sorted(set(studies["dataset_id"]))
 
     sampler = optuna.samplers.TPESampler()
     study_stop_cb = StopWhenOptimumReached(
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     )
 
     study.optimize(
-        objective_report(unique_datasets),
+        objective_report(report_order),
         n_trials=OPTUNA_N_TRIALS,
         timeout=OPTUNA_TIMEOUT,
         callbacks=[study_stop_cb],
