@@ -120,7 +120,7 @@ jobs:
         ANSIBLE_HOST_KEY_CHECKING: "False"
       run: |
         echo "Sleeping to ensure instance is ready..."
-        sleep 10
+        sleep 20
         ansible-playbook ./asreview2-optuna/ansible/ansible_optuna_playbook.yml \
           --extra-vars "branch_name=${{ github.ref_name }} db_uri=${{ secrets.DB_API }}" \
           -u ubuntu --private-key ~/.ssh/id_rsa -i inventory.ini
