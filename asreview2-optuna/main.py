@@ -20,7 +20,7 @@ from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
 VERSION = 1
-STUDY_SET = "demo"
+STUDY_SET = "full"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
 FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot"
@@ -162,7 +162,7 @@ def process_row(row, clf_params, fe_params, ratio):
 def objective_report(report_order):
     def objective(trial):
         # Use normal distribution for ratio (ratio effect is linear)
-        ratio = trial.suggest_float("ratio", 1.0, 5.0)
+        ratio = trial.suggest_float("ratio", 1.0, 3.0)
         # ratio = 1.5
         clf_params = classifier_params[CLASSIFIER_TYPE](trial)
         fe_params = feature_extractor_params[FEATURE_EXTRACTOR_TYPE](trial)
