@@ -20,7 +20,11 @@ def logistic_params(trial: optuna.trial.FrozenTrial):
 
     solver = trial.suggest_categorical("log__solver", ["lbfgs", "saga"])
 
-    return {"C": C, "solver": solver}
+    max_iter = 100
+    if solver == "saga":
+        max_iter = 1000
+
+    return {"C": C, "solver": solver, "max_iter": max_iter}
 
 
 def svm_params(trial: optuna.trial.FrozenTrial):
