@@ -20,7 +20,7 @@ from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
 VERSION = 1
-STUDY_SET = "full"
+STUDY_SET = "demo"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 CLASSIFIER_TYPE = "rf"  # Options: "nb", "log", "svm", "rf"
 FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot"
