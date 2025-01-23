@@ -18,7 +18,7 @@ def logistic_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for C (C effect is non-linear)
     C = trial.suggest_float("log__C", 0.01, 10, log=True)
 
-    solver = "lbfgs"
+    solver = trial.suggest_categorical("log__solver", ["lbfgs", "saga"])
 
     return {"C": C, "solver": solver}
 
