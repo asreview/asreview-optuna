@@ -162,7 +162,7 @@ def process_row(row, clf_params, fe_params, ratio):
 def objective_report(report_order):
     def objective(trial):
         # Use normal distribution for ratio (ratio effect is linear)
-        ratio = trial.suggest_float("ratio", 1.0, 3.0)
+        ratio = trial.suggest_float("ratio", 1.0, 2.0)
         # ratio = 1.5
         clf_params = classifier_params[CLASSIFIER_TYPE](trial)
         fe_params = feature_extractor_params[FEATURE_EXTRACTOR_TYPE](trial)
