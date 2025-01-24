@@ -37,10 +37,10 @@ def svm_params(trial: optuna.trial.FrozenTrial):
 
 def random_forest_params(trial: optuna.trial.FrozenTrial):
     # Use normal distribution for n_estimators (n_estimators effect is linear)
-    n_estimators = trial.suggest_int("rf__n_estimators", 50, 500)
+    n_estimators = trial.suggest_int("rf__n_estimators", 50, 200)
 
     # Use normal distribution for max_features (max_features effect is linear)
-    max_features = trial.suggest_int("rf__max_features", 2, 20)
+    max_features = trial.suggest_categorical("rf__max_features", ["sqrt", "log2"])
     return {"n_estimators": n_estimators, "max_features": max_features}
 
 
