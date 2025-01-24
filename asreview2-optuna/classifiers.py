@@ -3,9 +3,10 @@ import optuna
 from asreview.models.classifiers import (
     NaiveBayesClassifier,
     LogisticClassifier,
-    SVMClassifier,
     RandomForestClassifier,
 )
+
+from sklearn.svm import LinearSVC
 
 
 def naive_bayes_params(trial: optuna.trial.FrozenTrial):
@@ -22,17 +23,11 @@ def logistic_params(trial: optuna.trial.FrozenTrial):
 
 def svm_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for C (C effect is non-linear)
-    C = trial.suggest_float("svm__C", 0.05, 10, log=True)
+    C = trial.suggest_float("svm__C", 0.01, 10, log=True)
 
-    # Use categorical for kernel
-    kernel = "linear"#trial.suggest_categorical("svm__kernel", ["linear", "rbf"])
-
-    # Only set gamma to a value if we use rbf kernel
-    gamma = "scale"
-    if kernel == "rbf":
-        # Use logarithmic normal distribution for gamma (gamma effect is non-linear)
-        gamma = trial.suggest_float("svm__gamma", 1e-4, 10, log=True)
-    return {"C": C, "kernel": kernel, "gamma": gamma}
+    loss = trial.suggest_categorical("svm__loss", ["hinge", "squared_hinge"])
+    
+    return {"C": C, "loss": loss}
 
 
 def random_forest_params(trial: optuna.trial.FrozenTrial):
@@ -52,9 +47,25 @@ classifier_params = {
 }
 
 
+class LinearSVMClassifier(LinearSVC):
+    """Support vector machine classifier.
+
+    Based on the sklearn implementation of the support vector machine
+    sklearn.svm.LinearSVC.
+    """
+
+    name = "svm"
+    label = "Support vector machine"
+
+    def __init__(self, C=15.4, **kwargs):
+        super().__init__(
+            C=C,
+            **kwargs,
+        )
+
 classifiers = {
     "nb": NaiveBayesClassifier,
     "log": LogisticClassifier,
-    "svm": SVMClassifier,
+    "svm": LinearSVMClassifier,
     "rf": RandomForestClassifier,
 }
