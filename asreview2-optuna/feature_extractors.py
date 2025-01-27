@@ -1,7 +1,8 @@
 import optuna
 
-from asreview.models.feature_extraction import Tfidf
-from asreview.models.feature_extraction import OneHot
+from asreview.models.feature_extraction import Tfidf, OneHot
+from sentence_transformers import SentenceTransformer
+from sklearn.pipeline import Pipeline
 
 
 def tfidf_params(trial: optuna.trial.FrozenTrial):
@@ -40,14 +41,35 @@ def onehot_params(trial: optuna.trial.FrozenTrial):
         "ngram_range": ngram_range,
     }
 
+def labse_params(trial: optuna.trial.FrozenTrial):
+    return {}
+
 
 feature_extractor_params = {
     "tfidf": tfidf_params,
     "onehot": onehot_params,
+    "labse": labse_params,
 }
+
+
+class LaBSE(Pipeline):
+    """LaBSE feature extraction.
+
+    Based on the huggingface LaBSE model feature extraction
+    """
+
+    name = "labse"
+    label = "LaBSE"
+
+    def __init__(self, **kwargs):
+        self.model = SentenceTransformer('sentence-transformers/LaBSE', **kwargs)
+    
+    def encode(self, text: str | list[str]):
+        return self.model.encode(text)
 
 
 feature_extractors = {
     "tfidf": Tfidf,
     "onehot": OneHot,
+    "labse": LaBSE
 }

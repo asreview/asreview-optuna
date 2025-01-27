@@ -16,14 +16,14 @@ from asreview.models.balance import Balanced
 from asreview.models.query import MaxQuery
 from asreview.learner import ActiveLearningCycle
 from classifiers import classifier_params, classifiers
-from feature_extractors import feature_extractor_params, feature_extractors
+from feature_extractors import feature_extractor_params, feature_extractors, LaBSE
 
 # Study variables
 VERSION = 1
 STUDY_SET = "full"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", "pickles")
 CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot"
+FEATURE_EXTRACTOR_TYPE = "labse"  # Options: "tfidf", "onehot", "labse"
 PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
 
@@ -126,6 +126,23 @@ def process_row(row, clf_params, fe_params, ratio):
             balance_strategy=blc,
             n_query=lambda results: n_query_extreme(results, X.shape[0]),
         )
+    elif FEATURE_EXTRACTOR_TYPE == "labse":
+        dataset = load_dataset(row["dataset_id"])
+        labels = dataset["label_included"]
+        combined_texts = (
+            dataset["title"].fillna("") + " " + dataset["abstract"].fillna("")
+        ).tolist()
+
+        model = LaBSE()
+        X = model.encode(combined_texts)
+
+        alc = ActiveLearningCycle(
+            query_strategy=MaxQuery(),
+            classifier=clf,
+            balance_strategy=blc,
+            n_query=lambda results: n_query_extreme(results, X.shape[0]),
+        )
+
     else:
         X = load_dataset(row["dataset_id"])
 
