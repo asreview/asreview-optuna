@@ -1,10 +1,11 @@
-from pathlib import Path
 import pickle
-from sentence_transformers import SentenceTransformer
-from tqdm import tqdm
+from pathlib import Path
+
+import pandas as pd
 import synergy_dataset as sd  # Assuming this is your custom dataset handler
 import torch
-import pandas as pd
+from sentence_transformers import SentenceTransformer
+from tqdm import tqdm
 
 FORCE = False
 

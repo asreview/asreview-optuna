@@ -1,11 +1,10 @@
-from pathlib import Path
 import pickle
+from pathlib import Path
 
-import synergy_dataset as sd
 import pandas as pd
-from tqdm import tqdm
-
+import synergy_dataset as sd
 from asreview.models.feature_extraction import Tfidf
+from tqdm import tqdm
 
 FORCE = False
 

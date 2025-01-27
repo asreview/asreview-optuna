@@ -1,20 +1,20 @@
-import os
-from collections import defaultdict
 import multiprocessing as mp
+import os
 import pickle
+from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
+import asreview
 import numpy as np
 import optuna
 import pandas as pd
+import requests
 import synergy_dataset as sd
-
-import asreview
+from asreview.learner import ActiveLearningCycle
 from asreview.metrics import loss
 from asreview.models.balance import Balanced
 from asreview.models.query import MaxQuery
-from asreview.learner import ActiveLearningCycle
 from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
@@ -22,12 +22,8 @@ from feature_extractors import feature_extractor_params, feature_extractors
 VERSION = 1
 STUDY_SET = "full"
 CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "labse"  # Options: "tfidf", "onehot", "labse", "bge-m3"
-PICKLE_FOLDER_PATH = (
-    Path("synergy-dataset", "pickles")
-    if FEATURE_EXTRACTOR_TYPE != "labse"
-    else Path("synergy-dataset", "pickles_labse")
-)
+FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3"
+PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
 PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
 
@@ -118,11 +114,12 @@ def process_row(row, clf_params, fe_params, ratio):
 
     # Create classifier and feature extractor with params
     clf = classifiers[CLASSIFIER_TYPE](**clf_params)
-    fe = feature_extractors[FEATURE_EXTRACTOR_TYPE](**fe_params)
 
-    if PRE_PROCESSED_FMS or FEATURE_EXTRACTOR_TYPE == "labse":
+    if PRE_PROCESSED_FMS:
         with open(PICKLE_FOLDER_PATH / f"{row['dataset_id']}.pkl", "rb") as f:
             X, labels = pickle.load(f)
+
+        labels = pd.Series(labels)
 
         alc = ActiveLearningCycle(
             query_strategy=MaxQuery(),
@@ -148,6 +145,7 @@ def process_row(row, clf_params, fe_params, ratio):
         X=X,
         labels=labels,
         learners=[alc],
+        skip_transform=True if PRE_PROCESSED_FMS else False,
     )
 
     # Set priors
@@ -169,7 +167,11 @@ def objective_report(report_order):
         ratio = trial.suggest_float("ratio", 1.0, 5.0)
         # ratio = 1.5
         clf_params = classifier_params[CLASSIFIER_TYPE](trial)
-        fe_params = feature_extractor_params[FEATURE_EXTRACTOR_TYPE](trial)
+        fe_params = (
+            feature_extractor_params[FEATURE_EXTRACTOR_TYPE](trial)
+            if FEATURE_EXTRACTOR_TYPE in feature_extractor_params
+            else {}
+        )
 
         if PARALLELIZE_OBJECTIVE:
             result = run_parallel(
@@ -212,10 +214,41 @@ class StopWhenOptimumReached:
                 study.stop()
 
 
+def download_pickles(report_order):
+    if PICKLE_FOLDER_PATH.exists():
+        print("Pickles already exist! Delete the folder if you want to re-download.")
+
+    else:
+        for dataset_id in report_order:
+            url = f"https://sos-de-fra-1.exo.io/asreview2-optuna-embeddings/pickles_{FEATURE_EXTRACTOR_TYPE}/{dataset_id}.pkl"
+
+            # Make the request to download the file
+            response = requests.get(url)
+
+            if response.status_code == 200:
+                # Ensure the folder exists
+                os.makedirs(PICKLE_FOLDER_PATH, exist_ok=True)
+
+                # Define the full path to save the pickle file
+                pickle_file_path = os.path.join(PICKLE_FOLDER_PATH, f"{dataset_id}.pkl")
+
+                # Write the content to a file
+                with open(pickle_file_path, "wb") as f:
+                    f.write(response.content)
+                print(f"Downloaded {dataset_id}.pkl successfully.")
+            else:
+                print(
+                    f"Failed to download {dataset_id}.pkl. Status code: {response.status_code}"
+                )
+
+
 if __name__ == "__main__":
     # list of studies
     studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True)
     report_order = sorted(set(studies["dataset_id"]))
+
+    if PRE_PROCESSED_FMS:
+        download_pickles(report_order)
 
     sampler = optuna.samplers.TPESampler()
     study_stop_cb = StopWhenOptimumReached(

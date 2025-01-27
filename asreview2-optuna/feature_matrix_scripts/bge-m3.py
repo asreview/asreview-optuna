@@ -1,10 +1,10 @@
-from pathlib import Path
 import pickle
-from FlagEmbedding import BGEM3FlagModel
+from pathlib import Path
 
-import synergy_dataset as sd
-from tqdm import tqdm
 import pandas as pd
+import synergy_dataset as sd
+from FlagEmbedding import BGEM3FlagModel
+from tqdm import tqdm
 
 FORCE = False
 
