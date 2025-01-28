@@ -1,7 +1,6 @@
 import os
 
 os.environ["OMP_NUM_THREADS"] = "1"
-from collections import defaultdict
 import multiprocessing as mp
 import os
 import pickle
