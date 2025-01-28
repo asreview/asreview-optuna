@@ -2,17 +2,25 @@ import pickle
 from pathlib import Path
 
 import pandas as pd
-import synergy_dataset as sd
-from FlagEmbedding import BGEM3FlagModel
+import synergy_dataset as sd  # Assuming this is your custom dataset handler
+import torch
+from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
 FORCE = False
 
-folder_pickle_files = Path("synergy-dataset", "pickles_bge-m3")
+# Folder to save embeddings
+folder_pickle_files = Path("synergy-dataset", "pickles_labse")
 folder_pickle_files.mkdir(parents=True, exist_ok=True)
 
-model = BGEM3FlagModel("BAAI/bge-m3", devices=["cuda:0"])
+# Load LaBSE model
+model = SentenceTransformer("sentence-transformers/LaBSE")
 
+# Check if CUDA is available
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"Using device: {device}")
+
+# Loop through datasets
 for dataset in tqdm(sd.iter_datasets(), total=26):
     if dataset.name == "Moran_2021":
         df = pd.read_csv("../datasets/Moran_2021_corrected_shuffled_raw.csv")
@@ -33,19 +41,17 @@ for dataset in tqdm(sd.iter_datasets(), total=26):
         print(f"Skipping {dataset_name}, pickle file already exists.")
         continue
 
-    # Generate embeddings using the LLM embedder
+    # Generate embeddings
     X = model.encode(
-        combined_texts,
-        batch_size=128,
-        max_length=8192,
-        return_dense=True,
-        return_sparse=True,
-        return_colbert_vecs=False,
+        combined_texts, batch_size=64, show_progress_bar=False, device=device
     )
 
     # Save embeddings and labels as a pickle file
     with open(folder_pickle_files / f"{dataset_name}.pkl", "wb") as f:
-        pickle.dump((X["dense_vecs"], df["label_included"].tolist()), f)
-
-    with open(folder_pickle_files / f"sparse-{dataset_name}.pkl", "wb") as f:
-        pickle.dump((X["lexical_weights"], df["label_included"].tolist()), f)
+        pickle.dump(
+            (
+                X,
+                df["label_included"].tolist(),
+            ),
+            f,
+        )
