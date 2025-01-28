@@ -20,7 +20,7 @@ from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
 VERSION = 1
-STUDY_SET = "full"
+STUDY_SET = "demo"
 CLASSIFIER_TYPE = "rf"  # Options: "nb", "log", "svm", "rf"
 FEATURE_EXTRACTOR_TYPE = "bge-m3"  # Options: "tfidf", "onehot", "labse", "bge-m3"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
