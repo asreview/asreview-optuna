@@ -2,7 +2,6 @@ import optuna
 from asreview.models.classifiers import (
     LogisticClassifier,
     NaiveBayesClassifier,
-    RandomForestClassifier,
     SVMClassifier,
 )
 
@@ -41,7 +40,9 @@ def random_forest_params(trial: optuna.trial.FrozenTrial):
     n_estimators = trial.suggest_int("rf__n_estimators", 50, 200)
 
     # Use normal distribution for max_features (max_features effect is linear)
-    max_features = trial.suggest_categorical("rf__max_features", ["sqrt", "log2"])
+    max_features = (
+        None  # trial.suggest_categorical("rf__max_features", ["sqrt", "log2"])
+    )
     return {"n_estimators": n_estimators, "max_features": max_features}
 
 
@@ -69,6 +70,7 @@ class RFClassifier(RandomForestClassifier):
             max_features=max_features,
             **kwargs,
         )
+
 
 classifiers = {
     "nb": NaiveBayesClassifier,
