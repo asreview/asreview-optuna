@@ -1,8 +1,7 @@
 import optuna
-
 from asreview.models.classifiers import (
-    NaiveBayesClassifier,
     LogisticClassifier,
+    NaiveBayesClassifier,
     RandomForestClassifier,
 )
 
