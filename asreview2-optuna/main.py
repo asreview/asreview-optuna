@@ -22,7 +22,7 @@ from feature_extractors import feature_extractor_params, feature_extractors
 VERSION = 1
 STUDY_SET = "demo"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "labse"  # Options: "tfidf", "onehot", "labse", "bge-m3"
+FEATURE_EXTRACTOR_TYPE = "bge-m3"  # Options: "tfidf", "onehot", "labse", "bge-m3"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
 PRE_PROCESSED_FMS = True  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
