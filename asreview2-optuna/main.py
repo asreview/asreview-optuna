@@ -21,10 +21,10 @@ from feature_extractors import feature_extractor_params, feature_extractors
 # Study variables
 VERSION = 1
 STUDY_SET = "full"
-CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3"
+CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
+FEATURE_EXTRACTOR_TYPE = "labse"  # Options: "tfidf", "onehot", "labse", "bge-m3"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
-PRE_PROCESSED_FMS = False  # False = on the fly
+PRE_PROCESSED_FMS = True  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
 
 # Optuna variables
@@ -259,7 +259,7 @@ if __name__ == "__main__":
         storage=os.getenv(
             "DB_URI", "sqlite:///db.sqlite3"
         ),  # Specify the storage URL here.
-        study_name=f"ASReview2-{STUDY_SET}-{CLASSIFIER_TYPE}-{VERSION}",
+        study_name=f"ASReview2-{STUDY_SET}-{FEATURE_EXTRACTOR_TYPE}-{CLASSIFIER_TYPE}-{VERSION}",
         direction="minimize",
         sampler=sampler,
         load_if_exists=True,
