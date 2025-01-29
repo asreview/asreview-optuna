@@ -19,12 +19,12 @@ from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
-VERSION = 1
+VERSION = 2
 STUDY_SET = "full"
 CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "labse"  # Options: "tfidf", "onehot", "labse", "bge-m3"
+FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
-PRE_PROCESSED_FMS = True  # False = on the fly
+PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
 
 # Optuna variables
@@ -164,7 +164,7 @@ def process_row(row, clf_params, fe_params, ratio):
 def objective_report(report_order):
     def objective(trial):
         # Use normal distribution for ratio (ratio effect is linear)
-        ratio = trial.suggest_float("ratio", 1.0, 2.0)
+        ratio = trial.suggest_float("ratio", 1.0, 10.0)
         # ratio = 1.5
         clf_params = classifier_params[CLASSIFIER_TYPE](trial)
         fe_params = (
