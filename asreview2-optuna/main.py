@@ -27,6 +27,7 @@ FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
 PRE_PROCESSED_FMS = True  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
+AUTO_SHUTDOWN = True
 
 # Optuna variables
 OPTUNA_N_TRIALS = 500
@@ -277,3 +278,6 @@ if __name__ == "__main__":
     )
 
     print(f"Best value: {study.best_value} (params: {study.best_params})")
+    if AUTO_SHUTDOWN:
+        print("Shutting down now...")
+        os.system("shutdown now -h")
