@@ -9,8 +9,8 @@ from asreview.models.classifiers import (
 
 def naive_bayes_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for alpha (alpha effect is non-linear)
-    alpha = 3.822 #trial.suggest_float("alpha", 0.5, 50, log=True)
-    #alpha = trial.suggest_float("nb__alpha", 1.0, 15.0)
+    #alpha = 8.4 #trial.suggest_float("alpha", 0.5, 50, log=True)
+    alpha = trial.suggest_float("nb__alpha", 1.0, 15.0)
     return {"alpha": alpha}
 
 
