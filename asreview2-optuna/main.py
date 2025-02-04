@@ -247,7 +247,7 @@ def download_pickles(report_order):
 
 if __name__ == "__main__":
     # list of studies
-    studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True).head(1)
+    studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True)
     report_order = sorted(set(studies["dataset_id"]))
 
     if PRE_PROCESSED_FMS:
