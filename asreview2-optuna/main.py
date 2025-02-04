@@ -12,7 +12,7 @@ import pandas as pd
 import requests
 import synergy_dataset as sd
 from asreview.learner import ActiveLearningCycle
-from asreview.metrics import loss
+from asreview.metrics import loss, ndcg
 from asreview.models.balance import Balanced
 from asreview.models.query import MaxQuery
 from classifiers import classifier_params, classifiers
@@ -159,7 +159,8 @@ def process_row(row, clf_params, fe_params, ratio):
     padded_results = list(simulate._results["label"]) + [0] * (
         len(simulate.labels) - len(simulate._results["label"])
     )
-    return row["dataset_id"], loss(padded_results)
+    metric = loss(padded_results) if METRIC == "loss" else ndcg(padded_results)
+    return row["dataset_id"], metric
 
 
 def objective_report(report_order):
