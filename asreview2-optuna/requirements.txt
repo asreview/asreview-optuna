@@ -1,6 +1,6 @@
 optuna
 optuna-dashboard
-asreview==2.0a9
+asreview==2.0a10
 synergy_dataset
 numpy
 pandas
