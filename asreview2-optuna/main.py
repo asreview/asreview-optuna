@@ -13,8 +13,8 @@ import requests
 import synergy_dataset as sd
 from asreview.learner import ActiveLearningCycle
 from asreview.metrics import loss, ndcg
-from asreview.models.balance import Balanced
-from asreview.models.query import MaxQuery
+from asreview.models.balancers import Balanced
+from asreview.models.queriers import Max
 from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
@@ -123,9 +123,9 @@ def process_row(row, clf_params, fe_params, ratio):
         labels = pd.Series(labels)
 
         alc = ActiveLearningCycle(
-            query_strategy=MaxQuery(),
+            querier=Max(),
             classifier=clf,
-            balance_strategy=blc,
+            balancer=blc,
             n_query=lambda results: n_query_extreme(results, X.shape[0]),
         )
     else:
@@ -135,17 +135,17 @@ def process_row(row, clf_params, fe_params, ratio):
         fe = feature_extractors[FEATURE_EXTRACTOR_TYPE](**fe_params)
 
         alc = ActiveLearningCycle(
-            query_strategy=MaxQuery(),
+            querier=Max(),
             classifier=clf,
-            balance_strategy=blc,
-            feature_extraction=fe,
+            balancer=blc,
+            feature_extractor=fe,
             n_query=lambda results: n_query_extreme(results, X.shape[0]),
         )
 
     simulate = asreview.Simulate(
         X=X,
         labels=labels,
-        learners=[alc],
+        cycles=[alc],
         skip_transform=True if PRE_PROCESSED_FMS else False,
     )
 
@@ -247,7 +247,7 @@ def download_pickles(report_order):
 
 if __name__ == "__main__":
     # list of studies
-    studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True)
+    studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True).head(1)
     report_order = sorted(set(studies["dataset_id"]))
 
     if PRE_PROCESSED_FMS:
