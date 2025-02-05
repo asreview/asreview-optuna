@@ -1,8 +1,9 @@
 import optuna
 from asreview.models.classifiers import (
-    LogisticClassifier,
-    NaiveBayesClassifier,
-    SVMClassifier,
+    Logistic,
+    NaiveBayes,
+    RandomForest,
+    SVM,
 )
 
 from sklearn.ensemble import RandomForestClassifier
@@ -23,16 +24,7 @@ def logistic_params(trial: optuna.trial.FrozenTrial):
 def svm_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for C (C effect is non-linear)
     C = trial.suggest_float("svm__C", 1e-3, 100, log=True)
-
-    # Use categorical for kernel
-    kernel = trial.suggest_categorical("svm__kernel", ["linear", "rbf"])
-
-    # Only set gamma to a value if we use rbf kernel
-    gamma = "scale"
-    if kernel == "rbf":
-        # Use logarithmic normal distribution for gamma (gamma effect is non-linear)
-        gamma = trial.suggest_float("svm__gamma", 1e-4, 10, log=True)
-    return {"C": C, "kernel": kernel, "gamma": gamma}
+    return {"C": C}
 
 
 def random_forest_params(trial: optuna.trial.FrozenTrial):
@@ -72,8 +64,8 @@ class RFClassifier(RandomForestClassifier):
 
 
 classifiers = {
-    "nb": NaiveBayesClassifier,
-    "log": LogisticClassifier,
-    "svm": SVMClassifier,
-    "rf": RFClassifier,
+    "nb": NaiveBayes,
+    "log": Logistic,
+    "svm": SVM,
+    "rf": RandomForest,
 }
