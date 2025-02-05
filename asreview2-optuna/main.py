@@ -22,8 +22,8 @@ from feature_extractors import feature_extractor_params, feature_extractors
 VERSION = 1
 METRIC = "ndcg"  # Options: "loss", "ndcg"
 STUDY_SET = "full"
-CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai"
+CLASSIFIER_TYPE = "xgboost"  # Options: "nb", "log", "svm", "rf", "xgboost"
+FEATURE_EXTRACTOR_TYPE = "mxbai"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
 PRE_PROCESSED_FMS = True  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
@@ -248,7 +248,7 @@ def download_pickles(report_order):
 
 if __name__ == "__main__":
     # list of studies
-    studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True)
+    studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True).head(1)
     report_order = sorted(set(studies["dataset_id"]))
 
     if PRE_PROCESSED_FMS:

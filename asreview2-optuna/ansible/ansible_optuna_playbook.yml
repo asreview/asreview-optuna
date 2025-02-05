@@ -36,6 +36,7 @@
         name:
           - python3-venv
           - python3-pip
+          - libgomp1
         state: present
 
     - name: Create Python virtual environment

@@ -6,6 +6,8 @@ from asreview.models.classifiers import (
     SVM,
 )
 
+from xgboost import XGBClassifier
+
 
 def naive_bayes_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for alpha (alpha effect is non-linear)
@@ -34,17 +36,38 @@ def random_forest_params(trial: optuna.trial.FrozenTrial):
     return {"n_estimators": n_estimators, "max_features": max_features}
 
 
+def xgboost_params(trial: optuna.trial.FrozenTrial):
+    # Use normal distribution for n_estimators (n_estimators effect is linear)
+    n_estimators = trial.suggest_int("xgboost__n_estimators", 50, 500)
+
+    # Use normal distribution for max_depth (max_depth effect is linear)
+    max_depth = trial.suggest_int("xgboost__max_depth", 2, 20)
+    return {"n_estimators": n_estimators, "max_depth": max_depth}
+
+
 classifier_params = {
     "nb": naive_bayes_params,
     "log": logistic_params,
     "svm": svm_params,
     "rf": random_forest_params,
+    "xgboost": xgboost_params,
 }
 
+class XGBoost(XGBClassifier):
+    """XGBoost classifier.
+
+    """
+
+    name = "xgboost"
+    label = "XGBoost"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 classifiers = {
     "nb": NaiveBayes,
     "log": Logistic,
     "svm": SVM,
     "rf": RandomForest,
+    "xgboost": XGBoost,
 }
