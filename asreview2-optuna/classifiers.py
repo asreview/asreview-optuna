@@ -15,11 +15,14 @@ def naive_bayes_params(trial: optuna.trial.FrozenTrial):
 
 def logistic_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for C (C effect is non-linear)
-    C = trial.suggest_float("log__C", 0.01, 10, log=True)
+    C = trial.suggest_float("log__C", 0.01, 100, log=True)
 
-    solver = "lbfgs"
+    solver = trial.suggest_categorical("log__solver", ["lbfgs", "liblinear", "saga"])
 
-    return {"C": C, "solver": solver}
+    max_iter = 100
+    if solver == "saga":
+        max_iter = trial.suggest_int("log__max_iter", 100, 2000)
+    return {"C": C, "solver": "lbfgs", "max_iter": max_iter}
 
 
 def svm_params(trial: optuna.trial.FrozenTrial):
