@@ -24,16 +24,8 @@ def logistic_params(trial: optuna.trial.FrozenTrial):
 def svm_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for C (C effect is non-linear)
     C = trial.suggest_float("svm__C", 0.001, 100, log=True)
-
-    loss = trial.suggest_categorical("svm__loss", ["hinge", "squared_hinge"])
-    if loss == "hinge":
-        penalty = "l2"
-    else:
-        penalty = trial.suggest_categorical("svm__penalty", ["l1", "l2"])
-
-    tol = trial.suggest_float("svm__tolerance", 1e-4, 1e-1, log=True)
     
-    return {"C": C, "loss": loss, "penalty": penalty, "tol": tol}
+    return {"C": C, "loss": "squared_hinge"}
 
 
 def random_forest_params(trial: optuna.trial.FrozenTrial):
