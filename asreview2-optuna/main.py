@@ -19,7 +19,7 @@ from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
-VERSION = 2
+VERSION = 3
 METRIC = "ndcg"  # Options: "loss", "ndcg"
 STUDY_SET = "full"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
@@ -167,7 +167,7 @@ def process_row(row, clf_params, fe_params, ratio):
 def objective_report(report_order):
     def objective(trial):
         # Use normal distribution for ratio (ratio effect is linear)
-        ratio = trial.suggest_float("ratio", 1.0, 10.0)
+        ratio = trial.suggest_float("ratio", 1.0, 50.0)
 
         clf_params = classifier_params[CLASSIFIER_TYPE](trial)
         fe_params = (
