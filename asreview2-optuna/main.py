@@ -15,20 +15,22 @@ import pandas as pd
 import requests
 import synergy_dataset as sd
 from asreview.learner import ActiveLearningCycle
-from asreview.metrics import loss
-from asreview.models.balance import Balanced
-from asreview.models.query import MaxQuery
+from asreview.metrics import loss, ndcg
+from asreview.models.balancers import Balanced
+from asreview.models.queriers import Max
 from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
-VERSION = 1
+VERSION = 2
+METRIC = "ndcg"  # Options: "loss", "ndcg"
 STUDY_SET = "full"
 CLASSIFIER_TYPE = "log"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "labse"  # Options: "tfidf", "onehot", "labse", "bge-m3"
+FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
 PRE_PROCESSED_FMS = True  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
+AUTO_SHUTDOWN = True
 
 # Optuna variables
 OPTUNA_N_TRIALS = 500
@@ -125,9 +127,9 @@ def process_row(row, clf_params, fe_params, ratio):
         labels = pd.Series(labels)
 
         alc = ActiveLearningCycle(
-            query_strategy=MaxQuery(),
+            querier=Max(),
             classifier=clf,
-            balance_strategy=blc,
+            balancer=blc,
             n_query=lambda results: n_query_extreme(results, X.shape[0]),
         )
     else:
@@ -137,17 +139,17 @@ def process_row(row, clf_params, fe_params, ratio):
         fe = feature_extractors[FEATURE_EXTRACTOR_TYPE](**fe_params)
 
         alc = ActiveLearningCycle(
-            query_strategy=MaxQuery(),
+            querier=Max(),
             classifier=clf,
-            balance_strategy=blc,
-            feature_extraction=fe,
+            balancer=blc,
+            feature_extractor=fe,
             n_query=lambda results: n_query_extreme(results, X.shape[0]),
         )
 
     simulate = asreview.Simulate(
         X=X,
         labels=labels,
-        learners=[alc],
+        cycles=[alc],
         skip_transform=True if PRE_PROCESSED_FMS else False,
     )
 
@@ -161,14 +163,15 @@ def process_row(row, clf_params, fe_params, ratio):
     padded_results = list(simulate._results["label"]) + [0] * (
         len(simulate.labels) - len(simulate._results["label"])
     )
-    return row["dataset_id"], loss(padded_results)
+    metric = loss(padded_results) if METRIC == "loss" else ndcg(padded_results)
+    return row["dataset_id"], metric
 
 
 def objective_report(report_order):
     def objective(trial):
         # Use normal distribution for ratio (ratio effect is linear)
         ratio = trial.suggest_float("ratio", 1.0, 10.0)
-        # ratio = 1.5
+
         clf_params = classifier_params[CLASSIFIER_TYPE](trial)
         fe_params = (
             feature_extractor_params[FEATURE_EXTRACTOR_TYPE](trial)
@@ -189,6 +192,7 @@ def objective_report(report_order):
         for i, dataset_id in enumerate(report_order):
             losses = result[dataset_id] if dataset_id in result else [0]
             trial.report(np.mean(losses), i)
+            trial.report(np.std(losses), len(report_order) + i)
             all_losses += losses
 
         return np.mean(all_losses)
@@ -263,7 +267,7 @@ if __name__ == "__main__":
             "DB_URI", "sqlite:///db.sqlite3"
         ),  # Specify the storage URL here.
         study_name=f"ASReview2-{STUDY_SET}-{FEATURE_EXTRACTOR_TYPE}-{CLASSIFIER_TYPE}-{VERSION}",
-        direction="minimize",
+        direction="minimize" if METRIC == "loss" else "maximize",
         sampler=sampler,
         load_if_exists=True,
     )
@@ -277,3 +281,6 @@ if __name__ == "__main__":
     )
 
     print(f"Best value: {study.best_value} (params: {study.best_params})")
+    if AUTO_SHUTDOWN:
+        print("Shutting down now...")
+        os.system("shutdown now -h")
