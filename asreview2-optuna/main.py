@@ -20,13 +20,14 @@ from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
 VERSION = 3
-METRIC = "ndcg"  # "loss", "ndcg"
+METRIC = "ndcg"  # Options: "loss", "ndcg"
 STUDY_SET = "full"
 CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3"
+FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
 PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
+AUTO_SHUTDOWN = True
 
 # Optuna variables
 OPTUNA_N_TRIALS = 500
@@ -167,7 +168,7 @@ def objective_report(report_order):
     def objective(trial):
         # Use normal distribution for ratio (ratio effect is linear)
         ratio = trial.suggest_float("ratio", 1.0, 5.0)
-        # ratio = 1.5
+
         clf_params = classifier_params[CLASSIFIER_TYPE](trial)
         fe_params = (
             feature_extractor_params[FEATURE_EXTRACTOR_TYPE](trial)
@@ -277,3 +278,6 @@ if __name__ == "__main__":
     )
 
     print(f"Best value: {study.best_value} (params: {study.best_params})")
+    if AUTO_SHUTDOWN:
+        print("Shutting down now...")
+        os.system("shutdown now -h")
