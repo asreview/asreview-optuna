@@ -23,7 +23,7 @@ VERSION = 1
 METRIC = "ndcg"  # Options: "loss", "ndcg"
 STUDY_SET = "demo"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "stella"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai"
+FEATURE_EXTRACTOR_TYPE = "mxbai"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
 PRE_PROCESSED_FMS = True  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
