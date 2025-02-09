@@ -280,4 +280,4 @@ if __name__ == "__main__":
     print(f"Best value: {study.best_value} (params: {study.best_params})")
     if AUTO_SHUTDOWN:
         print("Shutting down now...")
-        os.system("shutdown now -h")
+        os.system("sudo shutdown -h now")
