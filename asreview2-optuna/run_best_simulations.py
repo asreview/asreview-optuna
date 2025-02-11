@@ -147,17 +147,17 @@ def main():
         report_order,
         studies_filtered,
         params=params_ndcg,
-        output_file="recalls_ndcg_test.csv",
+        output_file="recalls_ndcg.csv",
     )
     run_simulation(
         report_order,
         studies_filtered,
         params=params_loss,
-        output_file="recalls_loss_test.csv",
+        output_file="recalls_loss.csv",
     )
     if RUN_OLD:
         run_simulation(
-            report_order, studies_filtered, output_file="recalls_old_test.csv"
+            report_order, studies_filtered, output_file="recalls_old.csv"
         )  # Defaults to old settings
 
 
