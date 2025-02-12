@@ -7,14 +7,14 @@ import optuna
 import pandas as pd
 import synergy_dataset as sd
 from asreview.models.balancers import Balanced
-from asreview.models.classifiers import NaiveBayes
+from asreview.models.classifiers import SVM
 from asreview.models.feature_extractors import Tfidf
 from asreview.models.queriers import Max
 
 RUN_OLD = True
 DB_PATH = ""
-NDCG_STUDY = "ASReview2-full-tfidf-nb-3"
-LOSS_STUDY = "ASReview2-full-nb-1"
+NDCG_STUDY = "ASReview2-full-tfidf-svm-3"
+LOSS_STUDY = "ASReview2-full-svm-1"
 NUM_WORKERS = mp.cpu_count() - 1
 
 
@@ -64,12 +64,12 @@ def process_study(study, dataset_name, params=None):
     priors = study["prior_inclusions"] + study["prior_exclusions"]
 
     # Set parameters for different configurations
-    alpha = params.get("nb__alpha", 3.822) if params else 3.822
+    C = params.get("svm__C", 15.4) if params else 15.4
     ratio = params.get("ratio", 3) if params else 3
     tfidf_kwargs = {
         "stop_words": None if params else "english",
         "ngram_range": (1, 2) if params else (1, 1),
-        "sublinear_tf": params.get("sublinear_tf", False) if params else False,
+        "sublinear_tf": True if params else False,
         "max_df": params.get("tfidf__max_df", 1.0) if params else 1.0,
         "min_df": params.get("tfidf__min_df", 1) if params else 1,
     }
@@ -77,7 +77,7 @@ def process_study(study, dataset_name, params=None):
     # Setup Active Learning Cycle
     alc = asreview.ActiveLearningCycle(
         querier=Max(),
-        classifier=NaiveBayes(alpha=alpha),
+        classifier=SVM(C=C),
         balancer=Balanced(ratio=ratio),
         feature_extractor=Tfidf(**tfidf_kwargs),
     )
@@ -140,24 +140,23 @@ def main():
 
     opt_study = optuna.load_study(study_name=LOSS_STUDY, storage=DB_PATH)
     params_loss = opt_study.best_trial.params
-    params_loss["nb__alpha"] = params_loss["alpha"]
 
     # Run different simulations
     run_simulation(
         report_order,
         studies_filtered,
         params=params_ndcg,
-        output_file="recalls_ndcg.csv",
+        output_file="recalls_ndcg_svm.csv",
     )
     run_simulation(
         report_order,
         studies_filtered,
         params=params_loss,
-        output_file="recalls_loss.csv",
+        output_file="recalls_loss_svm.csv",
     )
     if RUN_OLD:
         run_simulation(
-            report_order, studies_filtered, output_file="recalls_old.csv"
+            report_order, studies_filtered, output_file="recalls_old_svm.csv"
         )  # Defaults to old settings
 
 
