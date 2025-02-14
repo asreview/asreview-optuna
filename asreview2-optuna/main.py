@@ -19,7 +19,7 @@ from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
-VERSION = 5
+VERSION = 6
 #METRIC = "ndcg"  # Options: "loss", "ndcg"
 STUDY_SET = "full"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
@@ -263,7 +263,7 @@ if __name__ == "__main__":
     if PRE_PROCESSED_FMS:
         download_pickles(report_order)
 
-    sampler = optuna.samplers.TPESampler()
+    sampler = optuna.samplers.NSGAIISampler()
     study_stop_cb = StopWhenOptimumReached(
         min_trials=MIN_TRIALS, threshold=STOPPING_THRESHOLD, n_history=N_HISTORY
     )
