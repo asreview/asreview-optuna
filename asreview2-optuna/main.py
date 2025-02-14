@@ -20,10 +20,10 @@ from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
 VERSION = 1
-METRIC = "ndcg"  # Options: "loss", "ndcg"
-STUDY_SET = "demo"
+#METRIC = "ndcg"  # Options: "loss", "ndcg"
+STUDY_SET = "full"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "mxbai"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai"
+FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
 PRE_PROCESSED_FMS = True  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
@@ -83,6 +83,7 @@ def n_query_extreme(results, n_records):
 # Function to run the loop in parallel
 def run_parallel(studies, *args, **kwargs):
     losses = defaultdict(list)
+    gains = defaultdict(list)
     with ProcessPoolExecutor(max_workers=mp.cpu_count() - 1) as executor:
         # Submit tasks
         futures = {
@@ -91,20 +92,23 @@ def run_parallel(studies, *args, **kwargs):
         }
         # Collect results
         for future in as_completed(futures):
-            dataset_id, result = future.result()
-            if result is not None:
-                losses[dataset_id].append(result)
-    return losses
+            dataset_id, results = future.result()
+            if results is not None:
+                losses[dataset_id].append(results[0])
+                gains[dataset_id].append(results[1])
+    return losses, gains
 
 
 # Function to run the loop in parallel
 def run_sequential(studies, *args, **kwargs):
     losses = defaultdict(list)
+    gains = defaultdict(list)
     for _, row in studies.iterrows():
-        dataset_id, result = process_row(row, *args, **kwargs)
-        losses[dataset_id].append(result)
+        dataset_id, results = process_row(row, *args, **kwargs)
+        losses[dataset_id].append(results[0])
+        gains[dataset_id].append(results[1])
 
-    return losses
+    return losses, gains
 
 
 # Function to process each row
@@ -160,14 +164,14 @@ def process_row(row, clf_params, fe_params, ratio):
     padded_results = list(simulate._results["label"]) + [0] * (
         len(simulate.labels) - len(simulate._results["label"])
     )
-    metric = loss(padded_results) if METRIC == "loss" else ndcg(padded_results)
-    return row["dataset_id"], metric
+    #metric = loss(padded_results) if METRIC == "loss" else ndcg(padded_results)
+    return row["dataset_id"], (loss(padded_results), ndcg(padded_results))
 
 
 def objective_report(report_order):
     def objective(trial):
         # Use normal distribution for ratio (ratio effect is linear)
-        ratio = trial.suggest_float("ratio", 1.0, 50.0)
+        ratio = trial.suggest_float("ratio", 1.0, 100.0)
 
         clf_params = classifier_params[CLASSIFIER_TYPE](trial)
         fe_params = (
@@ -177,22 +181,27 @@ def objective_report(report_order):
         )
 
         if PARALLELIZE_OBJECTIVE:
-            result = run_parallel(
+            losses, gains = run_parallel(
                 studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
             )
         else:
-            result = run_sequential(
+            losses, gains = run_sequential(
                 studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
             )
 
         all_losses = []
+        all_gains = []
         for i, dataset_id in enumerate(report_order):
-            losses = result[dataset_id] if dataset_id in result else [0]
-            trial.report(np.mean(losses), i)
-            trial.report(np.std(losses), len(report_order) + i)
-            all_losses += losses
+            ds_losses = losses[dataset_id] if dataset_id in losses else [0]
+            ds_gains = gains[dataset_id] if dataset_id in gains else [0]
+            #trial.report(np.mean(ds_losses), i)
+            #trial.report(np.std(ds_losses), len(report_order) + i)
+            #trial.report(np.mean(ds_gains), (2 *len(report_order)) + i)
+            #trial.report(np.std(ds_gains), (3 *len(report_order)) + i)
+            all_losses += ds_losses
+            all_gains += ds_gains
 
-        return np.mean(all_losses)
+        return np.mean(all_losses), np.mean(all_gains)
 
     return objective
 
@@ -264,7 +273,7 @@ if __name__ == "__main__":
             "DB_URI", "sqlite:///db.sqlite3"
         ),  # Specify the storage URL here.
         study_name=f"ASReview2-{STUDY_SET}-{FEATURE_EXTRACTOR_TYPE}-{CLASSIFIER_TYPE}-{VERSION}",
-        direction="minimize" if METRIC == "loss" else "maximize",
+        directions=["minimize", "maximize"], #if METRIC == "loss" else "maximize",
         sampler=sampler,
         load_if_exists=True,
     )
