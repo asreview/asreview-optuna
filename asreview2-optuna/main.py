@@ -19,13 +19,13 @@ from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
-VERSION = 4
+VERSION = 5
 #METRIC = "ndcg"  # Options: "loss", "ndcg"
 STUDY_SET = "full"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
 FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
-PRE_PROCESSED_FMS = True  # False = on the fly
+PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
 AUTO_SHUTDOWN = True
 
