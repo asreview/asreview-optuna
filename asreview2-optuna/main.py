@@ -19,13 +19,13 @@ from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
-VERSION = 6
+VERSION = 1
 #METRIC = "ndcg"  # Options: "loss", "ndcg"
-STUDY_SET = "full"
+STUDY_SET = "demo"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai"
+FEATURE_EXTRACTOR_TYPE = "gist"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai", "gist", "e5", "gte", "kalm", "lajavaness", "snowflake"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
-PRE_PROCESSED_FMS = False  # False = on the fly
+PRE_PROCESSED_FMS = True  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
 AUTO_SHUTDOWN = True
 
@@ -35,7 +35,7 @@ OPTUNA_TIMEOUT = None  # in seconds
 OPTUNA_N_JOBS = 1 if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 1
 
 # Early stopping condition variables
-MIN_TRIALS = 400
+MIN_TRIALS = 1000
 N_HISTORY = 5
 STOPPING_THRESHOLD = 0.0001
 
@@ -263,7 +263,7 @@ if __name__ == "__main__":
     if PRE_PROCESSED_FMS:
         download_pickles(report_order)
 
-    sampler = optuna.samplers.NSGAIISampler()
+    sampler = optuna.samplers.TPESampler()
     study_stop_cb = StopWhenOptimumReached(
         min_trials=MIN_TRIALS, threshold=STOPPING_THRESHOLD, n_history=N_HISTORY
     )
