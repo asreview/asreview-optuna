@@ -6,7 +6,7 @@ from asreview.models.classifiers import (
     SVM,
 )
 
-from sklearn.svm import LinearSVC
+from sklearn.neural_network import MLPClassifier
 
 
 def naive_bayes_params(trial: optuna.trial.FrozenTrial):
@@ -36,34 +36,57 @@ def random_forest_params(trial: optuna.trial.FrozenTrial):
     max_features = trial.suggest_int("rf__max_features", 2, 20)
     return {"n_estimators": n_estimators, "max_features": max_features}
 
+def mlp_params(trial: optuna.trial.FrozenTrial):
+    alpha = trial.suggest_categorical("mlp__alpha", [1e-5, 1e-4, 1e-3, 1e-2])
+    learning_rate_init = trial.suggest_categorical("mlp__lr_init", [0.0001, 0.001, 0.01])
+    activation = trial.suggest_categorical("mlp__activation", ['relu', 'tanh'])
+    solver = trial.suggest_categorical("mlp__solver", ['adam', 'lbfgs'])
+    batch_size = trial.suggest_categorical("mlp__batch_size", [32, 64, 128])
+    max_iter = trial.suggest_categorical("mlp__max_iter", [200, 500, 1000])
+    early_stopping = trial.suggest_categorical("mlp__early_stopping", [True, False])
+
+    return {"alpha": alpha, "learning_rate_init": learning_rate_init, "activation": activation, "solver": solver, "batch_size": batch_size, "max_iter": max_iter, "early_stopping": early_stopping}
+
 
 classifier_params = {
     "nb": naive_bayes_params,
     "log": logistic_params,
     "svm": svm_params,
     "rf": random_forest_params,
+    "nn": mlp_params,
 }
 
+class MLP(MLPClassifier):
+    """Multi Layer Perceptron classifier.
 
-class LinearSVMClassifier(LinearSVC):
-    """Support vector machine classifier.
-
-    Based on the sklearn implementation of the support vector machine
-    sklearn.svm.LinearSVC.
+    Based on the sklearn implementation of the MLP
+    sklearn.neural_network
     """
 
-    name = "svm"
-    label = "Support vector machine"
+    name = "nn"
+    label = "Multi Layer Perceptron"
 
-    def __init__(self, C=15.4, **kwargs):
+    def __init__(self, n_dims=1024, alpha=0.001, activation="relu", solver="adam", max_iter=200, **kwargs):
+        self.n_dims = n_dims
+        hidden_layer_1 = max(self.n_dims // 2, 64)  # At least 64 neurons
+        hidden_layer_2 = max(self.n_dims // 4, 32)  # At least 32 neurons
+        layer_sizes = (hidden_layer_1, hidden_layer_2)
         super().__init__(
-            C=C,
+            hidden_layer_sizes=layer_sizes,
+            activation=activation,
+            solver=solver,
+            alpha=alpha,
+            max_iter=max_iter,
             **kwargs,
         )
+
+    def fit(self, X, y, sample_weight=None):
+        super().fit(X, y)
 
 classifiers = {
     "nb": NaiveBayes,
     "log": Logistic,
     "svm": SVM,
     "rf": RandomForest,
+    "nn": MLP,
 }

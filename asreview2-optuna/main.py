@@ -22,8 +22,8 @@ from feature_extractors import feature_extractor_params, feature_extractors
 VERSION = 1
 #METRIC = "ndcg"  # Options: "loss", "ndcg"
 STUDY_SET = "demo"
-CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "snowflake"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai", "gist", "e5", "gte", "kalm", "lajavaness", "snowflake"
+CLASSIFIER_TYPE = "nn"  # Options: "nb", "log", "svm", "rf"
+FEATURE_EXTRACTOR_TYPE = "e5"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai", "gist", "e5", "gte", "kalm", "lajavaness", "snowflake"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
 PRE_PROCESSED_FMS = True  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
@@ -124,6 +124,10 @@ def process_row(row, clf_params, fe_params, ratio):
     if PRE_PROCESSED_FMS:
         with open(PICKLE_FOLDER_PATH / f"{row['dataset_id']}.pkl", "rb") as f:
             X, labels = pickle.load(f)
+        
+        if CLASSIFIER_TYPE == "nn":
+            clf_params["n_dims"] = len(X[0])
+            clf = classifiers[CLASSIFIER_TYPE](**clf_params)
 
         labels = pd.Series(labels)
 
