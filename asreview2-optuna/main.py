@@ -19,13 +19,13 @@ from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
-VERSION = 1
+VERSION = 7
 #METRIC = "ndcg"  # Options: "loss", "ndcg"
-STUDY_SET = "demo"
+STUDY_SET = "full"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "snowflake"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai", "gist", "e5", "gte", "kalm", "lajavaness", "snowflake"
+FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai", "gist", "e5", "gte", "kalm", "lajavaness", "snowflake"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
-PRE_PROCESSED_FMS = True  # False = on the fly
+PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
 AUTO_SHUTDOWN = True
 
@@ -171,7 +171,7 @@ def process_row(row, clf_params, fe_params, ratio):
 def objective_report(report_order):
     def objective(trial):
         # Use normal distribution for ratio (ratio effect is linear)
-        ratio = trial.suggest_float("ratio", 1.0, 100.0)
+        ratio = trial.suggest_float("ratio", 1.0, 5.0)
 
         clf_params = classifier_params[CLASSIFIER_TYPE](trial)
         fe_params = (
