@@ -41,9 +41,9 @@ def mlp_params(trial: optuna.trial.FrozenTrial):
     learning_rate_init = trial.suggest_categorical("mlp__lr_init", [0.001, 0.01])
     activation = 'relu'#trial.suggest_categorical("mlp__activation", ['relu', 'tanh'])
     solver = 'adam'#trial.suggest_categorical("mlp__solver", ['adam', 'lbfgs'])
-    batch_size = trial.suggest_categorical("mlp__batch_size", [32, 64, 128])
+    batch_size = trial.suggest_categorical("mlp__batch_size", [256, 512])
     max_iter = trial.suggest_categorical("mlp__max_iter", [200, 500, 1000])
-    early_stopping = trial.suggest_categorical("mlp__early_stopping", [True, False])
+    early_stopping = True #trial.suggest_categorical("mlp__early_stopping", [True, False])
 
     return {"alpha": alpha, "learning_rate_init": learning_rate_init, "activation": activation, "solver": solver, "batch_size": batch_size, "max_iter": max_iter, "early_stopping": early_stopping}
 
@@ -68,8 +68,8 @@ class MLP(MLPClassifier):
 
     def __init__(self, n_dims=1024, alpha=0.001, activation="relu", solver="adam", max_iter=200, **kwargs):
         self.n_dims = n_dims
-        hidden_layer_1 = max(self.n_dims // 2, 64)  # At least 64 neurons
-        hidden_layer_2 = max(self.n_dims // 4, 32)  # At least 32 neurons
+        hidden_layer_1 = max(self.n_dims // 4, 64)  # At least 64 neurons
+        hidden_layer_2 = max(self.n_dims // 8, 32)  # At least 32 neurons
         layer_sizes = (hidden_layer_1, hidden_layer_2)
         super().__init__(
             hidden_layer_sizes=layer_sizes,

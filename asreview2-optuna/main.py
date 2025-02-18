@@ -19,6 +19,7 @@ from asreview.models.balancers import Balanced
 from asreview.models.queriers import Max
 from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
+from sklearn.preprocessing import StandardScaler
 
 # Study variables
 VERSION = 1
@@ -130,6 +131,8 @@ def process_row(row, clf_params, fe_params, ratio):
         if CLASSIFIER_TYPE == "nn":
             clf_params["n_dims"] = len(X[0])
             clf = classifiers[CLASSIFIER_TYPE](**clf_params)
+            scaler = StandardScaler()
+            X = scaler.fit_transform(X)
 
         labels = pd.Series(labels)
 
