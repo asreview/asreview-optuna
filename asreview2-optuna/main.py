@@ -1,5 +1,7 @@
-import multiprocessing as mp
 import os
+
+os.environ["OMP_NUM_THREADS"] = "4"
+import multiprocessing as mp
 import pickle
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -84,7 +86,7 @@ def n_query_extreme(results, n_records):
 def run_parallel(studies, *args, **kwargs):
     losses = defaultdict(list)
     gains = defaultdict(list)
-    with ProcessPoolExecutor(max_workers=mp.cpu_count() - 1) as executor:
+    with ProcessPoolExecutor(max_workers=(mp.cpu_count() - 1)/4) as executor:
         # Submit tasks
         futures = {
             executor.submit(process_row, row, *args, **kwargs): i
