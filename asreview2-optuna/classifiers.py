@@ -38,9 +38,9 @@ def random_forest_params(trial: optuna.trial.FrozenTrial):
 
 def mlp_params(trial: optuna.trial.FrozenTrial):
     alpha = trial.suggest_categorical("mlp__alpha", [1e-5, 1e-4, 1e-3, 1e-2])
-    learning_rate_init = trial.suggest_categorical("mlp__lr_init", [0.0001, 0.001, 0.01])
-    activation = trial.suggest_categorical("mlp__activation", ['relu', 'tanh'])
-    solver = trial.suggest_categorical("mlp__solver", ['adam', 'lbfgs'])
+    learning_rate_init = trial.suggest_categorical("mlp__lr_init", [0.001, 0.01])
+    activation = 'relu'#trial.suggest_categorical("mlp__activation", ['relu', 'tanh'])
+    solver = 'adam'#trial.suggest_categorical("mlp__solver", ['adam', 'lbfgs'])
     batch_size = trial.suggest_categorical("mlp__batch_size", [32, 64, 128])
     max_iter = trial.suggest_categorical("mlp__max_iter", [200, 500, 1000])
     early_stopping = trial.suggest_categorical("mlp__early_stopping", [True, False])
