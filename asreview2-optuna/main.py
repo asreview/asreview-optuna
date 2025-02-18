@@ -129,10 +129,10 @@ def process_row(row, clf_params, fe_params, ratio):
             X, labels = pickle.load(f)
         
         if CLASSIFIER_TYPE == "nn":
-            clf_params["n_dims"] = len(X[0])
-            clf = classifiers[CLASSIFIER_TYPE](**clf_params)
             scaler = StandardScaler()
             X = scaler.fit_transform(X)
+            clf_params["n_dims"] = len(X[0])
+            clf = classifiers[CLASSIFIER_TYPE](**clf_params)
 
         labels = pd.Series(labels)
 
