@@ -1,8 +1,10 @@
 optuna
 optuna-dashboard
-asreview==2.0a10
+asreview==2.0b0
 synergy_dataset
 numpy
 pandas
 psycopg2-binary
 sentence-transformers
+keras
+scikeras

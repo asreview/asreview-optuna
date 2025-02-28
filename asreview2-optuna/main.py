@@ -1,6 +1,4 @@
 import os
-
-os.environ["OMP_NUM_THREADS"] = "4"
 import multiprocessing as mp
 import pickle
 from collections import defaultdict
@@ -22,8 +20,8 @@ from feature_extractors import feature_extractor_params, feature_extractors
 from sklearn.preprocessing import StandardScaler
 
 # Study variables
-VERSION = 1
-#METRIC = "ndcg"  # Options: "loss", "ndcg"
+VERSION = 2
+# METRIC = "ndcg"  # Options: "loss", "ndcg"
 STUDY_SET = "demo"
 CLASSIFIER_TYPE = "nn"  # Options: "nb", "log", "svm", "rf"
 FEATURE_EXTRACTOR_TYPE = "e5"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai", "gist", "e5", "gte", "kalm", "lajavaness", "snowflake"
@@ -87,7 +85,7 @@ def n_query_extreme(results, n_records):
 def run_parallel(studies, *args, **kwargs):
     losses = defaultdict(list)
     gains = defaultdict(list)
-    with ProcessPoolExecutor(max_workers=int((mp.cpu_count() - 1)/4)) as executor:
+    with ProcessPoolExecutor(max_workers=int((mp.cpu_count() - 1) / 4)) as executor:
         # Submit tasks
         futures = {
             executor.submit(process_row, row, *args, **kwargs): i
@@ -121,18 +119,17 @@ def process_row(row, clf_params, fe_params, ratio):
     # Create balancer with optuna value
     blc = Balanced(ratio=ratio)
 
-    # Create classifier and feature extractor with params
-    clf = classifiers[CLASSIFIER_TYPE](**clf_params)
-
     if PRE_PROCESSED_FMS:
         with open(PICKLE_FOLDER_PATH / f"{row['dataset_id']}.pkl", "rb") as f:
             X, labels = pickle.load(f)
-        
+
         if CLASSIFIER_TYPE == "nn":
             scaler = StandardScaler()
             X = scaler.fit_transform(X)
-            clf_params["n_dims"] = len(X[0])
-            clf = classifiers[CLASSIFIER_TYPE](**clf_params)
+            clf_params["input_dim"] = len(X[0])
+
+        # Create classifier and feature extractor with params
+        clf = classifiers[CLASSIFIER_TYPE](**clf_params)
 
         labels = pd.Series(labels)
 
@@ -143,6 +140,8 @@ def process_row(row, clf_params, fe_params, ratio):
             n_query=lambda results: n_query_extreme(results, X.shape[0]),
         )
     else:
+        # Create classifier and feature extractor with params
+        clf = classifiers[CLASSIFIER_TYPE](**clf_params)
         X = load_dataset(row["dataset_id"])
 
         labels = X["label_included"]
@@ -173,7 +172,7 @@ def process_row(row, clf_params, fe_params, ratio):
     padded_results = list(simulate._results["label"]) + [0] * (
         len(simulate.labels) - len(simulate._results["label"])
     )
-    #metric = loss(padded_results) if METRIC == "loss" else ndcg(padded_results)
+    # metric = loss(padded_results) if METRIC == "loss" else ndcg(padded_results)
     return row["dataset_id"], (loss(padded_results), ndcg(padded_results))
 
 
@@ -203,10 +202,10 @@ def objective_report(report_order):
         for i, dataset_id in enumerate(report_order):
             ds_losses = losses[dataset_id] if dataset_id in losses else [0]
             ds_gains = gains[dataset_id] if dataset_id in gains else [0]
-            #trial.report(np.mean(ds_losses), i)
-            #trial.report(np.std(ds_losses), len(report_order) + i)
-            #trial.report(np.mean(ds_gains), (2 *len(report_order)) + i)
-            #trial.report(np.std(ds_gains), (3 *len(report_order)) + i)
+            # trial.report(np.mean(ds_losses), i)
+            # trial.report(np.std(ds_losses), len(report_order) + i)
+            # trial.report(np.mean(ds_gains), (2 *len(report_order)) + i)
+            # trial.report(np.std(ds_gains), (3 *len(report_order)) + i)
             all_losses += ds_losses
             all_gains += ds_gains
 
@@ -282,7 +281,7 @@ if __name__ == "__main__":
             "DB_URI", "sqlite:///db.sqlite3"
         ),  # Specify the storage URL here.
         study_name=f"ASReview2-{STUDY_SET}-{FEATURE_EXTRACTOR_TYPE}-{CLASSIFIER_TYPE}-{VERSION}",
-        directions=["minimize", "maximize"], #if METRIC == "loss" else "maximize",
+        directions=["minimize", "maximize"],  # if METRIC == "loss" else "maximize",
         sampler=sampler,
         load_if_exists=True,
     )

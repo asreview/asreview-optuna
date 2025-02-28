@@ -1,12 +1,18 @@
+import os
+
+os.environ["OMP_NUM_THREADS"] = "4"
+os.environ["MKL_NUM_THREADS"] = "4"
+os.environ["KERAS_BACKEND"] = "torch"
+import keras
 import optuna
 from asreview.models.classifiers import (
+    SVM,
     Logistic,
     NaiveBayes,
     RandomForest,
-    SVM,
 )
-
-from sklearn.neural_network import MLPClassifier
+from keras import layers, regularizers
+from scikeras.wrappers import KerasClassifier
 
 
 def naive_bayes_params(trial: optuna.trial.FrozenTrial):
@@ -37,23 +43,33 @@ def random_forest_params(trial: optuna.trial.FrozenTrial):
     return {"n_estimators": n_estimators, "max_features": max_features}
 
 
-def mlp_params(trial: optuna.trial.FrozenTrial):
-    alpha = trial.suggest_categorical("mlp__alpha", [1e-5, 1e-4, 1e-3, 1e-2])
-    learning_rate_init = trial.suggest_categorical("mlp__lr_init", [0.001, 0.01])
-    activation = "relu" # trial.suggest_categorical("mlp__activation", ['relu', 'tanh'])
-    solver = "adam"  # trial.suggest_categorical("mlp__solver", ['adam', 'lbfgs'])
-    batch_size = "auto"  # trial.suggest_categorical("mlp__batch_size", [256, 512])
-    max_iter = trial.suggest_categorical("mlp__max_iter", [200, 500, 1000])
-    early_stopping = False # trial.suggest_categorical("mlp__early_stopping", [True, False])
+def nn_params(trial: optuna.trial.FrozenTrial):
+    # Regularization parameters
+    l2_alpha = trial.suggest_float("l2_alpha", 1e-6, 1e-2, log=True)
+    dropout_rate = trial.suggest_float("dropout_rate", 0.1, 0.5, step=0.1)
+    batch_norm = trial.suggest_categorical("batch_norm", [True, False])
+
+    # Learning parameters
+    learning_rate = trial.suggest_float("learning_rate", 1e-4, 1e-2, log=True)
+    batch_size = trial.suggest_categorical("batch_size", [32, 64, 128, 256])
+
+    # Architecture parameters
+    activation = trial.suggest_categorical(
+        "activation", ["relu", "selu", "swish", "gelu"]
+    )
+
+    hidden_layers_1 = trial.suggest_categorical("hidden_layers_1", [2, 4])
+    hidden_layer_2 = trial.suggest_categorical("hidden_layer_2", [1, 2])
 
     return {
-        "alpha": alpha,
-        "learning_rate_init": learning_rate_init,
-        "activation": activation,
-        "solver": solver,
+        "l2_alpha": l2_alpha,
+        "dropout_rate": dropout_rate,
+        "batch_norm": batch_norm,
+        "learning_rate": learning_rate,
         "batch_size": batch_size,
-        "max_iter": max_iter,
-        "early_stopping": early_stopping,
+        "activation": activation,
+        "hidden_layers_1": hidden_layers_1,
+        "hidden_layers_2": hidden_layer_2,
     }
 
 
@@ -62,44 +78,87 @@ classifier_params = {
     "log": logistic_params,
     "svm": svm_params,
     "rf": random_forest_params,
-    "nn": mlp_params,
+    "nn": nn_params,
 }
 
 
-class MLP(MLPClassifier):
-    """Multi Layer Perceptron classifier.
-
-    Based on the sklearn implementation of the MLP
-    sklearn.neural_network
-    """
+class NN(KerasClassifier):
+    """Multi Layer Perceptron classifier based on KerasClassifier."""
 
     name = "nn"
     label = "Multi Layer Perceptron"
 
-    def __init__(
-        self,
-        n_dims=1024,
-        alpha=0.001,
-        activation="relu",
-        solver="adam",
-        max_iter=200,
-        **kwargs,
-    ):
-        self.n_dims = n_dims
-        hidden_layer_1 = max(self.n_dims // 4, 64)  # At least 64 neurons
-        hidden_layer_2 = max(self.n_dims // 8, 32)  # At least 32 neurons
-        layer_sizes = (hidden_layer_1, hidden_layer_2)
-        super().__init__(
-            hidden_layer_sizes=layer_sizes,
-            activation=activation,
-            solver=solver,
-            alpha=alpha,
-            max_iter=max_iter,
-            **kwargs,
-        )
+    def __init__(self, **kwargs):
+        def build_nn_model(
+            input_dim,
+            batch_norm,
+            activation,
+            dropout_rate,
+            l2_alpha,
+            learning_rate,
+            hidden_layers_1,
+            hidden_layers_2,
+        ):
+            inputs = keras.Input(shape=(input_dim,))
+            x = inputs
 
-    def fit(self, X, y, sample_weight=None):
-        super().fit(X, y)
+            # Batch normalization (if enabled)
+            if batch_norm:
+                x = layers.BatchNormalization()(x)
+
+            # First hidden layer
+            hidden_1 = layers.Dense(
+                input_dim // hidden_layers_1,
+                kernel_regularizer=regularizers.l2(l2_alpha),
+                kernel_initializer="he_normal",
+            )(x)
+
+            # Activation and dropout
+            hidden_1 = layers.Activation(activation)(hidden_1)
+            hidden_1 = layers.Dropout(dropout_rate)(hidden_1)
+
+            # Batch normalization (if enabled)
+            if batch_norm:
+                hidden_1 = layers.BatchNormalization()(hidden_1)
+
+            # Second hidden layer
+            hidden_2 = layers.Dense(
+                input_dim // (hidden_layers_1 * hidden_layers_2),
+                kernel_regularizer=regularizers.l2(l2_alpha),
+                kernel_initializer="he_normal",
+            )(hidden_1)
+
+            # Activation and dropout
+            hidden_2 = layers.Activation(activation)(hidden_2)
+            hidden_2 = layers.Dropout(dropout_rate)(hidden_2)
+
+            # Batch normalization (if enabled)
+            if batch_norm:
+                hidden_2 = layers.BatchNormalization()(hidden_2)
+
+            # Output layer
+            outputs = layers.Dense(1, activation="sigmoid")(hidden_2)
+
+            model = keras.Model(inputs, outputs)
+
+            # Learning rate scheduler
+            lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+                initial_learning_rate=learning_rate,
+                decay_steps=1000,
+                decay_rate=0.9,
+                staircase=True,
+            )
+
+            # Compile the model
+            model.compile(
+                optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
+                loss=keras.losses.BinaryCrossentropy(),
+                metrics=["Accuracy"],
+            )
+
+            return model
+
+        super().__init__(model=build_nn_model, verbose=0, **kwargs)
 
 
 classifiers = {
@@ -107,5 +166,5 @@ classifiers = {
     "log": Logistic,
     "svm": SVM,
     "rf": RandomForest,
-    "nn": MLP,
+    "nn": NN,
 }
