@@ -61,6 +61,10 @@ def nn_params(trial: optuna.trial.FrozenTrial):
     hidden_layers_1 = trial.suggest_categorical("hidden_layers_1", [2, 4])
     hidden_layer_2 = trial.suggest_categorical("hidden_layer_2", [1, 2])
 
+    loss = trial.suggest_categorical("loss", ["focal", "crossEntropy"])
+
+    epochs = trial.suggest_int("epochs", 10, 100, step=10)
+
     return {
         "l2_alpha": l2_alpha,
         "dropout_rate": dropout_rate,
@@ -70,6 +74,8 @@ def nn_params(trial: optuna.trial.FrozenTrial):
         "activation": activation,
         "hidden_layers_1": hidden_layers_1,
         "hidden_layers_2": hidden_layer_2,
+        "loss_func": loss,
+        "epochs": epochs,
     }
 
 
@@ -98,6 +104,7 @@ class NN(KerasClassifier):
             learning_rate,
             hidden_layers_1,
             hidden_layers_2,
+            loss_func,
         ):
             inputs = keras.Input(shape=(input_dim,))
             x = inputs
@@ -152,7 +159,7 @@ class NN(KerasClassifier):
             # Compile the model
             model.compile(
                 optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
-                loss=keras.losses.BinaryCrossentropy(),
+                loss=keras.losses.BinaryFocalCrossentropy() if loss_func == "focal" else keras.losses.BinaryCrossentropy(),
                 metrics=["Accuracy"],
             )
 
