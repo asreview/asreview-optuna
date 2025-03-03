@@ -7,4 +7,3 @@ pandas
 psycopg2-binary
 sentence-transformers
 keras
-scikeras

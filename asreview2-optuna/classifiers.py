@@ -11,8 +11,8 @@ from asreview.models.classifiers import (
     NaiveBayes,
     RandomForest,
 )
-from keras import layers, regularizers
-from scikeras.wrappers import KerasClassifier
+from keras.src.regularizers import L2
+from keras.src.layers import Dense, Input, BatchNormalization, Dropout
 
 
 def naive_bayes_params(trial: optuna.trial.FrozenTrial):
@@ -88,15 +88,19 @@ classifier_params = {
 }
 
 
-class NN(KerasClassifier):
+class NN(keras.wrappers.SKLearnClassifier):
     """Multi Layer Perceptron classifier based on KerasClassifier."""
 
     name = "nn"
     label = "Multi Layer Perceptron"
 
     def __init__(self, **kwargs):
+        self.epochs = kwargs.pop("epochs")
+        self.batch_size = kwargs.pop("batch_size")
+
         def build_nn_model(
-            input_dim,
+            X,
+            y,
             batch_norm,
             activation,
             dropout_rate,
@@ -106,47 +110,36 @@ class NN(KerasClassifier):
             hidden_layers_2,
             loss_func,
         ):
-            inputs = keras.Input(shape=(input_dim,))
-            x = inputs
+            # Creates a basic MLP model dynamically choosing the input and
+            # output shapes.
+            n_features_in = X.shape[1]
+            inp = Input(shape=(n_features_in,))
 
-            # Batch normalization (if enabled)
             if batch_norm:
-                x = layers.BatchNormalization()(x)
+                inp = BatchNormalization()(inp)
 
-            # First hidden layer
-            hidden_1 = layers.Dense(
-                input_dim // hidden_layers_1,
-                kernel_regularizer=regularizers.l2(l2_alpha),
-                kernel_initializer="he_normal",
-            )(x)
+            layers = [
+                n_features_in // hidden_layers_1,
+                n_features_in // (hidden_layers_1 * hidden_layers_2),
+            ]
+            hidden = inp
+            for layer_size in layers:
+                hidden = Dense(
+                    layer_size,
+                    activation=activation,
+                    kernel_regularizer=L2(l2_alpha),
+                    kernel_initializer="he_normal",
+                )(hidden)
 
-            # Activation and dropout
-            hidden_1 = layers.Activation(activation)(hidden_1)
-            hidden_1 = layers.Dropout(dropout_rate)(hidden_1)
+                hidden = Dropout(rate=dropout_rate)(hidden)
 
-            # Batch normalization (if enabled)
-            if batch_norm:
-                hidden_1 = layers.BatchNormalization()(hidden_1)
+                # Batch normalization (if enabled)
+                if batch_norm:
+                    hidden = BatchNormalization()(hidden)
 
-            # Second hidden layer
-            hidden_2 = layers.Dense(
-                input_dim // (hidden_layers_1 * hidden_layers_2),
-                kernel_regularizer=regularizers.l2(l2_alpha),
-                kernel_initializer="he_normal",
-            )(hidden_1)
-
-            # Activation and dropout
-            hidden_2 = layers.Activation(activation)(hidden_2)
-            hidden_2 = layers.Dropout(dropout_rate)(hidden_2)
-
-            # Batch normalization (if enabled)
-            if batch_norm:
-                hidden_2 = layers.BatchNormalization()(hidden_2)
-
-            # Output layer
-            outputs = layers.Dense(1, activation="sigmoid")(hidden_2)
-
-            model = keras.Model(inputs, outputs)
+            n_outputs = y.shape[1] if len(y.shape) > 1 else 1
+            out = [Dense(n_outputs, activation="softmax")(hidden)]
+            model = keras.Model(inp, out)
 
             # Learning rate scheduler
             lr_schedule = keras.optimizers.schedules.ExponentialDecay(
@@ -156,16 +149,24 @@ class NN(KerasClassifier):
                 staircase=True,
             )
 
-            # Compile the model
             model.compile(
+                loss=keras.losses.BinaryFocalCrossentropy()
+                if loss_func == "focal"
+                else keras.losses.BinaryCrossentropy(),
                 optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
-                loss=keras.losses.BinaryFocalCrossentropy() if loss_func == "focal" else keras.losses.BinaryCrossentropy(),
                 metrics=["Accuracy"],
             )
 
             return model
 
-        super().__init__(model=build_nn_model, verbose=0, **kwargs)
+        super().__init__(model=build_nn_model, model_kwargs=kwargs)
+
+    def fit(self, X, y, sample_weight):
+        print(self.epochs)
+        super().fit(X, y, sample_weight=sample_weight, epochs=self.epochs, verbose=0, batch_size=self.batch_size)
+
+    def predict_proba(self, X):
+        return self.model_.predict(X, verbose=0)
 
 
 classifiers = {
