@@ -153,7 +153,7 @@ class NN(wrappers.SKLearnClassifier):
                 if loss_func == "focal"
                 else losses.BinaryCrossentropy(),
                 optimizer=optimizers.Adam(learning_rate=lr_schedule),
-                metrics=["Accuracy"],
+                metrics=["accuracy"],
             )
 
             return model
