@@ -11,8 +11,7 @@ from asreview.models.classifiers import (
     NaiveBayes,
     RandomForest,
 )
-from keras.src.regularizers import L2
-from keras.src.layers import Dense, Input, BatchNormalization, Dropout
+from keras import layers, losses, optimizers, regularizers, wrappers
 
 
 def naive_bayes_params(trial: optuna.trial.FrozenTrial):
@@ -88,7 +87,7 @@ classifier_params = {
 }
 
 
-class NN(keras.wrappers.SKLearnClassifier):
+class NN(wrappers.SKLearnClassifier):
     """Multi Layer Perceptron classifier based on KerasClassifier."""
 
     name = "nn"
@@ -113,36 +112,36 @@ class NN(keras.wrappers.SKLearnClassifier):
             # Creates a basic MLP model dynamically choosing the input and
             # output shapes.
             n_features_in = X.shape[1]
-            inp = Input(shape=(n_features_in,))
+            inp = layers.Input(shape=(n_features_in,))
 
             if batch_norm:
-                inp = BatchNormalization()(inp)
+                inp = layers.BatchNormalization()(inp)
 
-            layers = [
+            layer_sizes = [
                 n_features_in // hidden_layers_1,
                 n_features_in // (hidden_layers_1 * hidden_layers_2),
             ]
             hidden = inp
-            for layer_size in layers:
-                hidden = Dense(
+            for layer_size in layer_sizes:
+                hidden = layers.Dense(
                     layer_size,
                     activation=activation,
-                    kernel_regularizer=L2(l2_alpha),
+                    kernel_regularizer=regularizers.L2(l2_alpha),
                     kernel_initializer="he_normal",
                 )(hidden)
 
-                hidden = Dropout(rate=dropout_rate)(hidden)
+                hidden = layers.Dropout(rate=dropout_rate)(hidden)
 
                 # Batch normalization (if enabled)
                 if batch_norm:
-                    hidden = BatchNormalization()(hidden)
+                    hidden = layers.BatchNormalization()(hidden)
 
             n_outputs = y.shape[1] if len(y.shape) > 1 else 1
-            out = [Dense(n_outputs, activation="softmax")(hidden)]
+            out = layers.Dense(n_outputs, activation="softmax")(hidden)
             model = keras.Model(inp, out)
 
             # Learning rate scheduler
-            lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+            lr_schedule = optimizers.schedules.ExponentialDecay(
                 initial_learning_rate=learning_rate,
                 decay_steps=1000,
                 decay_rate=0.9,
@@ -150,10 +149,10 @@ class NN(keras.wrappers.SKLearnClassifier):
             )
 
             model.compile(
-                loss=keras.losses.BinaryFocalCrossentropy()
+                loss=losses.BinaryFocalCrossentropy()
                 if loss_func == "focal"
-                else keras.losses.BinaryCrossentropy(),
-                optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
+                else losses.BinaryCrossentropy(),
+                optimizer=optimizers.Adam(learning_rate=lr_schedule),
                 metrics=["Accuracy"],
             )
 
@@ -163,7 +162,14 @@ class NN(keras.wrappers.SKLearnClassifier):
 
     def fit(self, X, y, sample_weight):
         print(self.epochs)
-        super().fit(X, y, sample_weight=sample_weight, epochs=self.epochs, verbose=0, batch_size=self.batch_size)
+        super().fit(
+            X,
+            y,
+            sample_weight=sample_weight,
+            epochs=self.epochs,
+            verbose=0,
+            batch_size=self.batch_size,
+        )
 
     def predict_proba(self, X):
         return self.model_.predict(X, verbose=0)
