@@ -24,8 +24,10 @@ def logistic_params(trial: optuna.trial.FrozenTrial):
 def svm_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for C (C effect is non-linear)
     C = trial.suggest_float("svm__C", 0.001, 100, log=True)
-    
-    return {"C": C, "loss": "squared_hinge"}
+
+    #max_iter = trial.suggest_categorical()
+
+    return {"C": C, "loss": "squared_hinge", "max_iter": 2000}
 
 
 def random_forest_params(trial: optuna.trial.FrozenTrial):

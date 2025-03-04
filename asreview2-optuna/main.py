@@ -22,7 +22,7 @@ from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 
 # Study variables
-VERSION = 9
+VERSION = 8
 METRIC = "loss"  # Options: "loss", "ndcg"
 STUDY_SET = "demo"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
@@ -55,7 +55,7 @@ lemmatizer = WordNetLemmatizer()
 def lemmatize_text(text):
     if text == "" or text is None:
         return ""
-    words = word_tokenize(text)  # Tokenize the text
+    words = word_tokenize(str(text))  # Tokenize the text
     return " ".join(
         [lemmatizer.lemmatize(word) for word in words]
     )  # Lemmatize each word
@@ -274,7 +274,7 @@ if __name__ == "__main__":
     nltk.download("punkt")
     nltk.download("wordnet")
     # list of studies
-    studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True).head(1)
+    studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True)
     report_order = sorted(set(studies["dataset_id"]))
 
     if PRE_PROCESSED_FMS:
