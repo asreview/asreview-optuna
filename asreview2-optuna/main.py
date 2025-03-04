@@ -17,7 +17,6 @@ from asreview.models.balancers import Balanced
 from asreview.models.queriers import Max
 from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
-from sklearn.preprocessing import StandardScaler
 
 # Study variables
 VERSION = 2
@@ -111,18 +110,12 @@ def process_row(row, clf_params, fe_params, ratio):
     # Create balancer with optuna value
     blc = Balanced(ratio=ratio)
 
+    clf = classifiers[CLASSIFIER_TYPE](**clf_params)
+
     if PRE_PROCESSED_FMS:
         with open(PICKLE_FOLDER_PATH / f"{row['dataset_id']}.pkl", "rb") as f:
             X, labels = pickle.load(f)
-
-        if CLASSIFIER_TYPE == "nn":
-            scaler = StandardScaler()
-            X = scaler.fit_transform(X)
-
-        # Create classifier and feature extractor with params
-        clf = classifiers[CLASSIFIER_TYPE](**clf_params)
-
-        labels = pd.Series(labels)
+            labels = pd.Series(labels)
 
         alc = ActiveLearningCycle(
             querier=Max(),
@@ -131,11 +124,9 @@ def process_row(row, clf_params, fe_params, ratio):
             n_query=lambda results: n_query_extreme(results, X.shape[0]),
         )
     else:
-        # Create classifier and feature extractor with params
-        clf = classifiers[CLASSIFIER_TYPE](**clf_params)
         X = load_dataset(row["dataset_id"])
-
         labels = X["label_included"]
+
         fe = feature_extractors[FEATURE_EXTRACTOR_TYPE](**fe_params)
 
         alc = ActiveLearningCycle(
