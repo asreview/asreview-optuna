@@ -17,11 +17,14 @@ from asreview.models.balancers import Balanced
 from asreview.models.queriers import Max
 from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
+import nltk
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
 
 # Study variables
-VERSION = 7
-#METRIC = "ndcg"  # Options: "loss", "ndcg"
-STUDY_SET = "full"
+VERSION = 8
+METRIC = "loss"  # Options: "loss", "ndcg"
+STUDY_SET = "demo"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
 FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai", "gist", "e5", "gte", "kalm", "lajavaness", "snowflake"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
@@ -43,6 +46,19 @@ dataset_sizes = {
     dataset.name: dataset.metadata["data"]["n_records"]
     for dataset in sd.iter_datasets()
 }
+
+# Initialize the lemmatizer
+lemmatizer = WordNetLemmatizer()
+
+
+# Function to lemmatize text
+def lemmatize_text(text):
+    if text == "" or text is None:
+        return ""
+    words = word_tokenize(text)  # Tokenize the text
+    return " ".join(
+        [lemmatizer.lemmatize(word) for word in words]
+    )  # Lemmatize each word
 
 
 def load_dataset(dataset_id):
@@ -112,7 +128,7 @@ def run_sequential(studies, *args, **kwargs):
 
 
 # Function to process each row
-def process_row(row, clf_params, fe_params, ratio):
+def process_row(row, clf_params, fe_params, ratio, lemmatization):
     priors = row["prior_inclusions"] + row["prior_exclusions"]
 
     # Create balancer with optuna value
@@ -135,6 +151,10 @@ def process_row(row, clf_params, fe_params, ratio):
         )
     else:
         X = load_dataset(row["dataset_id"])
+        
+        if lemmatization:
+            X["title"] = X["title"].apply(lemmatize_text)
+            X["abstract"] = X["abstract"].apply(lemmatize_text)
 
         labels = X["label_included"]
         fe = feature_extractors[FEATURE_EXTRACTOR_TYPE](**fe_params)
@@ -164,14 +184,15 @@ def process_row(row, clf_params, fe_params, ratio):
     padded_results = list(simulate._results["label"]) + [0] * (
         len(simulate.labels) - len(simulate._results["label"])
     )
-    #metric = loss(padded_results) if METRIC == "loss" else ndcg(padded_results)
-    return row["dataset_id"], (loss(padded_results), ndcg(padded_results))
+    metric = loss(padded_results) if METRIC == "loss" else ndcg(padded_results)
+    return row["dataset_id"], metric
 
 
 def objective_report(report_order):
     def objective(trial):
         # Use normal distribution for ratio (ratio effect is linear)
         ratio = trial.suggest_float("ratio", 1.0, 5.0)
+        lemmatization = trial.suggest_categorical("lemmatization", [True, False])
 
         clf_params = classifier_params[CLASSIFIER_TYPE](trial)
         fe_params = (
@@ -181,27 +202,24 @@ def objective_report(report_order):
         )
 
         if PARALLELIZE_OBJECTIVE:
-            losses, gains = run_parallel(
-                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
+            metric_values = run_parallel(
+                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio, lemmatization=lemmatization
             )
         else:
-            losses, gains = run_sequential(
-                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
+            metric_values = run_sequential(
+                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio,  lemmatization=lemmatization
             )
 
-        all_losses = []
-        all_gains = []
+        all_metric_values = []
         for i, dataset_id in enumerate(report_order):
-            ds_losses = losses[dataset_id] if dataset_id in losses else [0]
-            ds_gains = gains[dataset_id] if dataset_id in gains else [0]
-            #trial.report(np.mean(ds_losses), i)
-            #trial.report(np.std(ds_losses), len(report_order) + i)
-            #trial.report(np.mean(ds_gains), (2 *len(report_order)) + i)
-            #trial.report(np.std(ds_gains), (3 *len(report_order)) + i)
-            all_losses += ds_losses
-            all_gains += ds_gains
+            ds_metric_values = (
+                metric_values[dataset_id] if dataset_id in metric_values else [0]
+            )
+            trial.report(np.mean(metric_values), i)
+            trial.report(np.std(metric_values), len(report_order) + i)
+            all_metric_values += ds_metric_values
 
-        return np.mean(all_losses), np.mean(all_gains)
+        return np.mean(all_metric_values)
 
     return objective
 
@@ -256,6 +274,9 @@ def download_pickles(report_order):
 
 
 if __name__ == "__main__":
+    # Download necessary resources
+    nltk.download("punkt")
+    nltk.download("wordnet")
     # list of studies
     studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True)
     report_order = sorted(set(studies["dataset_id"]))
@@ -273,7 +294,7 @@ if __name__ == "__main__":
             "DB_URI", "sqlite:///db.sqlite3"
         ),  # Specify the storage URL here.
         study_name=f"ASReview2-{STUDY_SET}-{FEATURE_EXTRACTOR_TYPE}-{CLASSIFIER_TYPE}-{VERSION}",
-        directions=["minimize", "maximize"], #if METRIC == "loss" else "maximize",
+        direction="minimize" if METRIC == "loss" else "maximize",
         sampler=sampler,
         load_if_exists=True,
     )

@@ -6,3 +6,4 @@ numpy
 pandas
 psycopg2-binary
 sentence-transformers
+nltk
