@@ -22,7 +22,7 @@ from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 
 # Study variables
-VERSION = 8
+VERSION = 9
 METRIC = "loss"  # Options: "loss", "ndcg"
 STUDY_SET = "demo"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
@@ -98,8 +98,7 @@ def n_query_extreme(results, n_records):
 
 # Function to run the loop in parallel
 def run_parallel(studies, *args, **kwargs):
-    losses = defaultdict(list)
-    gains = defaultdict(list)
+    metric_values = defaultdict(list)
     with ProcessPoolExecutor(max_workers=mp.cpu_count() - 1) as executor:
         # Submit tasks
         futures = {
@@ -110,21 +109,18 @@ def run_parallel(studies, *args, **kwargs):
         for future in as_completed(futures):
             dataset_id, results = future.result()
             if results is not None:
-                losses[dataset_id].append(results[0])
-                gains[dataset_id].append(results[1])
-    return losses, gains
+                metric_values[dataset_id].append(results)
+    return metric_values
 
 
 # Function to run the loop in parallel
 def run_sequential(studies, *args, **kwargs):
-    losses = defaultdict(list)
-    gains = defaultdict(list)
+    metric_values = defaultdict(list)
     for _, row in studies.iterrows():
         dataset_id, results = process_row(row, *args, **kwargs)
-        losses[dataset_id].append(results[0])
-        gains[dataset_id].append(results[1])
+        metric_values[dataset_id].append(results)
 
-    return losses, gains
+    return metric_values
 
 
 # Function to process each row
@@ -215,8 +211,8 @@ def objective_report(report_order):
             ds_metric_values = (
                 metric_values[dataset_id] if dataset_id in metric_values else [0]
             )
-            trial.report(np.mean(metric_values), i)
-            trial.report(np.std(metric_values), len(report_order) + i)
+            trial.report(np.mean(ds_metric_values), i)
+            trial.report(np.std(ds_metric_values), len(report_order) + i)
             all_metric_values += ds_metric_values
 
         return np.mean(all_metric_values)
@@ -278,7 +274,7 @@ if __name__ == "__main__":
     nltk.download("punkt")
     nltk.download("wordnet")
     # list of studies
-    studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True)
+    studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True).head(1)
     report_order = sorted(set(studies["dataset_id"]))
 
     if PRE_PROCESSED_FMS:
