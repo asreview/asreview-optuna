@@ -271,7 +271,7 @@ def download_pickles(report_order):
 
 if __name__ == "__main__":
     # Download necessary resources
-    nltk.download("punkt")
+    nltk.download("punkt_tab")
     nltk.download("wordnet")
     # list of studies
     studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True)
