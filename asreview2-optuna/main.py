@@ -12,7 +12,7 @@ import pandas as pd
 import requests
 import synergy_dataset as sd
 from asreview.learner import ActiveLearningCycle
-from asreview.metrics import loss, ndcg
+from asreview.metrics import loss
 from asreview.models.balancers import Balanced
 from asreview.models.queriers import Max
 from classifiers import classifier_params, classifiers
@@ -21,7 +21,8 @@ from sklearn.preprocessing import StandardScaler
 
 # Study variables
 VERSION = 2
-# METRIC = "ndcg"  # Options: "loss", "ndcg"
+METRIC = loss  # Options: "loss", "ndcg"
+DIRECTION = "minimize"
 STUDY_SET = "demo"
 CLASSIFIER_TYPE = "nn"  # Options: "nb", "log", "svm", "rf"
 FEATURE_EXTRACTOR_TYPE = "e5"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai", "gist", "e5", "gte", "kalm", "lajavaness", "snowflake"
@@ -39,11 +40,6 @@ OPTUNA_N_JOBS = 1 if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 1
 MIN_TRIALS = 1000
 N_HISTORY = 5
 STOPPING_THRESHOLD = 0.0001
-
-dataset_sizes = {
-    dataset.name: dataset.metadata["data"]["n_records"]
-    for dataset in sd.iter_datasets()
-}
 
 
 def load_dataset(dataset_id):
@@ -83,8 +79,7 @@ def n_query_extreme(results, n_records):
 
 # Function to run the loop in parallel
 def run_parallel(studies, *args, **kwargs):
-    losses = defaultdict(list)
-    gains = defaultdict(list)
+    metric_values = defaultdict(list)
     with ProcessPoolExecutor(max_workers=int((mp.cpu_count() - 1) / 4)) as executor:
         # Submit tasks
         futures = {
@@ -95,21 +90,18 @@ def run_parallel(studies, *args, **kwargs):
         for future in as_completed(futures):
             dataset_id, results = future.result()
             if results is not None:
-                losses[dataset_id].append(results[0])
-                gains[dataset_id].append(results[1])
-    return losses, gains
+                metric_values[dataset_id].append(results)
+    return metric_values
 
 
 # Function to run the loop in parallel
 def run_sequential(studies, *args, **kwargs):
-    losses = defaultdict(list)
-    gains = defaultdict(list)
+    metric_values = defaultdict(list)
     for _, row in studies.iterrows():
         dataset_id, results = process_row(row, *args, **kwargs)
-        losses[dataset_id].append(results[0])
-        gains[dataset_id].append(results[1])
+        metric_values[dataset_id].append(results)
 
-    return losses, gains
+    return metric_values
 
 
 # Function to process each row
@@ -126,7 +118,6 @@ def process_row(row, clf_params, fe_params, ratio):
         if CLASSIFIER_TYPE == "nn":
             scaler = StandardScaler()
             X = scaler.fit_transform(X)
-            clf_params["input_dim"] = len(X[0])
 
         # Create classifier and feature extractor with params
         clf = classifiers[CLASSIFIER_TYPE](**clf_params)
@@ -172,8 +163,7 @@ def process_row(row, clf_params, fe_params, ratio):
     padded_results = list(simulate._results["label"]) + [0] * (
         len(simulate.labels) - len(simulate._results["label"])
     )
-    # metric = loss(padded_results) if METRIC == "loss" else ndcg(padded_results)
-    return row["dataset_id"], (loss(padded_results), ndcg(padded_results))
+    return row["dataset_id"], METRIC(padded_results)
 
 
 def objective_report(report_order):
@@ -189,27 +179,24 @@ def objective_report(report_order):
         )
 
         if PARALLELIZE_OBJECTIVE:
-            losses, gains = run_parallel(
+            metric_values = run_parallel(
                 studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
             )
         else:
-            losses, gains = run_sequential(
+            metric_values = run_sequential(
                 studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
             )
 
-        all_losses = []
-        all_gains = []
+        all_metric_values = []
         for i, dataset_id in enumerate(report_order):
-            ds_losses = losses[dataset_id] if dataset_id in losses else [0]
-            ds_gains = gains[dataset_id] if dataset_id in gains else [0]
-            # trial.report(np.mean(ds_losses), i)
-            # trial.report(np.std(ds_losses), len(report_order) + i)
-            # trial.report(np.mean(ds_gains), (2 *len(report_order)) + i)
-            # trial.report(np.std(ds_gains), (3 *len(report_order)) + i)
-            all_losses += ds_losses
-            all_gains += ds_gains
+            ds_metric_values = (
+                metric_values[dataset_id] if dataset_id in metric_values else [0]
+            )
+            trial.report(np.mean(ds_metric_values), i)
+            trial.report(np.std(ds_metric_values), len(report_order) + i)
+            all_metric_values += ds_metric_values
 
-        return np.mean(all_losses), np.mean(all_gains)
+        return np.mean(all_metric_values)
 
     return objective
 
@@ -281,7 +268,7 @@ if __name__ == "__main__":
             "DB_URI", "sqlite:///db.sqlite3"
         ),  # Specify the storage URL here.
         study_name=f"ASReview2-{STUDY_SET}-{FEATURE_EXTRACTOR_TYPE}-{CLASSIFIER_TYPE}-{VERSION}",
-        directions=["minimize", "maximize"],  # if METRIC == "loss" else "maximize",
+        direction=DIRECTION,
         sampler=sampler,
         load_if_exists=True,
     )

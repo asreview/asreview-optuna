@@ -161,7 +161,6 @@ class NN(wrappers.SKLearnClassifier):
         super().__init__(model=build_nn_model, model_kwargs=kwargs)
 
     def fit(self, X, y, sample_weight):
-        print(self.epochs)
         super().fit(
             X,
             y,
