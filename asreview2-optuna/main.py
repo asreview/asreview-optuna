@@ -19,7 +19,7 @@ from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
-VERSION = 2
+VERSION = 3
 METRIC = loss  # Options: "loss", "ndcg"
 DIRECTION = "minimize"
 STUDY_SET = "demo"

@@ -46,23 +46,26 @@ def nn_params(trial: optuna.trial.FrozenTrial):
     # Regularization parameters
     l2_alpha = trial.suggest_float("l2_alpha", 1e-6, 1e-2, log=True)
     dropout_rate = trial.suggest_float("dropout_rate", 0.1, 0.5, step=0.1)
-    batch_norm = trial.suggest_categorical("batch_norm", [True, False])
+    batch_norm = True #trial.suggest_categorical("batch_norm", [True, False])
 
     # Learning parameters
-    learning_rate = trial.suggest_float("learning_rate", 1e-4, 1e-2, log=True)
-    batch_size = trial.suggest_categorical("batch_size", [32, 64, 128, 256])
+    learning_rate = 1e-2 #trial.suggest_float("learning_rate", 1e-4, 1e-2, log=True)
+    batch_size = trial.suggest_categorical("batch_size", [16, 32, 64])
 
     # Architecture parameters
-    activation = trial.suggest_categorical(
-        "activation", ["relu", "selu", "swish", "gelu"]
-    )
+    #activation = trial.suggest_categorical(
+    #    "activation", ["relu", "selu", "swish", "gelu"]
+    #)
+    activation = "relu"
 
-    hidden_layers_1 = trial.suggest_categorical("hidden_layers_1", [2, 4])
+    hidden_layers_1 = trial.suggest_categorical("hidden_layers_1", [2, 4, 8, 16])
     hidden_layer_2 = trial.suggest_categorical("hidden_layer_2", [1, 2])
 
-    loss = trial.suggest_categorical("loss", ["focal", "crossEntropy"])
+    loss = "crossEntropy" #trial.suggest_categorical("loss", ["focal", "crossEntropy"])
 
     epochs = trial.suggest_int("epochs", 10, 100, step=10)
+
+    optimizer = "adam" #trial.suggest_categorical("optimizer", ["adam", "SGD"])
 
     return {
         "l2_alpha": l2_alpha,
@@ -75,6 +78,7 @@ def nn_params(trial: optuna.trial.FrozenTrial):
         "hidden_layers_2": hidden_layer_2,
         "loss_func": loss,
         "epochs": epochs,
+        "optimizer": optimizer,
     }
 
 
@@ -108,6 +112,7 @@ class NN(wrappers.SKLearnClassifier):
             hidden_layers_1,
             hidden_layers_2,
             loss_func,
+            optimizer,
         ):
             # Creates a basic MLP model dynamically choosing the input and
             # output shapes.
@@ -152,7 +157,7 @@ class NN(wrappers.SKLearnClassifier):
                 loss=losses.BinaryFocalCrossentropy()
                 if loss_func == "focal"
                 else losses.BinaryCrossentropy(),
-                optimizer=optimizers.Adam(learning_rate=lr_schedule),
+                optimizer=optimizers.Adam() if optimizer == "adam" else optimizers.SGD(learning_rate=lr_schedule, momentum=0.9, nesterov=True),
                 metrics=["accuracy"],
             )
 
