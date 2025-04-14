@@ -15,19 +15,20 @@ from asreview.learner import ActiveLearningCycle
 from asreview.metrics import loss, ndcg
 from asreview.models.balancers import Balanced
 from asreview.models.queriers import Max
+
 from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
 VERSION = 3
-METRIC = "ndcg"  # Options: "loss", "ndcg"
+METRIC = "loss"  # Options: "loss", "ndcg"
 STUDY_SET = "full"
 CLASSIFIER_TYPE = "nb"  # Options: "nb", "log", "svm", "rf"
 FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
 PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
-AUTO_SHUTDOWN = True
+AUTO_SHUTDOWN = False
 
 # Optuna variables
 OPTUNA_N_TRIALS = 500
@@ -48,6 +49,8 @@ dataset_sizes = {
 def load_dataset(dataset_id):
     if dataset_id == "Moran_2021_corrected":
         return pd.read_csv(Path("datasets", "Moran_2021_corrected_shuffled_raw.csv"))
+    if dataset_id == "Muthu_2021_corrected":
+        return pd.read_csv(Path("datasets", "Muthu_2021_corrected_shuffled_raw.csv"))
 
     return sd.Dataset(dataset_id).to_frame().reset_index()
 
@@ -167,7 +170,7 @@ def process_row(row, clf_params, fe_params, ratio):
 def objective_report(report_order):
     def objective(trial):
         # Use normal distribution for ratio (ratio effect is linear)
-        ratio = trial.suggest_float("ratio", 1.0, 5.0)
+        ratio = trial.suggest_float("ratio", 1.0, 10.0)
 
         clf_params = classifier_params[CLASSIFIER_TYPE](trial)
         fe_params = (
@@ -263,7 +266,7 @@ if __name__ == "__main__":
         storage=os.getenv(
             "DB_URI", "sqlite:///db.sqlite3"
         ),  # Specify the storage URL here.
-        study_name=f"ASReview2-{STUDY_SET}-{FEATURE_EXTRACTOR_TYPE}-{CLASSIFIER_TYPE}-{VERSION}",
+        study_name=f"ASReview2_0b4-{CLASSIFIER_TYPE}-{FEATURE_EXTRACTOR_TYPE}-{STUDY_SET}-{VERSION}",
         direction="minimize" if METRIC == "loss" else "maximize",
         sampler=sampler,
         load_if_exists=True,
@@ -280,4 +283,4 @@ if __name__ == "__main__":
     print(f"Best value: {study.best_value} (params: {study.best_params})")
     if AUTO_SHUTDOWN:
         print("Shutting down now...")
-        os.system("shutdown now -h")
+        os.system("sudo shutdown -h now")

@@ -1,16 +1,15 @@
 import optuna
 from asreview.models.classifiers import (
+    SVM,
     Logistic,
     NaiveBayes,
     RandomForest,
-    SVM,
 )
 
 
 def naive_bayes_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for alpha (alpha effect is non-linear)
-    #alpha = 8.4 #trial.suggest_float("alpha", 0.5, 50, log=True)
-    alpha = trial.suggest_float("nb__alpha", 1.0, 15.0)
+    alpha = trial.suggest_float("nb__alpha", 0.1, 15.0, log=True)
     return {"alpha": alpha}
 
 
@@ -23,16 +22,13 @@ def logistic_params(trial: optuna.trial.FrozenTrial):
 def svm_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for C (C effect is non-linear)
     C = trial.suggest_float("svm__C", 1e-3, 100, log=True)
-    return {"C": C}
+    return {"C": C, "loss": "squared_hinge", "max_iter": 2000}
 
 
 def random_forest_params(trial: optuna.trial.FrozenTrial):
     # Use normal distribution for n_estimators (n_estimators effect is linear)
-    n_estimators = trial.suggest_int("rf__n_estimators", 50, 500)
-
-    # Use normal distribution for max_features (max_features effect is linear)
-    max_features = trial.suggest_int("rf__max_features", 2, 20)
-    return {"n_estimators": n_estimators, "max_features": max_features}
+    n_estimators = trial.suggest_int("rf__n_estimators", 100, 200)
+    return {"n_estimators": n_estimators, "max_features": "sqrt"}
 
 
 classifier_params = {

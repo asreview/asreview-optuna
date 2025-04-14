@@ -165,3 +165,7 @@ cython_debug/
 #.idea/
 
 *.pdf
+*.asreview
+*.csv
+!Moran_2021_corrected_shuffled_raw.csv
+!Muthu_2021_corrected_shuffled_raw.csv
