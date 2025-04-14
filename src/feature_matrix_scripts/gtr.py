@@ -7,14 +7,14 @@ import torch
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
-FORCE = False
+FORCE = True
 
 # Folder to save embeddings
-folder_pickle_files = Path("synergy-dataset", "pickles_kalm")
+folder_pickle_files = Path("synergy-dataset", "pickles_gtr")
 folder_pickle_files.mkdir(parents=True, exist_ok=True)
 
 # Load LaBSE model
-model = SentenceTransformer("HIT-TMG/KaLM-embedding-multilingual-mini-instruct-v1.5")
+model = SentenceTransformer("gtr-t5-large")
 
 # Check if CUDA is available
 device = "cuda" if torch.cuda.is_available() else "cpu"

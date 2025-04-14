@@ -7,7 +7,7 @@ import torch
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
-FORCE = False
+FORCE = True
 
 # Folder to save embeddings
 folder_pickle_files = Path("synergy-dataset", "pickles_mxbai")
@@ -22,20 +22,21 @@ print(f"Using device: {device}")
 
 # Loop through datasets
 for dataset in tqdm(sd.iter_datasets(), total=26):
-    # Load dataset
-    if dataset.name == "Moran_2021_corrected":
+    if dataset.name == "Chou_2004" or dataset.name == "Jeyaraman_2020":
+        continue
+    elif dataset.name == "Moran_2021":
         df = pd.read_csv("./datasets/Moran_2021_corrected_shuffled_raw.csv")
-    elif dataset.name == "Muthu_2021_corrected":
+        dataset_name = "Moran_2021_corrected"
+    elif dataset.name == "Muthu_2021":
         df = pd.read_csv("./datasets/Muthu_2021_corrected_shuffled_raw.csv")
+        dataset_name = "Muthu_2021_corrected"
     else:
         df = dataset.to_frame().reset_index()
+        dataset_name = dataset.name
 
     # Combine 'title' and 'abstract' text
     combined_texts = (df["title"].fillna("") + " " + df["abstract"].fillna("")).tolist()
 
-    dataset_name = (
-        dataset.name if dataset.name != "Moran_2021" else "Moran_2021_corrected"
-    )
     pickle_file_path = folder_pickle_files / f"{dataset_name}.pkl"
 
     # Check if the pickle file already exists
@@ -45,7 +46,11 @@ for dataset in tqdm(sd.iter_datasets(), total=26):
 
     # Generate embeddings
     X = model.encode(
-        combined_texts, batch_size=128, show_progress_bar=False, device=device
+        combined_texts,
+        batch_size=512,
+        show_progress_bar=False,
+        device=device,
+        normalize_embeddings=True,
     )
 
     # Save embeddings and labels as a pickle file
