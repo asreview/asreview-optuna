@@ -33,9 +33,13 @@ for dataset in tqdm(sd.iter_datasets(), total=26):
     # Combine 'title' and 'abstract' text
     combined_texts = (df["title"].fillna("") + " " + df["abstract"].fillna("")).tolist()
 
-    dataset_name = (
-        dataset.name if dataset.name != "Moran_2021" else "Moran_2021_corrected"
-    )
+    if dataset.name == "Moran_2021":
+        dataset_name = "Moran_2021_corrected"
+    elif dataset.name == "Muthu_2021":
+        dataset_name = "Muthu_2021_corrected"
+    else:
+        dataset_name = dataset.name
+
     pickle_file_path = folder_pickle_files / f"{dataset_name}.pkl"
 
     # Check if the pickle file already exists
@@ -46,7 +50,7 @@ for dataset in tqdm(sd.iter_datasets(), total=26):
     # Generate embeddings
     X = model.encode(
         combined_texts,
-        batch_size=128,
+        batch_size=512,
         show_progress_bar=False,
         device=device,
         normalize_embeddings=True,

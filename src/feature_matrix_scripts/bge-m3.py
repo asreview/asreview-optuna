@@ -4,6 +4,7 @@ from pathlib import Path
 import pandas as pd
 import synergy_dataset as sd
 from FlagEmbedding import BGEM3FlagModel
+from sklearn.preprocessing import normalize
 from tqdm import tqdm
 
 FORCE = False
@@ -25,9 +26,13 @@ for dataset in tqdm(sd.iter_datasets(), total=26):
     # Combine 'title' and 'abstract' text
     combined_texts = (df["title"].fillna("") + " " + df["abstract"].fillna("")).tolist()
 
-    dataset_name = (
-        dataset.name if dataset.name != "Moran_2021" else "Moran_2021_corrected"
-    )
+    if dataset.name == "Moran_2021":
+        dataset_name = "Moran_2021_corrected"
+    elif dataset.name == "Muthu_2021":
+        dataset_name = "Muthu_2021_corrected"
+    else:
+        dataset_name = dataset.name
+
     pickle_file_path = folder_pickle_files / f"{dataset_name}.pkl"
 
     # Check if the pickle file already exists
@@ -45,9 +50,8 @@ for dataset in tqdm(sd.iter_datasets(), total=26):
         return_colbert_vecs=False,
     )
 
+    X["dense_vecs_norm"] = normalize(X["dense_vecs"], norm="l2")
+
     # Save embeddings and labels as a pickle file
     with open(folder_pickle_files / f"{dataset_name}.pkl", "wb") as f:
-        pickle.dump((X["dense_vecs"], df["label_included"].tolist()), f)
-
-    with open(folder_pickle_files / f"sparse-{dataset_name}.pkl", "wb") as f:
-        pickle.dump((X["lexical_weights"], df["label_included"].tolist()), f)
+        pickle.dump((X["dense_vecs_norm"], df["label_included"].tolist()), f)

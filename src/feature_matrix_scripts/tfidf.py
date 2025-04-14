@@ -20,9 +20,13 @@ for dataset in tqdm(sd.iter_datasets(), total=26):
     else:
         df = dataset.to_frame().reset_index()
 
-    dataset_name = (
-        dataset.name if dataset.name != "Moran_2021" else "Moran_2021_corrected"
-    )
+    if dataset.name == "Moran_2021":
+        dataset_name = "Moran_2021_corrected"
+    elif dataset.name == "Muthu_2021":
+        dataset_name = "Muthu_2021_corrected"
+    else:
+        dataset_name = dataset.name
+
     pickle_file_path = folder_pickle_files / f"{dataset_name}.pkl"
 
     # Check if the pickle file already exists
