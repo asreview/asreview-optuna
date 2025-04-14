@@ -10,11 +10,11 @@ from tqdm import tqdm
 FORCE = True
 
 # Folder to save embeddings
-folder_pickle_files = Path("synergy-dataset", "pickles_labse")
+folder_pickle_files = Path("synergy-dataset", "pickles_sbert")
 folder_pickle_files.mkdir(parents=True, exist_ok=True)
 
 # Load LaBSE model
-model = SentenceTransformer("sentence-transformers/LaBSE")
+model = SentenceTransformer("all-mpnet-base-v2")
 
 # Check if CUDA is available
 device = "cuda" if torch.cuda.is_available() else "cpu"
