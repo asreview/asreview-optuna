@@ -57,6 +57,8 @@ def process_study(study, dataset_name, params=None):
     # Load dataset
     if dataset_name == "Moran_2021_corrected":
         X = pd.read_csv("./datasets/Moran_2021_corrected_shuffled_raw.csv")
+    elif dataset_name == "Muthu_2021_corrected":
+        X = pd.read_csv("./datasets/Muthu_2021_corrected_shuffled_raw.csv")
     else:
         X = sd.Dataset(dataset_name).to_frame().reset_index()
 

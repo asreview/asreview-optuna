@@ -29,6 +29,8 @@ def process_study(dataset_name, study, index):
 
     if dataset_name == "Moran_2021_corrected":
         file_path = "./datasets/Moran_2021_corrected_shuffled_raw.csv"
+    elif dataset_name == "Muthu_2021_corrected":
+        file_path = "./datasets/Muthu_2021_corrected_shuffled_raw.csv"
     else:
         file_path = f"./datasets/synergy_dataset/{dataset_name}.csv"
 

@@ -2,7 +2,7 @@ import pickle
 from pathlib import Path
 
 import pandas as pd
-import synergy_dataset as sd  # Assuming this is your custom dataset handler
+import synergy_dataset as sd
 import torch
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
@@ -10,11 +10,13 @@ from tqdm import tqdm
 FORCE = False
 
 # Folder to save embeddings
-folder_pickle_files = Path("synergy-dataset", "pickles_mxbai")
+folder_pickle_files = Path("synergy-dataset", "pickles_lajavaness")
 folder_pickle_files.mkdir(parents=True, exist_ok=True)
 
 # Load LaBSE model
-model = SentenceTransformer("mixedbread-ai/mxbai-embed-large-v1")
+model = SentenceTransformer(
+    "Lajavaness/bilingual-embedding-large", trust_remote_code=True
+)
 
 # Check if CUDA is available
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -22,10 +24,12 @@ print(f"Using device: {device}")
 
 # Loop through datasets
 for dataset in tqdm(sd.iter_datasets(), total=26):
-    if dataset.name == "Moran_2021":
-        df = pd.read_csv("../datasets/Moran_2021_corrected_shuffled_raw.csv")
+    # Load dataset
+    if dataset.name == "Moran_2021_corrected":
+        df = pd.read_csv("./datasets/Moran_2021_corrected_shuffled_raw.csv")
+    elif dataset.name == "Muthu_2021_corrected":
+        df = pd.read_csv("./datasets/Muthu_2021_corrected_shuffled_raw.csv")
     else:
-        # Convert dataset to a DataFrame and reset index
         df = dataset.to_frame().reset_index()
 
     # Combine 'title' and 'abstract' text

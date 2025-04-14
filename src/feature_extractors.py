@@ -18,13 +18,10 @@ def onehot_params(trial: optuna.trial.FrozenTrial):
 
     min_df = trial.suggest_int("onehot__min_df", 1, 10)
 
-    # trial.suggest_categorical does not support tuples, so choose max_ngram_range first, then create a tuple.
-    max_ngram_range = trial.suggest_int("onehot__max_ngram_range", 1, 3)
-    ngram_range = (1, max_ngram_range)
     return {
         "max_df": max_df,
         "min_df": min_df,
-        "ngram_range": ngram_range,
+        "ngram_range": (1, 2),
     }
 
 

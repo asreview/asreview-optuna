@@ -15,11 +15,9 @@ from asreview.learner import ActiveLearningCycle
 from asreview.metrics import loss, ndcg
 from asreview.models.balancers import Balanced
 from asreview.models.queriers import Max
+
 from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
-import nltk
-from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
 
 # Study variables
 VERSION = 9
@@ -30,7 +28,7 @@ FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
 PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
-AUTO_SHUTDOWN = True
+AUTO_SHUTDOWN = False
 
 # Optuna variables
 OPTUNA_N_TRIALS = 500
@@ -47,23 +45,11 @@ dataset_sizes = {
     for dataset in sd.iter_datasets()
 }
 
-# Initialize the lemmatizer
-lemmatizer = WordNetLemmatizer()
-
-
-# Function to lemmatize text
-def lemmatize_text(text):
-    if text == "" or text is None:
-        return ""
-    words = word_tokenize(str(text))  # Tokenize the text
-    return " ".join(
-        [lemmatizer.lemmatize(word) for word in words]
-    )  # Lemmatize each word
-
-
 def load_dataset(dataset_id):
     if dataset_id == "Moran_2021_corrected":
         return pd.read_csv(Path("datasets", "Moran_2021_corrected_shuffled_raw.csv"))
+    if dataset_id == "Muthu_2021_corrected":
+        return pd.read_csv(Path("datasets", "Muthu_2021_corrected_shuffled_raw.csv"))
 
     return sd.Dataset(dataset_id).to_frame().reset_index()
 
@@ -124,7 +110,7 @@ def run_sequential(studies, *args, **kwargs):
 
 
 # Function to process each row
-def process_row(row, clf_params, fe_params, ratio, lemmatization):
+def process_row(row, clf_params, fe_params, ratio):
     priors = row["prior_inclusions"] + row["prior_exclusions"]
 
     # Create balancer with optuna value
@@ -147,10 +133,6 @@ def process_row(row, clf_params, fe_params, ratio, lemmatization):
         )
     else:
         X = load_dataset(row["dataset_id"])
-        
-        if lemmatization:
-            X["title"] = X["title"].apply(lemmatize_text)
-            X["abstract"] = X["abstract"].apply(lemmatize_text)
 
         labels = X["label_included"]
         fe = feature_extractors[FEATURE_EXTRACTOR_TYPE](**fe_params)
@@ -187,8 +169,7 @@ def process_row(row, clf_params, fe_params, ratio, lemmatization):
 def objective_report(report_order):
     def objective(trial):
         # Use normal distribution for ratio (ratio effect is linear)
-        ratio = trial.suggest_float("ratio", 1.0, 5.0)
-        lemmatization = trial.suggest_categorical("lemmatization", [True, False])
+        ratio = trial.suggest_float("ratio", 1.0, 10.0)
 
         clf_params = classifier_params[CLASSIFIER_TYPE](trial)
         fe_params = (
@@ -199,11 +180,11 @@ def objective_report(report_order):
 
         if PARALLELIZE_OBJECTIVE:
             metric_values = run_parallel(
-                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio, lemmatization=lemmatization
+                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
             )
         else:
             metric_values = run_sequential(
-                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio,  lemmatization=lemmatization
+                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
             )
 
         all_metric_values = []
@@ -270,9 +251,6 @@ def download_pickles(report_order):
 
 
 if __name__ == "__main__":
-    # Download necessary resources
-    nltk.download("punkt_tab")
-    nltk.download("wordnet")
     # list of studies
     studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True)
     report_order = sorted(set(studies["dataset_id"]))
@@ -289,7 +267,7 @@ if __name__ == "__main__":
         storage=os.getenv(
             "DB_URI", "sqlite:///db.sqlite3"
         ),  # Specify the storage URL here.
-        study_name=f"ASReview2-{STUDY_SET}-{FEATURE_EXTRACTOR_TYPE}-{CLASSIFIER_TYPE}-{VERSION}",
+        study_name=f"ASReview2_0b4-{CLASSIFIER_TYPE}-{FEATURE_EXTRACTOR_TYPE}-{STUDY_SET}-{VERSION}",
         direction="minimize" if METRIC == "loss" else "maximize",
         sampler=sampler,
         load_if_exists=True,
