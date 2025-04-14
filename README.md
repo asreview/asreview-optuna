@@ -21,12 +21,12 @@ pip install -r requirements.txt
 ## Run Local
 Simply execute the `main.py` file:
 ```bash
-python ./optuna/main.py
+python ./src/main.py
 ```
 
 And, to see the results, start up the dashboard:
 ```bash
-optuna-dashboard sqlite:///db.sqlite3
+optuna-dashboard sqlite:///src/db.sqlite3
 ```
 
 ## Run on Exoscale
@@ -50,7 +50,7 @@ Two options here:
 6. Create nginx.conf `nano nginx.conf` (example in `dashboard/nginx.conf`)
 7. Install deps `sudo apt install -y apache2-utils`
 8. Create htpasswd file `sudo htpasswd -c ./htpasswd admin`
-9. Create docker-compose.yml `nano docker-compose.yml` (example in `dashboard/docker-compose.yml`, make sure to fill in the DB URI)
+9. Create docker-compose.yml `nano docker-compose.yml` (example in `deployment/dashboard/docker-compose.yml`, make sure to fill in the DB URI)
 10. Start docker using docker-compose.yml `docker-compose up -d`
     
 #### To Start a Study
@@ -59,18 +59,18 @@ Two options here:
     - Make sure to set the `asreview-and-optuna-dashboard` security group
 2. Update and reboot `sudo apt update && sudo apt upgrade` and `sudo reboot`
 3. Clone this repo `git clone https://github.com/asreview/asreview-optuna.git`
-4. Move into dir `cd asreview-optuna/asreview2-opt/`
+4. Move into dir `cd asreview-optuna`
 5. Pull and checkout the correct study branch `git pull && git checkout [BRANCH_NAME]`
 6. Install venv `sudo apt install python3.12-venv`
 7. Create Python venv `python3 -m venv .venv`
 8. Activate venv `source .venv/bin/activate`
 9. Install Python packages `pip3 install -r requirements.txt`
-10. Create dataset pickles `python3 feature_matrices.py` (± 1.5 minutes)
+10. Create dataset pickles `python3 ./src/feature_matrix_scripts/tfidf.py` (± 1.5 minutes)
 11. Set `DB_URI` environment variable `export DB_URI=[FULL DB URI]`
 12. Create a tmux environment so optuna keeps running when we close the connection `tmux new -s optuna`
     In the `optuna` tmux env run the following commands to start the study:
     1. `source .venv/bin/activate`
-    2. `python3 main.py`
+    2. `python3 src/main.py`
     3. Detach from the tmux environment using `ctrl` `+` `b` followed by `d` (you can always reattach using `tmux attach -t optuna`)
 13. You are all set! Check the dashboard on your local machine through a browser: `[Exoscale instance ip]:8080`
 14. You can see CPU usage using `htop`
@@ -81,21 +81,21 @@ Two options here:
     - Make sure to set the `asreview-and-optuna-dashboard` security group
 2. Update and reboot `sudo apt update && sudo apt upgrade` and `sudo reboot`
 3. Clone this repo `git clone https://github.com/asreview/asreview-optuna.git`
-4. Move into dir `cd asreview-optuna/asreview2-opt/`
+4. Move into dir `cd asreview-optuna`
 5. Install venv `sudo apt install python3.12-venv`
 6. Create Python venv `python3 -m venv .venv`
 7. Activate venv `source .venv/bin/activate`
 8. Install Python packages `pip3 install -r requirements.txt`
-9. Create dataset pickles `python3 feature_matrices.py` (± 1.5 minutes)
+9. Create dataset pickles `python3 ./src/feature_matrix_scripts/tfidf.py` (± 1.5 minutes)
 10. Set your simulation parameters in `main.py` using a cli editor such as `nano main.py`
 11. Create a tmux environment so optuna keeps running when we close the connection `tmux new -s optuna`
     In the `optuna` tmux env run the following commands to start the study:
     1. `source .venv/bin/activate`
-    2. `python3 main.py`
+    2. `python3 src/main.py`
     3. Detach from the tmux environment using `ctrl` `+` `b` followed by `d` (you can always reattach using `tmux attach -t optuna`)
 12. Create a tmux environment for the dashboard `tmux new -s dashboard`
     In the `dashboard` tmux env run the following commands to start the dashboard:
-    1. `optuna-dashboard sqlite:///db.sqlite3 --host 0.0.0.0`
+    1. `optuna-dashboard sqlite:///src/db.sqlite3 --host 0.0.0.0`
     2. Detach from the tmux environment using `ctrl` `+` `b` followed by `d` (you can always reattach using `tmux attach -t dashboard`)
 13. You are all set! Check the dashboard on your local machine through a browser: `[Exoscale instance ip]:8080`
 14. You can see CPU usage using `htop`
