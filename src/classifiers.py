@@ -5,7 +5,6 @@ from asreview.models.classifiers import (
     NaiveBayes,
     RandomForest,
 )
-
 from sklearn.svm import LinearSVC
 
 
@@ -56,6 +55,7 @@ class LinearSVMClassifier(LinearSVC):
             C=C,
             **kwargs,
         )
+
 
 classifiers = {
     "nb": NaiveBayes,
