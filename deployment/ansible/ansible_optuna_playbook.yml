@@ -6,6 +6,7 @@
     repo_url: "https://github.com/asreview/asreview-optuna.git"
     repo_dir: "/home/{{ ansible_user }}/asreview-optuna/"
     venv_dir: "/home/{{ ansible_user }}/asreview-optuna/.venv"
+    src_dir: "/home/{{ ansible_user }}/asreview-optuna/src/"
 
   tasks:
 
@@ -61,7 +62,7 @@
       ansible.builtin.shell: |
         tmux new -d -s optuna "bash -c 'export DB_URI={{ db_uri }} && source {{ venv_dir }}/bin/activate && python3 ./src/main.py'"
       args:
-        chdir: "{{ repo_dir }}"
+        chdir: "{{ src_dir }}"
       become: no
 
     - name: Display setup completion message
