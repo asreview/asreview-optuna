@@ -23,6 +23,12 @@
       ansible.builtin.wait_for_connection:
         timeout: 300
 
+    - name: Ensure the destination directory is clean
+      ansible.builtin.file:
+        path: "/home/{{ ansible_user }}/asreview-optuna"
+        state: absent
+      become: no
+
     - name: Clone the repository
       ansible.builtin.git:
         repo: "{{ repo_url }}"
