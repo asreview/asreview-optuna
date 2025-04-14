@@ -20,7 +20,7 @@ from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
-VERSION = 9
+VERSION = 1
 METRIC = "loss"  # Options: "loss", "ndcg"
 STUDY_SET = "full"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
