@@ -1,0 +1,63 @@
+---
+- name: Setup ASReview Optuna Environment
+  hosts: asreview2
+  become: yes
+  vars:
+    repo_url: "https://github.com/asreview/asreview-optuna.git"
+    repo_dir: "/home/{{ ansible_user }}/asreview-optuna/"
+    venv_dir: "/home/{{ ansible_user }}/asreview-optuna/.venv"
+
+  tasks:
+
+    - name: Ensure the system is updated
+      ansible.builtin.apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Reboot the system if needed
+      ansible.builtin.reboot:
+        msg: "Rebooting after upgrade"
+        connect_timeout: 30
+
+    - name: Wait for system to come back online
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+
+    - name: Clone the repository
+      ansible.builtin.git:
+        repo: "{{ repo_url }}"
+        dest: "/home/{{ ansible_user }}/asreview-optuna"
+        version: "{{ branch_name }}"
+        force: yes
+      become: no
+
+    - name: Ensure required system packages are installed
+      ansible.builtin.apt:
+        name:
+          - python3-venv
+          - python3-pip
+        state: present
+
+    - name: Create Python virtual environment
+      ansible.builtin.command:
+        cmd: python3 -m venv {{ venv_dir }}
+      args:
+        creates: "{{ venv_dir }}/bin/activate"
+      become: no
+
+    - name: Install requirements in the virtual environment
+      ansible.builtin.pip:
+        requirements: "{{ repo_dir }}/requirements.txt"
+        virtualenv: "{{ venv_dir }}"
+      become: no
+
+    - name: Create a tmux session for Optuna
+      ansible.builtin.shell: |
+        tmux new -d -s optuna "bash -c 'export DB_URI={{ db_uri }} && source {{ venv_dir }}/bin/activate && python3 ./optuna/main.py'"
+      args:
+        chdir: "{{ repo_dir }}"
+      become: no
+
+    - name: Display setup completion message
+      ansible.builtin.debug:
+        msg: "ASReview Optuna environment is set up. Use 'tmux attach -t optuna' to manage the Optuna session."
