@@ -1,11 +1,10 @@
+import optuna
 from asreview.models.classifiers import (
     SVM,
     Logistic,
     NaiveBayes,
     RandomForest,
 )
-
-import optuna
 
 
 def naive_bayes_params(trial: optuna.trial.FrozenTrial):

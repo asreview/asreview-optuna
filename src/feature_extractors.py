@@ -1,6 +1,5 @@
-from asreview.models.feature_extractors import OneHot, Tfidf
-
 import optuna
+from asreview.models.feature_extractors import OneHot, Tfidf
 
 
 def tfidf_params(trial: optuna.trial.FrozenTrial):

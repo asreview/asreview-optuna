@@ -7,6 +7,7 @@ from pathlib import Path
 
 import asreview
 import numpy as np
+import optuna
 import pandas as pd
 import requests
 import synergy_dataset as sd
@@ -14,10 +15,9 @@ from asreview.learner import ActiveLearningCycle
 from asreview.metrics import loss, ndcg
 from asreview.models.balancers import Balanced
 from asreview.models.queriers import Max
+
 from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
-
-import optuna
 
 # Study variables
 VERSION = 1

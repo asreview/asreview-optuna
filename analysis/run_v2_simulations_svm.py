@@ -3,14 +3,13 @@ from concurrent.futures import ProcessPoolExecutor
 
 import asreview
 import numpy as np
+import optuna
 import pandas as pd
 import synergy_dataset as sd
 from asreview.models.balancers import Balanced
 from asreview.models.classifiers import SVM
 from asreview.models.feature_extractors import Tfidf
 from asreview.models.queriers import Max
-
-import optuna
 
 RUN_OLD = True
 DB_PATH = ""
