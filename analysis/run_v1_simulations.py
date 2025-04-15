@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import synergy_dataset as sd
 from asreview import ASReviewData, ASReviewProject, open_state
 from asreview.models.balance import DoubleBalance
 from asreview.models.classifiers import NaiveBayesClassifier
@@ -28,9 +29,9 @@ def process_study(dataset_name, study, index):
     project_path.mkdir(exist_ok=True, parents=True)
 
     if dataset_name == "Moran_2021_corrected":
-        file_path = "./datasets/Moran_2021_corrected_shuffled_raw.csv"
+        file_path = "../src/datasets/Moran_2021_corrected_shuffled_raw.csv"
     elif dataset_name == "Muthu_2021_corrected":
-        file_path = "./datasets/Muthu_2021_corrected_shuffled_raw.csv"
+        file_path = "../src/datasets/Muthu_2021_corrected_shuffled_raw.csv"
     else:
         file_path = f"./datasets/synergy_dataset/{dataset_name}.csv"
 
@@ -63,6 +64,7 @@ def process_study(dataset_name, study, index):
         n_prior_included=len(study["prior_inclusions"]),
         n_prior_excluded=len(study["prior_exclusions"]),
         prior_indices=priors,
+        stop_if="min",
     )
 
     reviewer.review()
@@ -73,13 +75,9 @@ def process_study(dataset_name, study, index):
 
 
 # Load studies and filter
-studies = pd.read_json("synergy_studies_full_val.jsonl", lines=True)
-studies_filtered = (
-    studies.sort_values("dataset_id")
-    .groupby("dataset_id")
-    .head(5)
-    .reset_index(drop=True)
-)
+studies = pd.read_json("synergy_studies_validation.jsonl", lines=True)
+studies_filtered = studies.sort_values("dataset_id").reset_index(drop=True)
+
 report_order = studies_filtered["dataset_id"].unique()
 
 # Run in parallel using ThreadPoolExecutor
@@ -99,6 +97,16 @@ print("Processing complete.")
 recalls_old = []
 
 for dataset_name in report_order:
+    # Load dataset
+    if dataset_name == "Moran_2021_corrected":
+        X = pd.read_csv("../src/datasets/Moran_2021_corrected_shuffled_raw.csv")
+    elif dataset_name == "Muthu_2021_corrected":
+        X = pd.read_csv("../src/datasets/Muthu_2021_corrected_shuffled_raw.csv")
+    else:
+        X = sd.Dataset(dataset_name).to_frame().reset_index()
+
+    num_records = len(X)
+
     for i, study in studies_filtered[
         studies_filtered["dataset_id"] == dataset_name
     ].iterrows():
@@ -106,7 +114,7 @@ for dataset_name in report_order:
 
         with open_state(f"asreview_old_files/{dataset_name}-{i}.asreview") as state:
             df = state.get_dataset()
-            num_records = len(df)
+
             df.drop(df[df["training_set"] < 0].index, axis=0, inplace=True)
             labels_old = pad_labels(
                 df["label"].reset_index(drop=True),

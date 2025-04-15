@@ -56,9 +56,9 @@ def process_study(study, dataset_name, params=None):
 
     # Load dataset
     if dataset_name == "Moran_2021_corrected":
-        X = pd.read_csv("./datasets/Moran_2021_corrected_shuffled_raw.csv")
+        X = pd.read_csv("../src/datasets/Moran_2021_corrected_shuffled_raw.csv")
     elif dataset_name == "Muthu_2021_corrected":
-        X = pd.read_csv("./datasets/Muthu_2021_corrected_shuffled_raw.csv")
+        X = pd.read_csv("../src/datasets/Muthu_2021_corrected_shuffled_raw.csv")
     else:
         X = sd.Dataset(dataset_name).to_frame().reset_index()
 
@@ -82,6 +82,7 @@ def process_study(study, dataset_name, params=None):
         classifier=SVM(C=C),
         balancer=Balanced(ratio=ratio),
         feature_extractor=Tfidf(**tfidf_kwargs),
+        n_query=lambda results: n_query_extreme(results, X.shape[0]),
     )
 
     # Run simulation
@@ -127,13 +128,8 @@ def run_simulation(
 def main():
     """Main execution function."""
     # Load studies and filter top 5 per dataset
-    studies = pd.read_json("synergy_studies_full_val.jsonl", lines=True)
-    studies_filtered = (
-        studies.sort_values("dataset_id")
-        .groupby("dataset_id")
-        .head(5)
-        .reset_index(drop=True)
-    )
+    studies = pd.read_json("synergy_studies_validation.jsonl", lines=True)
+    studies_filtered = studies.sort_values("dataset_id").reset_index(drop=True)
     report_order = studies_filtered["dataset_id"].unique()
 
     # Load optimized parameters
