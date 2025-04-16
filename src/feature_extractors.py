@@ -4,8 +4,6 @@ from asreview.models.feature_extractors import OneHot, Tfidf
 
 def tfidf_params(trial: optuna.trial.FrozenTrial):
     max_df = trial.suggest_float("tfidf__max_df", 0.5, 1.0)
-    #max_df = 0.875
-    #min_df = 3
 
     min_df = trial.suggest_int("tfidf__min_df", 1, 10)
 
