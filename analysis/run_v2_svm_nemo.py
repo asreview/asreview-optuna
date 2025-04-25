@@ -1,0 +1,138 @@
+import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor
+
+import asreview
+import numpy as np
+import pickle
+import pandas as pd
+from asreview.models.balancers import Balanced
+from asreview.models.classifiers import SVM
+from asreviewcontrib.nemo.feature_extractors.sentence_transformers import MXBAI, MultilingualE5Large
+from asreview.models.queriers import Max
+
+NUM_WORKERS = mp.cpu_count() - 1
+
+# ------------------ Helper Functions ------------------
+
+
+def pad_labels(labels, num_priors, num_records):
+    """Pad labels to match the dataset size."""
+    return pd.Series(
+        labels.tolist() + np.zeros(num_records - len(labels) - num_priors).tolist()
+    )
+
+
+def n_query_extreme(results, n_records):
+    """Dynamic query function for active learning."""
+    if n_records >= 10000:
+        if len(results) >= 10000:
+            return 10**5
+        if len(results) >= 1000:
+            return 1000
+        elif len(results) >= 100:
+            return 25
+        else:
+            return 1
+    else:
+        if len(results) >= 1000:
+            return 100
+        elif len(results) >= 100:
+            return 5
+        else:
+            return 1
+
+
+# ------------------ Core Processing Logic ------------------
+
+
+def process_study(study, dataset_name, params=None):
+    """Processes a single study, handling dataset loading and active learning."""
+    priors = study["prior_inclusions"] + study["prior_exclusions"]
+
+    if params["fe"] == "e5":
+        with open(f"./fms/pickles_e5/{dataset_name}.pkl", "rb") as f:
+            X, labels = pickle.load(f)
+        # Setup Active Learning Cycle
+        alc = asreview.ActiveLearningCycle(
+            querier=Max(),
+            classifier=SVM(C=0.106, loss="squared_hinge", max_iter=5000),
+            balancer=Balanced(ratio=9.707),
+            feature_extractor=MultilingualE5Large(),
+            n_query=lambda results: n_query_extreme(results, X.shape[0]),
+        )
+    elif params["fe"] == "mxbai":
+        with open(f"./fms/pickles_mxbai/{dataset_name}.pkl", "rb") as f:
+            X, labels = pickle.load(f)
+        # Setup Active Learning Cycle
+        alc = asreview.ActiveLearningCycle(
+            querier=Max(),
+            classifier=SVM(C=0.067, loss="squared_hinge", max_iter=5000),
+            balancer=Balanced(ratio=9.724),
+            feature_extractor=MXBAI(),
+            n_query=lambda results: n_query_extreme(results, X.shape[0]),
+        )
+
+    # Run simulation
+    simulate = asreview.Simulate(X=X, labels=labels, cycles=[alc], skip_transform=True)
+    simulate.label(priors)
+    simulate.review()
+
+    df_results = simulate._results.dropna(axis=0, subset="training_set")
+    labels_processed = pad_labels(
+        df_results["label"].reset_index(drop=True), len(priors), len(X)
+    )
+
+    return labels_processed.cumsum()
+
+
+def run_simulation(
+    report_order, studies_filtered, output_file, params=None, n_workers=NUM_WORKERS
+):
+    """Runs the simulation for all datasets and saves results in parallel."""
+    results = []
+
+    with ProcessPoolExecutor(max_workers=n_workers) as executor:
+        futures = []
+        for dataset_name in report_order:
+            dataset_studies = studies_filtered[
+                studies_filtered["dataset_id"] == dataset_name
+            ]
+            for _, study in dataset_studies.iterrows():
+                futures.append(
+                    executor.submit(process_study, study, dataset_name, params)
+                )
+
+        for future in futures:
+            results.append(future.result())
+
+    # Save results
+    pd.DataFrame(results).to_csv(output_file, index=False)
+
+
+# ------------------ Main Function ------------------
+
+
+def main():
+    """Main execution function."""
+    # Load studies and filter top 5 per dataset
+    studies = pd.read_json("synergy_studies_validation.jsonl", lines=True)
+    studies_filtered = studies.sort_values("dataset_id").reset_index(drop=True)
+    report_order = studies_filtered["dataset_id"].unique()
+
+    # Run different simulations
+    run_simulation(
+        report_order,
+        studies_filtered,
+        params={"fe": "e5"},
+        output_file="recalls_new2_e5_svm.csv",
+    )
+    run_simulation(
+        report_order,
+        studies_filtered,
+        params={"fe": "mxbai"},
+        output_file="recalls_new2_mxbai_svm.csv",
+    )
+
+
+if __name__ == "__main__":
+    main()
