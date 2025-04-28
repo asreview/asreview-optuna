@@ -3,33 +3,23 @@ from concurrent.futures import ProcessPoolExecutor
 
 import asreview
 import numpy as np
-import optuna
 import pandas as pd
 import synergy_dataset as sd
 from asreview.models.balancers import Balanced
-from asreview.models.classifiers import SVM
+from asreview.models.classifiers import SVM, NaiveBayes
 from asreview.models.feature_extractors import Tfidf
 from asreview.models.queriers import Max
 
-RUN_OLD = True
-DB_PATH = ""
-NDCG_STUDY = "ASReview2-full-tfidf-svm-3"
-LOSS_STUDY = "ASReview2-full-svm-1"
 NUM_WORKERS = mp.cpu_count() - 1
 
 
-# ------------------ Helper Functions ------------------
-
-
 def pad_labels(labels, num_priors, num_records):
-    """Pad labels to match the dataset size."""
     return pd.Series(
         labels.tolist() + np.zeros(num_records - len(labels) - num_priors).tolist()
     )
 
 
 def n_query_extreme(results, n_records):
-    """Dynamic query function for active learning."""
     if n_records >= 10000:
         if len(results) >= 10000:
             return 10**5
@@ -48,13 +38,7 @@ def n_query_extreme(results, n_records):
             return 1
 
 
-# ------------------ Core Processing Logic ------------------
-
-
-def process_study(study, dataset_name, params=None):
-    """Processes a single study, handling dataset loading and active learning."""
-
-    # Load dataset
+def process_study(study, dataset_name, clf):
     if dataset_name == "Moran_2021_corrected":
         X = pd.read_csv("../src/datasets/Moran_2021_corrected_shuffled_raw.csv")
     elif dataset_name == "Muthu_2021_corrected":
@@ -65,25 +49,37 @@ def process_study(study, dataset_name, params=None):
     labels = X["label_included"]
     priors = study["prior_inclusions"] + study["prior_exclusions"]
 
-    # Set parameters for different configurations
-    C = params.get("svm__C", 15.4) if params else 15.4
-    ratio = params.get("ratio", 3) if params else 3
-    tfidf_kwargs = {
-        "stop_words": None if params else "english",
-        "ngram_range": (1, 2) if params else (1, 1),
-        "sublinear_tf": True if params else False,
-        "max_df": params.get("tfidf__max_df", 1.0) if params else 1.0,
-        "min_df": params.get("tfidf__min_df", 1) if params else 1,
-    }
+    if clf == "nb":
+        tfidf_kwargs = {
+            "ngram_range": (1, 2),
+            "sublinear_tf": True,
+            "max_df": 0.93,
+            "min_df": 7,
+        }
 
-    # Setup Active Learning Cycle
-    alc = asreview.ActiveLearningCycle(
-        querier=Max(),
-        classifier=SVM(C=C),
-        balancer=Balanced(ratio=ratio),
-        feature_extractor=Tfidf(**tfidf_kwargs),
-        n_query=lambda results: n_query_extreme(results, X.shape[0]),
-    )
+        alc = asreview.ActiveLearningCycle(
+            querier=Max(),
+            classifier=NaiveBayes(alpha=1.48),
+            balancer=Balanced(ratio=1.58),
+            feature_extractor=Tfidf(stop_words="english"),
+            n_query=lambda results: n_query_extreme(results, X.shape[0]),
+        )
+
+    elif clf == "svm":
+        tfidf_kwargs = {
+            "ngram_range": (1, 2),
+            "sublinear_tf": True,
+            "max_df": 0.95,
+            "min_df": 1,
+        }
+
+        alc = asreview.ActiveLearningCycle(
+            querier=Max(),
+            classifier=SVM(C=0.11, loss="squared_hinge"),
+            balancer=Balanced(ratio=9.8),
+            feature_extractor=Tfidf(**tfidf_kwargs),
+            n_query=lambda results: n_query_extreme(results, X.shape[0]),
+        )
 
     # Run simulation
     simulate = asreview.Simulate(X=X, labels=labels, cycles=[alc])
@@ -99,9 +95,8 @@ def process_study(study, dataset_name, params=None):
 
 
 def run_simulation(
-    report_order, studies_filtered, output_file, params=None, n_workers=NUM_WORKERS
+    report_order, studies_filtered, output_file, clf, n_workers=NUM_WORKERS
 ):
-    """Runs the simulation for all datasets and saves results in parallel."""
     results = []
 
     with ProcessPoolExecutor(max_workers=n_workers) as executor:
@@ -111,9 +106,7 @@ def run_simulation(
                 studies_filtered["dataset_id"] == dataset_name
             ]
             for _, study in dataset_studies.iterrows():
-                futures.append(
-                    executor.submit(process_study, study, dataset_name, params)
-                )
+                futures.append(executor.submit(process_study, study, dataset_name, clf))
 
         for future in futures:
             results.append(future.result())
@@ -122,40 +115,23 @@ def run_simulation(
     pd.DataFrame(results).to_csv(output_file, index=False)
 
 
-# ------------------ Main Function ------------------
-
-
 def main():
-    """Main execution function."""
-    # Load studies and filter top 5 per dataset
     studies = pd.read_json("synergy_studies_validation.jsonl", lines=True)
     studies_filtered = studies.sort_values("dataset_id").reset_index(drop=True)
     report_order = studies_filtered["dataset_id"].unique()
 
-    # Load optimized parameters
-    opt_study = optuna.load_study(study_name=NDCG_STUDY, storage=DB_PATH)
-    params_ndcg = opt_study.best_trial.params
-
-    opt_study = optuna.load_study(study_name=LOSS_STUDY, storage=DB_PATH)
-    params_loss = opt_study.best_trial.params
-
-    # Run different simulations
     run_simulation(
         report_order,
         studies_filtered,
-        params=params_ndcg,
-        output_file="recalls_ndcg_svm.csv",
+        clf="nb",
+        output_file="recalls_new2_nb.csv",
     )
     run_simulation(
         report_order,
         studies_filtered,
-        params=params_loss,
-        output_file="recalls_loss_svm.csv",
+        clf="svm",
+        output_file="recalls_new2_svm.csv",
     )
-    if RUN_OLD:
-        run_simulation(
-            report_order, studies_filtered, output_file="recalls_old_svm.csv"
-        )  # Defaults to old settings
 
 
 if __name__ == "__main__":

@@ -7,23 +7,22 @@ import pickle
 import pandas as pd
 from asreview.models.balancers import Balanced
 from asreview.models.classifiers import SVM
-from asreviewcontrib.nemo.feature_extractors.sentence_transformers import MXBAI, MultilingualE5Large
+from asreviewcontrib.nemo.feature_extractors.sentence_transformers import (
+    MXBAI,
+    MultilingualE5Large,
+)
 from asreview.models.queriers import Max
 
 NUM_WORKERS = mp.cpu_count() - 1
 
-# ------------------ Helper Functions ------------------
-
 
 def pad_labels(labels, num_priors, num_records):
-    """Pad labels to match the dataset size."""
     return pd.Series(
         labels.tolist() + np.zeros(num_records - len(labels) - num_priors).tolist()
     )
 
 
 def n_query_extreme(results, n_records):
-    """Dynamic query function for active learning."""
     if n_records >= 10000:
         if len(results) >= 10000:
             return 10**5
@@ -42,17 +41,13 @@ def n_query_extreme(results, n_records):
             return 1
 
 
-# ------------------ Core Processing Logic ------------------
-
-
 def process_study(study, dataset_name, params=None):
-    """Processes a single study, handling dataset loading and active learning."""
     priors = study["prior_inclusions"] + study["prior_exclusions"]
 
     if params["fe"] == "e5":
         with open(f"./fms/pickles_e5/{dataset_name}.pkl", "rb") as f:
             X, labels = pickle.load(f)
-        # Setup Active Learning Cycle
+
         alc = asreview.ActiveLearningCycle(
             querier=Max(),
             classifier=SVM(C=0.106, loss="squared_hinge", max_iter=5000),
@@ -63,7 +58,7 @@ def process_study(study, dataset_name, params=None):
     elif params["fe"] == "mxbai":
         with open(f"./fms/pickles_mxbai/{dataset_name}.pkl", "rb") as f:
             X, labels = pickle.load(f)
-        # Setup Active Learning Cycle
+
         alc = asreview.ActiveLearningCycle(
             querier=Max(),
             classifier=SVM(C=0.067, loss="squared_hinge", max_iter=5000),
@@ -72,7 +67,6 @@ def process_study(study, dataset_name, params=None):
             n_query=lambda results: n_query_extreme(results, X.shape[0]),
         )
 
-    # Run simulation
     simulate = asreview.Simulate(X=X, labels=labels, cycles=[alc], skip_transform=True)
     simulate.label(priors)
     simulate.review()
@@ -88,7 +82,6 @@ def process_study(study, dataset_name, params=None):
 def run_simulation(
     report_order, studies_filtered, output_file, params=None, n_workers=NUM_WORKERS
 ):
-    """Runs the simulation for all datasets and saves results in parallel."""
     results = []
 
     with ProcessPoolExecutor(max_workers=n_workers) as executor:
@@ -105,21 +98,14 @@ def run_simulation(
         for future in futures:
             results.append(future.result())
 
-    # Save results
     pd.DataFrame(results).to_csv(output_file, index=False)
 
 
-# ------------------ Main Function ------------------
-
-
 def main():
-    """Main execution function."""
-    # Load studies and filter top 5 per dataset
     studies = pd.read_json("synergy_studies_validation.jsonl", lines=True)
     studies_filtered = studies.sort_values("dataset_id").reset_index(drop=True)
     report_order = studies_filtered["dataset_id"].unique()
 
-    # Run different simulations
     run_simulation(
         report_order,
         studies_filtered,
