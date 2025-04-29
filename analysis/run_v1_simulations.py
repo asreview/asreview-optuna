@@ -53,6 +53,7 @@ def process_study(dataset_name, study, index, clf):
     balance_model = DoubleBalance()
     feature_model = Tfidf()
 
+    # Define parameters for query strategy
     if len(data_obj) >= 10000:
         n_instances = [1, 25, 1000, 10**5]
         stop_ifs = [100, 1000, 10000]
