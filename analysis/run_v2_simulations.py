@@ -120,18 +120,23 @@ def main():
     studies_filtered = studies.sort_values("dataset_id").reset_index(drop=True)
     report_order = studies_filtered["dataset_id"].unique()
 
+    print("Running ASReview v.2 NB Simulations")
     run_simulation(
         report_order,
         studies_filtered,
         clf="nb",
         output_file="recalls_new2_nb.csv",
     )
+    print("NB simulations complete\n")
+    
+    print("Running ASReview v.2 SVM Simulations")
     run_simulation(
         report_order,
         studies_filtered,
         clf="svm",
         output_file="recalls_new2_svm.csv",
     )
+    print("SVM simulations complete")
 
 
 if __name__ == "__main__":

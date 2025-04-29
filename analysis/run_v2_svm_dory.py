@@ -106,18 +106,23 @@ def main():
     studies_filtered = studies.sort_values("dataset_id").reset_index(drop=True)
     report_order = studies_filtered["dataset_id"].unique()
 
+    print("Running ASReview v.2 E5 Simulations")
     run_simulation(
         report_order,
         studies_filtered,
         params={"fe": "e5"},
         output_file="recalls_new2_e5_svm.csv",
     )
+    print("E5 simulations complete\n")
+    
+    print("Running ASReview v.2 mxbai Simulations")
     run_simulation(
         report_order,
         studies_filtered,
         params={"fe": "mxbai"},
         output_file="recalls_new2_mxbai_svm.csv",
     )
+    print("mxbai simulations complete")
 
 
 if __name__ == "__main__":

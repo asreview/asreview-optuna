@@ -53,21 +53,47 @@ def process_study(dataset_name, study, index, clf):
     balance_model = DoubleBalance()
     feature_model = Tfidf()
 
-    # Initialize and run the simulation
-    reviewer = ReviewSimulate(
+    if len(data_obj) >= 10000:
+        n_instances = [1, 25, 1000, 10**5]
+        stop_ifs = [100, 1000, 10000]
+    else:
+        n_instances = [1, 5, 100]
+        stop_ifs = [100, 1000]
+
+    # Common reviewer args (shared across all ReviewSimulate calls)
+    common_args = dict(
         as_data=data_obj,
         model=train_model,
         query_model=query_model,
         balance_model=balance_model,
         feature_model=feature_model,
-        n_instances=10,
         project=project,
         n_prior_included=len(study["prior_inclusions"]),
         n_prior_excluded=len(study["prior_exclusions"]),
         prior_indices=priors,
-        stop_if="min",
     )
 
+    # Run review steps with computed stop_ifs
+    prev_stop_if = stop_ifs[0]
+    for i in range(len(stop_ifs)):
+        stop_if = stop_ifs[i]
+        instances = n_instances[i]
+        if i > 0:
+            queries_needed = (stop_ifs[i] - stop_ifs[i - 1]) // instances
+            stop_if = prev_stop_if + queries_needed
+            prev_stop_if = stop_if
+        reviewer = ReviewSimulate(
+            **common_args,
+            n_instances=instances,
+            stop_if=stop_if,
+        )
+        reviewer.review()
+
+    reviewer = ReviewSimulate(
+        **common_args,
+        n_instances=n_instances[-1],
+        stop_if="min",
+    )
     reviewer.review()
 
     # Export results and cleanup
@@ -147,5 +173,5 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
     # Wait for all tasks to complete
     concurrent.futures.wait(futures)
 
-print("NB simulations complete.\nCreating cumsum CSV")
+print("SVM simulations complete.\nCreating cumsum CSV")
 create_csv(report_order=report_order, studies_filtered=studies_filtered, clf=clf)
