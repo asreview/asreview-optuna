@@ -1,17 +1,17 @@
 import multiprocessing as mp
+import pickle
 from concurrent.futures import ProcessPoolExecutor
 
 import asreview
 import numpy as np
-import pickle
 import pandas as pd
 from asreview.models.balancers import Balanced
 from asreview.models.classifiers import SVM
+from asreview.models.queriers import Max
 from asreviewcontrib.nemo.feature_extractors.sentence_transformers import (
     MXBAI,
     MultilingualE5Large,
 )
-from asreview.models.queriers import Max
 
 NUM_WORKERS = mp.cpu_count() - 1
 
@@ -114,7 +114,7 @@ def main():
         output_file="recalls_new2_e5_svm.csv",
     )
     print("E5 simulations complete\n")
-    
+
     print("Running ASReview v.2 mxbai Simulations")
     run_simulation(
         report_order,

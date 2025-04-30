@@ -50,18 +50,13 @@ def process_study(study, dataset_name, clf):
     priors = study["prior_inclusions"] + study["prior_exclusions"]
 
     if clf == "nb":
-        tfidf_kwargs = {
-            "ngram_range": (1, 2),
-            "sublinear_tf": True,
-            "max_df": 0.93,
-            "min_df": 7,
-        }
+        tfidf_kwargs = {"stop_words": "english"}
 
         alc = asreview.ActiveLearningCycle(
             querier=Max(),
-            classifier=NaiveBayes(alpha=1.48),
-            balancer=Balanced(ratio=1.58),
-            feature_extractor=Tfidf(stop_words="english"),
+            classifier=NaiveBayes(alpha=3.822),
+            balancer=Balanced(ratio=1.2),
+            feature_extractor=Tfidf(**tfidf_kwargs),
             n_query=lambda results: n_query_extreme(results, X.shape[0]),
         )
 
@@ -128,7 +123,7 @@ def main():
         output_file="recalls_new2_nb.csv",
     )
     print("NB simulations complete\n")
-    
+
     print("Running ASReview v.2 SVM Simulations")
     run_simulation(
         report_order,
