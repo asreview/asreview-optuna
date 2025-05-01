@@ -12,17 +12,18 @@ folder_pickle_files = Path("synergy-dataset", "pickles_tfidf")
 folder_pickle_files.mkdir(parents=True, exist_ok=True)
 
 for dataset in tqdm(sd.iter_datasets(), total=26):
-    # Load dataset
-    if dataset.name == "Moran_2021_corrected":
+    if dataset.name == "Chou_2004" or dataset.name == "Jeyaraman_2020":
+        continue
+    elif dataset.name == "Moran_2021":
         df = pd.read_csv("./datasets/Moran_2021_corrected_shuffled_raw.csv")
-    elif dataset.name == "Muthu_2021_corrected":
+        dataset_name = "Moran_2021_corrected"
+    elif dataset.name == "Muthu_2021":
         df = pd.read_csv("./datasets/Muthu_2021_corrected_shuffled_raw.csv")
+        dataset_name = "Muthu_2021_corrected"
     else:
         df = dataset.to_frame().reset_index()
+        dataset_name = dataset.name
 
-    dataset_name = (
-        dataset.name if dataset.name != "Moran_2021" else "Moran_2021_corrected"
-    )
     pickle_file_path = folder_pickle_files / f"{dataset_name}.pkl"
 
     # Check if the pickle file already exists
