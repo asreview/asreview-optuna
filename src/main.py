@@ -20,7 +20,7 @@ from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
-VERSION = 1
+VERSION = 2
 METRIC = "loss"  # Options: "loss", "ndcg"
 STUDY_SET = "full"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
@@ -46,7 +46,7 @@ dataset_sizes = {
 }
 
 
-def filter_empty_abstracts(df, min_words=50):
+def filter_empty_abstracts(df, min_words=3):
     df = df[df["abstract"].notna() & (df["abstract"].str.strip() != "")]
     df = df[df["abstract"].str.split().str.len() >= min_words]
     df.reset_index(drop=True, inplace=True)
