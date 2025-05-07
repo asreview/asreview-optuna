@@ -46,13 +46,25 @@ dataset_sizes = {
 }
 
 
+def filter_empty_abstracts(df, min_words=50):
+    df = df[df["abstract"].notna() & (df["abstract"].str.strip() != "")]
+    df = df[df["abstract"].str.split().str.len() >= min_words]
+    df.reset_index(drop=True, inplace=True)
+
+    return df
+
+
 def load_dataset(dataset_id):
     if dataset_id == "Moran_2021_corrected":
-        return pd.read_csv(Path("datasets", "Moran_2021_corrected_shuffled_raw.csv"))
+        return filter_empty_abstracts(
+            pd.read_csv(Path("datasets", "Moran_2021_corrected_shuffled_raw.csv"))
+        )
     if dataset_id == "Muthu_2021_corrected":
-        return pd.read_csv(Path("datasets", "Muthu_2021_corrected_shuffled_raw.csv"))
+        return filter_empty_abstracts(
+            pd.read_csv(Path("datasets", "Muthu_2021_corrected_shuffled_raw.csv"))
+        )
 
-    return sd.Dataset(dataset_id).to_frame().reset_index()
+    return filter_empty_abstracts(sd.Dataset(dataset_id).to_frame().reset_index())
 
 
 def n_query(results, n_records):
