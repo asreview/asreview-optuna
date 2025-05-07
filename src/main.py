@@ -280,7 +280,7 @@ if __name__ == "__main__":
         storage=os.getenv(
             "DB_URI", "sqlite:///db.sqlite3"
         ),  # Specify the storage URL here.
-        study_name=f"ASReview2_0b4-{CLASSIFIER_TYPE}-{FEATURE_EXTRACTOR_TYPE}-{STUDY_SET}-{VERSION}-no-empty-abstracts",
+        study_name=f"ASReview2_0rc3-{CLASSIFIER_TYPE}-{FEATURE_EXTRACTOR_TYPE}-{STUDY_SET}-{VERSION}-no-empty-abstracts",
         direction="minimize" if METRIC == "loss" else "maximize",
         sampler=sampler,
         load_if_exists=True,
