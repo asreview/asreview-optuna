@@ -16,19 +16,20 @@ from asreview.metrics import loss, ndcg
 from asreview.models.balancers import Balanced
 from asreview.models.queriers import Max
 
+from balancers import DynamicLossBalancer
 from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 # Study variables
 VERSION = 1
 METRIC = "loss"  # Options: "loss", "ndcg"
-STUDY_SET = "full"
+STUDY_SET = "demo"
 CLASSIFIER_TYPE = "svm"  # Options: "nb", "log", "svm", "rf"
-FEATURE_EXTRACTOR_TYPE = "e5"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai", "gist", "e5", "gte", "kalm", "lajavaness", "snowflake"
+FEATURE_EXTRACTOR_TYPE = "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai", "gist", "e5", "gte", "kalm", "lajavaness", "snowflake"
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
-PRE_PROCESSED_FMS = True  # False = on the fly
+PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
-AUTO_SHUTDOWN = False
+AUTO_SHUTDOWN = True
 
 # Optuna variables
 OPTUNA_N_TRIALS = 500
@@ -111,11 +112,12 @@ def run_sequential(studies, *args, **kwargs):
 
 
 # Function to process each row
-def process_row(row, clf_params, fe_params, ratio):
+def process_row(row, clf_params, fe_params, ratio, a, activation, window_size):
     priors = row["prior_inclusions"] + row["prior_exclusions"]
 
     # Create balancer with optuna value
-    blc = Balanced(ratio=ratio)
+    #blc = DynamicLossBalancer(ratio=ratio)
+    blc = DynamicLossBalancer(ratio=ratio, a=a, activation=activation, window_size=window_size)
 
     # Create classifier and feature extractor with params
     clf = classifiers[CLASSIFIER_TYPE](**clf_params)
@@ -171,6 +173,9 @@ def objective_report(report_order):
     def objective(trial):
         # Use normal distribution for ratio (ratio effect is linear)
         ratio = trial.suggest_float("ratio", 1.0, 10.0)
+        a = trial.suggest_float("a", 1.0, 10.0)
+        activation = trial.suggest_categorical("activation", ["linear", "sigmoid", "tanh"])
+        window_size = trial.suggest_int("window_size", 10, 100)
 
         clf_params = classifier_params[CLASSIFIER_TYPE](trial)
         fe_params = (
@@ -181,11 +186,11 @@ def objective_report(report_order):
 
         if PARALLELIZE_OBJECTIVE:
             metric_values = run_parallel(
-                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
+                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio, a=a, activation=activation, window_size=window_size
             )
         else:
             metric_values = run_sequential(
-                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio
+                studies, clf_params=clf_params, fe_params=fe_params, ratio=ratio, a=a, activation=activation, window_size=window_size
             )
 
         all_metric_values = []
@@ -268,7 +273,7 @@ if __name__ == "__main__":
         storage=os.getenv(
             "DB_URI", "sqlite:///db.sqlite3"
         ),  # Specify the storage URL here.
-        study_name=f"ASReview2_0b4-{CLASSIFIER_TYPE}-{FEATURE_EXTRACTOR_TYPE}-{STUDY_SET}-{VERSION}",
+        study_name=f"ASReview2_1_1_1-{CLASSIFIER_TYPE}-{FEATURE_EXTRACTOR_TYPE}-{STUDY_SET}-{VERSION}",
         direction="minimize" if METRIC == "loss" else "maximize",
         sampler=sampler,
         load_if_exists=True,

@@ -4,11 +4,13 @@ from asreview.models.feature_extractors import OneHot, Tfidf
 
 def tfidf_params(trial: optuna.trial.FrozenTrial):
     max_df = trial.suggest_float("tfidf__max_df", 0.5, 1.0)
+    min_df = trial.suggest_int("tfidf__min_df", 1, 10)
+    ngram_range = trial.suggest_int("tfidf__ngram_range", 1, 3)
 
     return {
         "max_df": max_df,
-        "min_df": 1,
-        "ngram_range": (1, 2),
+        "min_df": min_df,
+        "ngram_range": (1, ngram_range),
         "sublinear_tf": True,
     }
 
