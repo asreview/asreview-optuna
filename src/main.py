@@ -385,7 +385,7 @@ if __name__ == "__main__":
         optuna.create_study(
             sampler=sampler,
             direction="minimize" if args.metric == "loss" else "maximize",
-            study_name=f"[{datetime.datetime.now().strftime('%b-%d-%H')}] {args.classifier}-{args.feature_extractor}-{args.study_set}-{args.metric}",
+            study_name=f"[{datetime.datetime.now().strftime('%b-%d-%H:%M')}] {args.classifier}-{args.feature_extractor}-{args.study_set}-{args.metric}",
             storage=os.getenv("DB_URI", "sqlite:///db.sqlite3"),
             load_if_exists=True,
         )
@@ -395,7 +395,7 @@ if __name__ == "__main__":
     study = optuna.create_study(
         sampler=sampler,
         direction="minimize" if args.metric == "loss" else "maximize",
-        study_name=f"[{datetime.datetime.now().strftime('%b-%d-%H')}] {args.classifier}-{args.feature_extractor}-{args.study_set}-{args.metric}",
+        study_name=f"[{datetime.datetime.now().strftime('%b-%d-%H:%M')}] {args.classifier}-{args.feature_extractor}-{args.study_set}-{args.metric}",
         storage=os.getenv("DB_URI", "sqlite:///db.sqlite3"),
         load_if_exists=True,
     )
