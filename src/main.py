@@ -272,7 +272,7 @@ def objective_report(
             losses = result[dataset_id] if dataset_id in result else [0]
             trial.report(np.mean(losses), i)
             trial.report(np.std(losses), len(report_order) + i)
-            all_losses += losses
+            all_losses.extend(losses)
 
         return np.mean(all_losses)
 
