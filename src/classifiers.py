@@ -28,7 +28,7 @@ def svm_params(trial: optuna.trial.FrozenTrial):
 def random_forest_params(trial: optuna.trial.FrozenTrial):
     # Use normal distribution for n_estimators (n_estimators effect is linear)
     n_estimators = trial.suggest_categorical("rf__n_estimators", [100, 200, 500, 1000])
-    min_samples_split = trial.suggest_categorical("rf__min_samples_split", [1, 2, 5])
+    min_samples_split = trial.suggest_categorical("rf__min_samples_split", [2, 3, 4, 5])
     return {"n_estimators": n_estimators, "max_features": "sqrt", "min_samples_split": min_samples_split}
 
 
