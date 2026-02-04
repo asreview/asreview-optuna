@@ -22,18 +22,19 @@ from classifiers import classifier_params, classifiers
 from feature_extractors import feature_extractor_params, feature_extractors
 
 
-def load_dataset(dataset_id: str) -> pd.DataFrame:
+def load_dataset(data_path: str, dataset_id: str) -> pd.DataFrame:
     """
     Load a dataset by ID.
 
     Args:
+        path (str): Path to raw data files.
         dataset_id (str): Identifier for the dataset.
 
     Returns:
         pd.DataFrame: The dataset as a pandas DataFrame.
     """
     if dataset_id == "Appenzeller-Herzog_2019":
-        return pd.read_csv("./data/Appenzeller-Herzog_2019.csv")
+        return pd.read_csv(Path(data_path) / f"{dataset_id}.csv")
     return sd.Dataset(dataset_id).to_frame().reset_index()
 
 
@@ -117,6 +118,8 @@ def process_row(
     feature_extractor: str,
     metric: str,
     pre_processed_fms: bool,
+    data_path: str,
+    fms_path: str,
 ) -> tuple[str, float]:
     """
     Run a single ASReview simulation for one study row.
@@ -136,6 +139,8 @@ def process_row(
         feature_extractor (str): Name of the feature extractor to use.
         metric (str): Metric to compute ("loss" or "ndcg").
         pre_processed_fms (bool): Whether to use pre-processed feature matrices.
+        data_path (str): The path to the raw data.
+        fms_path (str): The path to the preprocessed fms.
 
     Returns:
         tuple[str, float]: Dataset ID and computed metric value.
@@ -150,11 +155,7 @@ def process_row(
 
     if pre_processed_fms:
         with open(
-            Path(
-                "synergy-dataset",
-                f"pickles_{feature_extractor}",
-                f"{row['dataset_id']}.pkl",
-            ),
+            Path(fms_path) / f"{row['dataset_id']}.pkl",
             "rb",
         ) as f:
             X, labels = pickle.load(f)
@@ -168,7 +169,7 @@ def process_row(
             n_query=lambda results: n_query(results, X.shape[0]),
         )
     else:
-        X = load_dataset(row["dataset_id"])
+        X = load_dataset(data_path, row["dataset_id"])
 
         labels = X["label_included"]
         fe = feature_extractors[feature_extractor](**fe_params)
@@ -213,6 +214,8 @@ def objective_report(
     metric: str,
     pre_processed_fms: bool,
     n_workers: int,
+    data_path: str,
+    fms_path: str,
 ) -> Callable[[optuna.trial.Trial], float]:
     """
     Create an Optuna objective function for hyperparameter optimization.
@@ -231,6 +234,8 @@ def objective_report(
         metric (str): Optimization metric ("loss" or "ndcg").
         pre_processed_fms (bool): Whether to use pre-processed feature matrices.
         n_workers (int): Number of workers to use when parallelize_objective is True.
+        data_path (str): The path to the raw data.
+        fms_path (str): The path to the preprocessed fms.
 
     Returns:
         callable: Optuna-compatible objective function.
@@ -258,6 +263,8 @@ def objective_report(
             ratio=ratio,
             metric=metric,
             pre_processed_fms=pre_processed_fms,
+            data_path=data_path,
+            fms_path=fms_path,
         )
 
         report_order = sorted(set(studies["dataset_id"]))
@@ -374,6 +381,15 @@ if __name__ == "__main__":
         type=int,
         help="Set the number of workers used for parallelizing the objective.",
     )
+    parser.add_argument(
+        "--data-path", default="./data", help="The path to the raw data (without trailing)."
+    )
+    parser.add_argument(
+        "--fms-path", default="./preprocessed_fms", help="The path to the raw data."
+    )
+    parser.add_argument(
+        "--studies-path", default="./studies", help="The path to the raw data."
+    )
     args = parser.parse_args()
 
     sampler = optuna.samplers.TPESampler()
@@ -401,7 +417,9 @@ if __name__ == "__main__":
     )
 
     # list of studies
-    studies = pd.read_json(f"synergy_studies_{args.study_set}.jsonl", lines=True)
+    studies = pd.read_json(
+        Path(args.studies_path) / f"synergy_studies_{args.study_set}.jsonl", lines=True
+    )
 
     n_studies = len(studies)
     n_datasets = studies["dataset_id"].nunique()
@@ -431,6 +449,8 @@ if __name__ == "__main__":
             metric=args.metric,
             pre_processed_fms=args.pre_processed_fms,
             n_workers=args.n_workers,
+            data_path=args.data_path,
+            fms_path=args.fms_path,
         ),
         n_trials=args.n_trials,
         callbacks=[study_stop_cb],
