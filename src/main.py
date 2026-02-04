@@ -155,7 +155,7 @@ def process_row(
 
     if pre_processed_fms:
         with open(
-            Path(fms_path) / f"{row['dataset_id']}.pkl",
+            Path(fms_path) / f"{feature_extractor}" / f"{row['dataset_id']}.pkl",
             "rb",
         ) as f:
             X, labels = pickle.load(f)
@@ -382,13 +382,19 @@ if __name__ == "__main__":
         help="Set the number of workers used for parallelizing the objective.",
     )
     parser.add_argument(
-        "--data-path", default="./data", help="The path to the raw data (without trailing)."
+        "--data-path",
+        default="./data",
+        help="The path to the raw data.",
     )
     parser.add_argument(
-        "--fms-path", default="./preprocessed_fms", help="The path to the raw data."
+        "--fms-path",
+        default="./preprocessed_fms",
+        help="The path to the preprocessed feature matrices.",
     )
     parser.add_argument(
-        "--studies-path", default="./studies", help="The path to the raw data."
+        "--studies-path",
+        default="./studies",
+        help='The path to the studies JSON files, "demo" and "full".',
     )
     args = parser.parse_args()
 
@@ -436,7 +442,10 @@ if __name__ == "__main__":
     parallel_objective : {args.parallelize_objective}
     max_workers        : {args.n_workers if args.parallelize_objective else 1}
     n_trials           : {args.n_trials}
-    storage            : {"local" if os.getenv("DB_URI", "sqlite:///db.sqlite3") == "sqlite:///db.sqlite3" else "remote"}
+    data_path          : {args.data_path}
+    fms_path           : {args.fms_path}
+    studies_path       : {args.studies_path}
+    DB                 : {"local" if os.getenv("DB_URI", "sqlite:///db.sqlite3") == "sqlite:///db.sqlite3" else "remote"}
     ===========================
     """)
 

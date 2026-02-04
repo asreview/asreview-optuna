@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 FORCE = False
 
-folder_pickle_files = Path("..", "spreprocessed_fms", "pickles_bge-m3")
+folder_pickle_files = Path("..", "spreprocessed_fms", "bge-m3")
 folder_pickle_files.mkdir(parents=True, exist_ok=True)
 
 model = BGEM3FlagModel("BAAI/bge-m3", devices=["cuda:0"])
