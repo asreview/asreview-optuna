@@ -1,7 +1,6 @@
 import pickle
 from pathlib import Path
 
-import pandas as pd
 import synergy_dataset as sd
 from FlagEmbedding import BGEM3FlagModel
 from sklearn.preprocessing import normalize
@@ -9,23 +8,14 @@ from tqdm import tqdm
 
 FORCE = False
 
-folder_pickle_files = Path("synergy-dataset", "pickles_bge-m3")
+folder_pickle_files = Path("spreprocessed_fms", "pickles_bge-m3")
 folder_pickle_files.mkdir(parents=True, exist_ok=True)
 
 model = BGEM3FlagModel("BAAI/bge-m3", devices=["cuda:0"])
 
 for dataset in tqdm(sd.iter_datasets(), total=26):
-    if dataset.name == "Chou_2004" or dataset.name == "Jeyaraman_2020":
-        continue
-    elif dataset.name == "Moran_2021":
-        df = pd.read_csv("./datasets/Moran_2021_corrected_shuffled_raw.csv")
-        dataset_name = "Moran_2021_corrected"
-    elif dataset.name == "Muthu_2021":
-        df = pd.read_csv("./datasets/Muthu_2021_corrected_shuffled_raw.csv")
-        dataset_name = "Muthu_2021_corrected"
-    else:
-        df = dataset.to_frame().reset_index()
-        dataset_name = dataset.name
+    df = dataset.to_frame().reset_index()
+    dataset_name = dataset.name 
 
     # Combine 'title' and 'abstract' text
     combined_texts = (df["title"].fillna("") + " " + df["abstract"].fillna("")).tolist()
@@ -50,5 +40,5 @@ for dataset in tqdm(sd.iter_datasets(), total=26):
     X["dense_vecs_norm"] = normalize(X["dense_vecs"], norm="l2")
 
     # Save embeddings and labels as a pickle file
-    with open(folder_pickle_files / f"{dataset_name}.pkl", "wb") as f:
+    with open(pickle_file_path, "wb") as f:
         pickle.dump((X["dense_vecs_norm"], df["label_included"].tolist()), f)

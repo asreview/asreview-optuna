@@ -14,6 +14,9 @@ for dataset in tqdm(sd.iter_datasets(), total=26):
     df = dataset.to_frame().reset_index()
     dataset_name = dataset.name
 
+    # Combine 'title' and 'abstract' text
+    combined_texts = (df["title"].fillna("") + " " + df["abstract"].fillna("")).tolist()
+
     pickle_file_path = folder_pickle_files / f"{dataset_name}.pkl"
 
     # Check if the pickle file already exists

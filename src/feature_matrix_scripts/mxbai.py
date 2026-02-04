@@ -1,7 +1,6 @@
 import pickle
 from pathlib import Path
 
-import pandas as pd
 import synergy_dataset as sd
 import torch
 from sentence_transformers import SentenceTransformer
@@ -10,7 +9,7 @@ from tqdm import tqdm
 FORCE = True
 
 # Folder to save embeddings
-folder_pickle_files = Path("synergy-dataset", "pickles_mxbai")
+folder_pickle_files = Path("preprocessed_fms", "pickles_mxbai")
 folder_pickle_files.mkdir(parents=True, exist_ok=True)
 
 # Load LaBSE model
@@ -22,17 +21,8 @@ print(f"Using device: {device}")
 
 # Loop through datasets
 for dataset in tqdm(sd.iter_datasets(), total=26):
-    if dataset.name == "Chou_2004" or dataset.name == "Jeyaraman_2020":
-        continue
-    elif dataset.name == "Moran_2021":
-        df = pd.read_csv("./datasets/Moran_2021_corrected_shuffled_raw.csv")
-        dataset_name = "Moran_2021_corrected"
-    elif dataset.name == "Muthu_2021":
-        df = pd.read_csv("./datasets/Muthu_2021_corrected_shuffled_raw.csv")
-        dataset_name = "Muthu_2021_corrected"
-    else:
-        df = dataset.to_frame().reset_index()
-        dataset_name = dataset.name
+    df = dataset.to_frame().reset_index()
+    dataset_name = dataset.name
 
     # Combine 'title' and 'abstract' text
     combined_texts = (df["title"].fillna("") + " " + df["abstract"].fillna("")).tolist()
@@ -54,7 +44,7 @@ for dataset in tqdm(sd.iter_datasets(), total=26):
     )
 
     # Save embeddings and labels as a pickle file
-    with open(folder_pickle_files / f"{dataset_name}.pkl", "wb") as f:
+    with open(pickle_file_path, "wb") as f:
         pickle.dump(
             (
                 X,
