@@ -1,3 +1,5 @@
+import argparse
+import sys
 import multiprocessing as mp
 import os
 import pickle
@@ -9,7 +11,7 @@ import asreview
 import numpy as np
 import optuna
 import pandas as pd
-import requests
+#import requests
 import synergy_dataset as sd
 from asreview.learner import ActiveLearningCycle
 from asreview.metrics import loss, ndcg
@@ -28,9 +30,8 @@ FEATURE_EXTRACTOR_TYPE = (
     "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai"
 )
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
-PRE_PROCESSED_FMS = False  # False = on the fly
+PRE_PROCESSED_FMS = True  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
-AUTO_SHUTDOWN = False
 
 # Optuna variables
 OPTUNA_N_TRIALS = 500
@@ -49,11 +50,6 @@ dataset_sizes = {
 
 
 def load_dataset(dataset_id):
-    if dataset_id == "Moran_2021_corrected":
-        return pd.read_csv(Path("datasets", "Moran_2021_corrected_shuffled_raw.csv"))
-    if dataset_id == "Muthu_2021_corrected":
-        return pd.read_csv(Path("datasets", "Muthu_2021_corrected_shuffled_raw.csv"))
-
     return sd.Dataset(dataset_id).to_frame().reset_index()
 
 
@@ -223,46 +219,55 @@ class StopWhenOptimumReached:
                 study.stop()
 
 
-def download_pickles(report_order):
-    if PICKLE_FOLDER_PATH.exists():
-        print("Pickles already exist! Delete the folder if you want to re-download.")
-
-    else:
-        for dataset_id in report_order:
-            url = f"https://sos-de-fra-1.exo.io/asreview2-optuna-embeddings/pickles_{FEATURE_EXTRACTOR_TYPE}/{dataset_id}.pkl"
-
-            # Make the request to download the file
-            response = requests.get(url)
-
-            if response.status_code == 200:
-                # Ensure the folder exists
-                os.makedirs(PICKLE_FOLDER_PATH, exist_ok=True)
-
-                # Define the full path to save the pickle file
-                pickle_file_path = os.path.join(PICKLE_FOLDER_PATH, f"{dataset_id}.pkl")
-
-                # Write the content to a file
-                with open(pickle_file_path, "wb") as f:
-                    f.write(response.content)
-                print(f"Downloaded {dataset_id}.pkl successfully.")
-            else:
-                print(
-                    f"Failed to download {dataset_id}.pkl. Status code: {response.status_code}"
-                )
+#def download_pickles(report_order):
+#    if PICKLE_FOLDER_PATH.exists():
+#        print("Pickles already exist! Delete the folder if you want to re-download.")
+#
+#    else:
+#        for dataset_id in report_order:
+#            url = f"https://sos-de-fra-1.exo.io/asreview2-optuna-embeddings/pickles_{FEATURE_EXTRACTOR_TYPE}/{dataset_id}.pkl"
+#
+#            # Make the request to download the file
+#            response = requests.get(url)
+#
+#            if response.status_code == 200:
+#                # Ensure the folder exists
+#                os.makedirs(PICKLE_FOLDER_PATH, exist_ok=True)
+#
+#                # Define the full path to save the pickle file
+#                pickle_file_path = os.path.join(PICKLE_FOLDER_PATH, f"{dataset_id}.pkl")
+#
+#                # Write the content to a file
+#                with open(pickle_file_path, "wb") as f:
+#                    f.write(response.content)
+#                print(f"Downloaded {dataset_id}.pkl successfully.")
+#            else:
+#                print(
+#                    f"Failed to download {dataset_id}.pkl. Status code: {response.status_code}"
+#                )
 
 
 if __name__ == "__main__":
-    # list of studies
-    studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True)
-    report_order = sorted(set(studies["dataset_id"]))
-
-    if PRE_PROCESSED_FMS:
-        download_pickles(report_order)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--init-db", action='store_true', default=False)
+    args = parser.parse_args()
 
     sampler = optuna.samplers.TPESampler()
     study_stop_cb = StopWhenOptimumReached(
         min_trials=MIN_TRIALS, threshold=STOPPING_THRESHOLD, n_history=N_HISTORY
     )
+
+    if args.init_db:
+        optuna.create_study(sampler=sampler,
+                            direction="minimize" if METRIC == "loss" else "maximize",
+                            study_name=f"ASReview2_2-{CLASSIFIER_TYPE}-{FEATURE_EXTRACTOR_TYPE}-{STUDY_SET}-{VERSION}",
+                            storage=os.getenv(
+                                "DB_URI", "sqlite:///db.sqlite3"
+                            ),  # Specify the storage URL here.
+                            load_if_exists=True,
+                            )
+        print("Database initialized, exiting.")
+        sys.exit(0)
 
     study = optuna.create_study(
         storage=os.getenv(
@@ -274,6 +279,13 @@ if __name__ == "__main__":
         load_if_exists=True,
     )
 
+    # list of studies
+    studies = pd.read_json(f"synergy_studies_{STUDY_SET}.jsonl", lines=True)
+    report_order = sorted(set(studies["dataset_id"]))
+
+#    if PRE_PROCESSED_FMS:
+#        download_pickles(report_order)
+
     study.optimize(
         objective_report(report_order),
         n_trials=OPTUNA_N_TRIALS,
@@ -281,8 +293,3 @@ if __name__ == "__main__":
         callbacks=[study_stop_cb],
         n_jobs=OPTUNA_N_JOBS,
     )
-
-    print(f"Best value: {study.best_value} (params: {study.best_params})")
-    if AUTO_SHUTDOWN:
-        print("Shutting down now...")
-        os.system("sudo shutdown -h now")
