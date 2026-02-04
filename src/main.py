@@ -30,7 +30,7 @@ FEATURE_EXTRACTOR_TYPE = (
     "tfidf"  # Options: "tfidf", "onehot", "labse", "bge-m3", "stella", "mxbai"
 )
 PICKLE_FOLDER_PATH = Path("synergy-dataset", f"pickles_{FEATURE_EXTRACTOR_TYPE}")
-PRE_PROCESSED_FMS = True  # False = on the fly
+PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
 
 # Optuna variables
