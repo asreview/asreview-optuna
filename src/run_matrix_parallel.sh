@@ -16,12 +16,13 @@ FEATURES=("tfidf" "onehot")
 for clf in "${CLASSIFIERS[@]}"; do
     for feat in "${FEATURES[@]}"; do
         echo "Starting study with classifier=$clf and feature-extractor=$feat"
+
+        # --pre-processed-fms \
         srun -n 1 python main.py \
             --metric loss \
             --study-set demo \
             --classifier "$clf" \
             --feature-extractor "$feat" \
-            --pre-processed-fms \
             --n-trials 5 \
             --parallelize-objective \
             --n-workers 47 \
