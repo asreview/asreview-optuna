@@ -24,7 +24,7 @@ for dataset in tqdm(sd.iter_datasets(), total=26):
         print(f"Skipping {dataset_name}, pickle file already exists.")
         continue
 
-    X = Tfidf().fit_transform(df)
+    X = Tfidf(ngram_range=(1,2), sublinear_tf=True, min_df=1, max_df=0.95).fit_transform(df)
 
     with open(pickle_file_path, "wb") as f:
         pickle.dump((X, df["label_included"]), f)
