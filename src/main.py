@@ -1,6 +1,5 @@
 import argparse
 import datetime
-import multiprocessing as mp
 import os
 import pickle
 import sys
@@ -70,6 +69,7 @@ def n_query(results: list, n_records: int) -> int:
 def run_studies(
     studies: pd.DataFrame,
     parallel: bool,
+    n_workers: int,
     *args,
     **kwargs,
 ) -> dict[str, list[float]]:
@@ -79,6 +79,7 @@ def run_studies(
     Args:
         studies (pd.DataFrame): DataFrame containing study rows.
         parallel (bool): If True, runs studies in parallel using ProcessPoolExecutor.
+        n_workers (int): Number of workers used to parallelize the objective.
         *args: Positional arguments passed to `process_row`.
         **kwargs: Keyword arguments passed to `process_row`.
 
@@ -89,7 +90,7 @@ def run_studies(
     losses = defaultdict(list)
 
     if parallel:
-        with ProcessPoolExecutor(max_workers=mp.cpu_count() - 1) as executor:
+        with ProcessPoolExecutor(max_workers=n_workers) as executor:
             futures = {
                 executor.submit(process_row, row, *args, **kwargs): i
                 for i, row in studies.iterrows()
@@ -211,6 +212,7 @@ def objective_report(
     parallelize_objective: bool,
     metric: str,
     pre_processed_fms: bool,
+    n_workers: int,
 ) -> Callable[[optuna.trial.Trial], float]:
     """
     Create an Optuna objective function for hyperparameter optimization.
@@ -228,6 +230,7 @@ def objective_report(
         parallelize_objective (bool): Whether to run studies in parallel.
         metric (str): Optimization metric ("loss" or "ndcg").
         pre_processed_fms (bool): Whether to use pre-processed feature matrices.
+        n_workers (int): Number of workers to use when parallelize_objective is True.
 
     Returns:
         callable: Optuna-compatible objective function.
@@ -247,6 +250,7 @@ def objective_report(
         result = run_studies(
             studies,
             parallel=parallelize_objective,
+            n_workers=n_workers,
             classifier=classifier,
             clf_params=clf_params,
             feature_extractor=feature_extractor,
@@ -364,6 +368,12 @@ if __name__ == "__main__":
         action="store_true",
         help='If set, run one trial with several threads. Each thread will run 1 study set row at a time. Useful if you have a lot of studies (e.g., study-set="full").',
     )
+    parser.add_argument(
+        "--n-workers",
+        default=1,
+        type=int,
+        help="Set the number of workers used for parallelizing the objective.",
+    )
     args = parser.parse_args()
 
     sampler = optuna.samplers.TPESampler()
@@ -400,13 +410,13 @@ if __name__ == "__main__":
     === ASReview Optuna run ===
     study_name         : {study.study_name}
     study_set          : {args.study_set}
-    studies            : {n_studies} rows / {n_datasets} datasets
+    studies            : {n_studies} row(s) / {n_datasets} dataset(s)
     classifier         : {args.classifier}
     feature_extractor  : {args.feature_extractor}
     metric             : {args.metric}
     preprocessed_fms   : {args.pre_processed_fms}
     parallel_objective : {args.parallelize_objective}
-    max_workers        : {mp.cpu_count() - 1 if args.parallelize_objective else 1}
+    max_workers        : {args.n_workers - 1 if args.parallelize_objective else 1}
     n_trials           : {args.n_trials}
     storage            : {"local" if os.getenv("DB_URI", "sqlite:///db.sqlite3") == "sqlite:///db.sqlite3" else "remote"}
     ===========================
@@ -420,6 +430,7 @@ if __name__ == "__main__":
             parallelize_objective=args.parallelize_objective,
             metric=args.metric,
             pre_processed_fms=args.pre_processed_fms,
+            n_workers=args.n_workers,
         ),
         n_trials=args.n_trials,
         callbacks=[study_stop_cb],
