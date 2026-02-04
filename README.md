@@ -2,8 +2,6 @@
 
 This repository provides tools for testing and optimizing the models found in ASReview via the Optuna package. It includes a Makita template that will generate a folder infrastructure with a jobs file to run the optimizations for a specific model.
 
-![Cool image with lots of optimization](images/all.png)
-
 ## Installation
 
 To get started, clone this repository:
@@ -24,9 +22,35 @@ Simply execute the `main.py` file:
 python ./src/main.py
 ```
 
+Or check out all options:
+```bash
+python ./src/main.py -h
+```
+
 And, to see the results, start up the dashboard:
 ```bash
 optuna-dashboard sqlite:///src/db.sqlite3
+```
+
+## Run on SLURM cluster
+Two options here:
+- A hosted, centralized DB
+- A local DB
+
+### Exoscale Hosted DB
+#### To setup a DB
+1. Create a PostgreSQL DB
+2. Get the full URI using [exo cli](https://community.exoscale.com/documentation/tools/exoscale-command-line-interface/#installation) on a local machine `exo dbaas -z [DB ZONE] show [DB NAME] --uri`
+3. Add the IP addresses from your study and dashboard servers to the IP filter
+
+#### To run Optuna
+```bash
+sbatch --export=DB_URI="[YOUR DB_URI GOES HERE]" ./src/run_opruna.sh
+```
+
+### Local DB
+```bash
+sbatch ./src/run_optuna.sh
 ```
 
 ## Run on Exoscale

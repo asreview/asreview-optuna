@@ -416,7 +416,7 @@ if __name__ == "__main__":
     metric             : {args.metric}
     preprocessed_fms   : {args.pre_processed_fms}
     parallel_objective : {args.parallelize_objective}
-    max_workers        : {args.n_workers - 1 if args.parallelize_objective else 1}
+    max_workers        : {args.n_workers if args.parallelize_objective else 1}
     n_trials           : {args.n_trials}
     storage            : {"local" if os.getenv("DB_URI", "sqlite:///db.sqlite3") == "sqlite:///db.sqlite3" else "remote"}
     ===========================
