@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 FORCE = False
 
-folder_pickle_files = Path("preprocessed_fms", "pickles_tfidf")
+folder_pickle_files = Path("..", "preprocessed_fms", "pickles_tfidf")
 folder_pickle_files.mkdir(parents=True, exist_ok=True)
 
 for dataset in tqdm(sd.iter_datasets(), total=26):

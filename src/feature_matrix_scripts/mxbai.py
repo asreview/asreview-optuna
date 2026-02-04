@@ -9,7 +9,7 @@ from tqdm import tqdm
 FORCE = True
 
 # Folder to save embeddings
-folder_pickle_files = Path("preprocessed_fms", "pickles_mxbai")
+folder_pickle_files = Path("..", "preprocessed_fms", "pickles_mxbai")
 folder_pickle_files.mkdir(parents=True, exist_ok=True)
 
 # Load LaBSE model
