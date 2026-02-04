@@ -43,13 +43,10 @@ MIN_TRIALS = 400
 N_HISTORY = 5
 STOPPING_THRESHOLD = 0.0001
 
-dataset_sizes = {
-    dataset.name: dataset.metadata["data"]["n_records"]
-    for dataset in sd.iter_datasets()
-}
-
 
 def load_dataset(dataset_id):
+    if dataset_id == "Appenzeller-Herzog_2019":
+        return pd.read_csv("./data/Appenzeller-Herzog_2019.csv")
     return sd.Dataset(dataset_id).to_frame().reset_index()
 
 
