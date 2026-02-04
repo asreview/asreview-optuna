@@ -267,6 +267,7 @@ if __name__ == "__main__":
         print("Database initialized, exiting.")
         sys.exit(0)
 
+    print(os.getenv("DB_URI", "sqlite:///db.sqlite3"))
     study = optuna.create_study(
         storage=os.getenv(
             "DB_URI", "sqlite:///db.sqlite3"
