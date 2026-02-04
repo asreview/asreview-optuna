@@ -146,6 +146,7 @@ def process_row(row, clf_params, fe_params, ratio):
         labels=labels,
         cycles=[alc],
         skip_transform=True if PRE_PROCESSED_FMS else False,
+        print_progress=False
     )
 
     # Set priors
