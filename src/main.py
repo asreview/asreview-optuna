@@ -34,7 +34,7 @@ PRE_PROCESSED_FMS = False  # False = on the fly
 PARALLELIZE_OBJECTIVE = True
 
 # Optuna variables
-OPTUNA_N_TRIALS = 500
+OPTUNA_N_TRIALS = 100
 OPTUNA_TIMEOUT = None  # in seconds
 OPTUNA_N_JOBS = 1 if PARALLELIZE_OBJECTIVE else mp.cpu_count() - 1
 
