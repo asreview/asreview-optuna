@@ -2,7 +2,6 @@ import argparse
 import datetime
 import os
 import pickle
-import sys
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
@@ -331,11 +330,6 @@ if __name__ == "__main__":
         description="Program that helps running exhaustive parameter optimization studies for ASReview and SYNERGY+",
     )
     parser.add_argument(
-        "--init-db",
-        action="store_true",
-        help="If set, the program will only create the DB, not run any trials.",
-    )
-    parser.add_argument(
         "--metric",
         default="loss",
         choices=["loss", "ndcg"],
@@ -398,56 +392,39 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    sampler = optuna.samplers.TPESampler()
-    study_stop_cb = StopWhenOptimumReached(
-        min_trials=400, threshold=0.0001, n_history=5
+    study_name = f"[{datetime.datetime.now().strftime('%b-%d-%H:%M')}] {args.classifier}-{args.feature_extractor}-{args.study_set}-{args.metric}"
+    studies = pd.read_json(
+        Path(args.studies_path) / f"synergy_studies_{args.study_set}.jsonl", lines=True
     )
+    n_studies = len(studies)
+    n_datasets = studies["dataset_id"].nunique()
 
-    if args.init_db:
-        optuna.create_study(
-            sampler=sampler,
-            direction="minimize" if args.metric == "loss" else "maximize",
-            study_name=f"[{datetime.datetime.now().strftime('%b-%d-%H:%M')}] {args.classifier}-{args.feature_extractor}-{args.study_set}-{args.metric}",
-            storage=os.getenv("DB_URI", "sqlite:///db.sqlite3"),
-            load_if_exists=True,
-        )
-        print("Database initialized, exiting.")
-        sys.exit(0)
+    print(f"""
+=== ASReview Optuna run ===
+study_name         : {study_name}
+study_set          : {args.study_set}
+studies            : {n_studies} row(s) / {n_datasets} dataset(s)
+classifier         : {args.classifier}
+feature_extractor  : {args.feature_extractor}
+metric             : {args.metric}
+preprocessed_fms   : {args.pre_processed_fms}
+parallel_objective : {args.parallelize_objective}
+max_workers        : {args.n_workers if args.parallelize_objective else 1}
+n_trials           : {args.n_trials}
+data_path          : {args.data_path}
+fms_path           : {args.fms_path}
+studies_path       : {args.studies_path}
+DB                 : {"local" if os.getenv("DB_URI", "sqlite:///db.sqlite3") == "sqlite:///db.sqlite3" else "remote"}
+===========================
+    """)
 
     study = optuna.create_study(
-        sampler=sampler,
+        sampler=optuna.samplers.TPESampler(),
         direction="minimize" if args.metric == "loss" else "maximize",
         study_name=f"[{datetime.datetime.now().strftime('%b-%d-%H:%M')}] {args.classifier}-{args.feature_extractor}-{args.study_set}-{args.metric}",
         storage=os.getenv("DB_URI", "sqlite:///db.sqlite3"),
         load_if_exists=True,
     )
-
-    # list of studies
-    studies = pd.read_json(
-        Path(args.studies_path) / f"synergy_studies_{args.study_set}.jsonl", lines=True
-    )
-
-    n_studies = len(studies)
-    n_datasets = studies["dataset_id"].nunique()
-
-    print(f"""
-    === ASReview Optuna run ===
-    study_name         : {study.study_name}
-    study_set          : {args.study_set}
-    studies            : {n_studies} row(s) / {n_datasets} dataset(s)
-    classifier         : {args.classifier}
-    feature_extractor  : {args.feature_extractor}
-    metric             : {args.metric}
-    preprocessed_fms   : {args.pre_processed_fms}
-    parallel_objective : {args.parallelize_objective}
-    max_workers        : {args.n_workers if args.parallelize_objective else 1}
-    n_trials           : {args.n_trials}
-    data_path          : {args.data_path}
-    fms_path           : {args.fms_path}
-    studies_path       : {args.studies_path}
-    DB                 : {"local" if os.getenv("DB_URI", "sqlite:///db.sqlite3") == "sqlite:///db.sqlite3" else "remote"}
-    ===========================
-    """)
 
     study.optimize(
         objective_report(
@@ -462,5 +439,7 @@ if __name__ == "__main__":
             fms_path=args.fms_path,
         ),
         n_trials=args.n_trials,
-        callbacks=[study_stop_cb],
+        callbacks=[
+            StopWhenOptimumReached(min_trials=400, threshold=0.0001, n_history=5)
+        ],
     )
