@@ -9,7 +9,7 @@ from asreview.models.classifiers import (
 
 def naive_bayes_params(trial: optuna.trial.FrozenTrial):
     # Use logarithmic normal distribution for alpha (alpha effect is non-linear)
-    alpha = trial.suggest_float("nb__alpha", 0.1, 15, log=True)
+    alpha = trial.suggest_float("nb__alpha", 0.01, 15, log=True)
     return {"alpha": alpha}
 
 
@@ -27,8 +27,9 @@ def svm_params(trial: optuna.trial.FrozenTrial):
 
 def random_forest_params(trial: optuna.trial.FrozenTrial):
     # Use normal distribution for n_estimators (n_estimators effect is linear)
-    n_estimators = trial.suggest_int("rf__n_estimators", 100, 200)
-    return {"n_estimators": n_estimators, "max_features": "sqrt"}
+    n_estimators = trial.suggest_categorical("rf__n_estimators", [100, 200, 500, 1000])
+    min_samples_split = trial.suggest_categorical("rf__min_samples_split", [1, 2, 5])
+    return {"n_estimators": n_estimators, "max_features": "sqrt", "min_samples_split": min_samples_split}
 
 
 classifier_params = {

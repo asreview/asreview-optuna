@@ -7,11 +7,15 @@ def tfidf_params(trial: optuna.trial.FrozenTrial):
 
     min_df = trial.suggest_int("tfidf__min_df", 1, 10)
 
+    ngram_range = trial.suggest_categorical("tfidf__ngram_range", [1, 2, 3])
+
+    sublinear_tf = trial.suggest_categorical("tfidf__sublinear_tf", [True, False])
+
     return {
         "max_df": max_df,
         "min_df": min_df,
-        "ngram_range": (1, 2),
-        "sublinear_tf": True,
+        "ngram_range": (1, ngram_range),
+        "sublinear_tf": sublinear_tf,
     }
 
 
