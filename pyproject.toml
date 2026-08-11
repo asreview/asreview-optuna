@@ -11,8 +11,7 @@ classifiers = [
 requires-python = ">=3.13"
 dynamic = ["version"]
 dependencies = [
-    "asreview>=2.0",
-    "FlagEmbedding",
+    "asreview>=3.0",
     "numpy",
     "optuna",
     "optuna-dashboard",

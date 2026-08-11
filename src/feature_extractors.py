@@ -40,3 +40,31 @@ feature_extractors = {
     "tfidf": Tfidf,
     "onehot": OneHot,
 }
+
+feature_extractor_static_params = {
+    "tfidf": {},
+    "onehot": {"ngram_range": (1, 2)},
+}
+
+
+def feature_extractor_kwargs_from_trial_params(
+    feature_extractor: str, params: dict
+) -> dict:
+    """
+    Reconstruct feature extractor constructor kwargs from a flat trial params
+    dict (e.g. study.best_trial.params), reversing the
+    "{feature_extractor}__{kwarg}" naming convention used by the
+    *_params(trial) functions above.
+
+    Args:
+        feature_extractor (str): Name of the feature extractor.
+        params (dict): Flat params dict, e.g. optuna trial.params.
+
+    Returns:
+        dict: Kwargs usable as `feature_extractors[feature_extractor](**kwargs)`.
+    """
+    prefix = f"{feature_extractor}__"
+    tuned = {k[len(prefix) :]: v for k, v in params.items() if k.startswith(prefix)}
+    if feature_extractor == "tfidf" and "ngram_range" in tuned:
+        tuned["ngram_range"] = (1, tuned["ngram_range"])
+    return {**tuned, **feature_extractor_static_params.get(feature_extractor, {})}

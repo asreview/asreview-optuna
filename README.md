@@ -16,16 +16,39 @@ Make sure you have all dependencies installed:
 uv sync
 ```
 
+# Data
+
+This project tunes against the local [synergy_plus](https://github.com/asreview/synergy-dataset) mirror: one CSV per systematic-review dataset, plus `metadata/review_metadata.csv` which assigns each dataset to a `train` or `test` split (a whole dataset belongs to exactly one split). `--data-path` (required on every script below) must point at this directory.
+
+Before running anything else, generate the random-prior study files once:
+```bash
+python ./src/generate_studies.py --data-path /path/to/synergy_plus
+```
+This writes `synergy_studies_{train,test,demo}.jsonl` into `src/studies/`. Re-run it (optionally with `--n-priors`/`--seed`) to regenerate with a different repeat count or seed.
+
+If you want to tune with `--feature-extractor mxbai` or `--feature-extractor multilingual-e5` (precomputed embeddings, not tuned by Optuna, see the options table below), precompute them once:
+```bash
+sbatch --export=DATA_PATH="/path/to/synergy_plus" ./src/preprocess_fms.sh
+```
+or locally: `python ./src/feature_matrix_scripts/mxbai.py --data-path /path/to/synergy_plus` (and similarly for `multilingual_e5.py`). Both accept a repeatable `--dataset-id` to cheaply precompute just one dataset for smoke testing. `tfidf`/`onehot` need no offline step — they're tuned every trial, so `main.py` fits them on the fly (once per dataset per trial, not once per prior draw).
+
 # Run Local
 Simply execute the `main.py` file:
 ```bash
-python ./src/main.py
+python ./src/main.py --data-path /path/to/synergy_plus
 ```
+The cheapest way to sanity-check the whole pipeline is `--study-set demo` (1 dataset, 2 prior draws).
 
 Or check out all options:
 ```bash
 python ./src/main.py -h
 ```
+
+Once a study finishes, evaluate its best hyperparameters against the held-out test split (never touched during the search):
+```bash
+python ./src/evaluate_test.py --study-name "[the name printed in main.py's banner]" --classifier svm --feature-extractor tfidf --data-path /path/to/synergy_plus
+```
+This prints and writes a per-dataset breakdown CSV. By default it also runs the relevant ASReview-shipped ELAS baseline model(s) against the same test split for comparison — `tfidf` against ELAS u3 and u4, `mxbai` against ELAS h3, `multilingual-e5` against ELAS l2 (`onehot` has no ELAS equivalent) — using their exact shipped hyperparameters (from `asreview.models.models`) rather than this repo's tuning defaults. Pass `--skip-baseline` to omit this.
 
 And, to see the results of your optimization, start up the dashboard:
 ```bash
@@ -47,30 +70,33 @@ Steps to setup an Exoscale DB:
 
 Then, run ASReview Optuna:
 ```bash
-sbatch --export=DB_URI="[YOUR DB_URI GOES HERE]" ./src/run_single.sh
+sbatch --export=DATA_PATH="/path/to/synergy_plus",DB_URI="[YOUR DB_URI GOES HERE]" ./src/run_single.sh
 ```
 
 ## Local DB
 When you choose to use a local db (sqlite), you can simply run:
 ```bash
-sbatch ./src/run_single.sh
+sbatch --export=DATA_PATH="/path/to/synergy_plus" ./src/run_single.sh
 ```
 
+`run_matrix_sequential.sh`/`run_matrix_parallel.sh` sweep all classifier x feature-extractor combinations and take `DATA_PATH`/`DB_URI` the same way. `preprocess_fms.sh` (see [Data](#data) above) needs a GPU partition — its `--partition=gpu` placeholder likely needs adjusting to your cluster's actual GPU partition name.
+
 # ASReview Optuna Options
-| Option                               | Description                                                                                                                                                 |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `-h, --help`                         | Show this help message and exit                                                                                                                             |
-| `--metric {loss,ndcg}`               | The metric used as objective during optimization.                                                                                                           |
-| `--study-set {demo,full}`            | The study set that is used.                                                                                                                                 |
-| `--classifier {log,nb,rf,svm}`       | The classifier to optimize.                                                                                                                                 |
-| `--feature-extractor {tfidf,onehot}` | The feature extractor to optimize.                                                                                                                          |
-| `--pre-processed-fms`                | If set, use the pre-processed feature matrices.                                                                                                             |
-| `--n-trials N_TRIALS`                | Set the maximum number of trials that will be ran.                                                                                                          |
-| `--parallelize-objective`            | If set, run one trial with several threads. Each thread will run 1 study set row at a time. Useful if you have a lot of studies (e.g., `study-set="full"`). |
-| `--n-workers N_WORKERS`              | Set the number of workers used for parallelizing the objective.                                                                                             |
-| `--data-path DATA_PATH`              | The path to the raw data.                                                                                                                                   |
-| `--fms-path FMS_PATH`                | The path to the preprocessed feature matrices.                                                                                                              |
-| `--studies-path STUDIES_PATH`        | The path to the studies JSON files (`demo` and `full`).                                                                                                     |
+| Option                                                    | Description                                                                                                          |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `-h, --help`                                               | Show this help message and exit                                                                                     |
+| `--metric {loss,ndcg}`                                     | The metric used as objective during optimization.                                                                   |
+| `--study-set {demo,train}`                                 | The study set that is used. Test-split data is intentionally not selectable here; use `evaluate_test.py`.           |
+| `--classifier {log,nb,rf,svm}`                              | The classifier to optimize.                                                                                        |
+| `--feature-extractor {tfidf,onehot,mxbai,multilingual-e5}`  | The feature extractor to optimize. `mxbai`/`multilingual-e5` have no on-the-fly implementation and require `--pre-processed-fms`. |
+| `--pre-processed-fms`                                       | If set, use the pre-processed feature matrices.                                                                    |
+| `--n-trials N_TRIALS`                                       | Set the maximum number of trials that will be ran.                                                                 |
+| `--parallelize-objective`                                   | If set, run one trial with several processes. Each process will run 1 study set row at a time.                    |
+| `--n-workers N_WORKERS`                                     | Set the number of workers used for parallelizing the objective.                                                    |
+| `--data-path DATA_PATH`                                     | The path to the synergy_plus data directory (required).                                                            |
+| `--fms-path FMS_PATH`                                       | The path to the preprocessed feature matrices (default: `src/preprocessed_fms`).                                   |
+| `--studies-path STUDIES_PATH`                               | The path to the studies JSON files, `demo` and `train` (default: `src/studies`).                                   |
+| `--seed SEED`                                               | Seed for the Optuna sampler, for a reproducible hyperparameter search order (default: `42`).                       |
 
 # Questions and Contributions
 

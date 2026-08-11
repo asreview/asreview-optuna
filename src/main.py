@@ -1,208 +1,16 @@
 import argparse
 import datetime
 import os
-import pickle
-from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
-from typing import Callable
+from collections.abc import Callable
 
-import asreview
 import numpy as np
 import optuna
 import pandas as pd
-import synergy_dataset as sd
-from asreview.learner import ActiveLearningCycle
-from asreview.metrics import loss, ndcg
-from asreview.models.balancers import Balanced
-from asreview.models.queriers import Max
 
-from classifiers import classifier_params, classifiers
-from feature_extractors import feature_extractor_params, feature_extractors
-
-
-def load_dataset(data_path: str, dataset_id: str) -> pd.DataFrame:
-    """
-    Load a dataset by ID.
-
-    Args:
-        path (str): Path to raw data files.
-        dataset_id (str): Identifier for the dataset.
-
-    Returns:
-        pd.DataFrame: The dataset as a pandas DataFrame.
-    """
-    if dataset_id == "Appenzeller-Herzog_2019":
-        return pd.read_csv(Path(data_path) / f"{dataset_id}.csv")
-    return sd.Dataset(dataset_id).to_frame().reset_index()
-
-
-def n_query(results: list, n_records: int) -> int:
-    """
-    Determine the number of items to query in each active learning cycle.
-
-    Args:
-        results (list): List of current simulation results.
-        n_records (int): Total number of records in the dataset.
-
-    Returns:
-        int: Number of items to query.
-    """
-    if n_records >= 10000:
-        if len(results) >= 10000:
-            return 10**5  # finish the run
-        if len(results) >= 1000:
-            return 1000
-        elif len(results) >= 100:
-            return 25
-        else:
-            return 1
-    else:
-        if len(results) >= 1000:
-            return 100
-        elif len(results) >= 100:
-            return 5
-        else:
-            return 1
-
-
-def run_studies(
-    studies: pd.DataFrame,
-    parallel: bool,
-    n_workers: int,
-    *args,
-    **kwargs,
-) -> dict[str, list[float]]:
-    """
-    Run ASReview simulations on a set of studies, either in parallel or sequentially.
-
-    Args:
-        studies (pd.DataFrame): DataFrame containing study rows.
-        parallel (bool): If True, runs studies in parallel using ProcessPoolExecutor.
-        n_workers (int): Number of workers used to parallelize the objective.
-        *args: Positional arguments passed to `process_row`.
-        **kwargs: Keyword arguments passed to `process_row`.
-
-    Returns:
-        dict[str, list[float]]: Mapping from dataset_id to metric values.
-    """
-
-    losses = defaultdict(list)
-
-    if parallel:
-        with ProcessPoolExecutor(max_workers=n_workers) as executor:
-            futures = {
-                executor.submit(process_row, row, *args, **kwargs): i
-                for i, row in studies.iterrows()
-            }
-            for future in as_completed(futures):
-                dataset_id, result = future.result()
-                if result is not None:
-                    losses[dataset_id].append(result)
-    else:
-        for _, row in studies.iterrows():
-            dataset_id, result = process_row(row, *args, **kwargs)
-            if result is not None:
-                losses[dataset_id].append(result)
-
-    return losses
-
-
-def process_row(
-    row: pd.Series,
-    clf_params: dict,
-    fe_params: dict,
-    ratio: float,
-    classifier: str,
-    feature_extractor: str,
-    metric: str,
-    pre_processed_fms: bool,
-    data_path: str,
-    fms_path: str,
-) -> tuple[str, float]:
-    """
-    Run a single ASReview simulation for one study row.
-
-    This function:
-    - Loads the dataset (raw or pre-processed features)
-    - Initializes the classifier, feature extractor, and balancer
-    - Runs an ASReview simulation with predefined priors
-    - Computes and returns the chosen evaluation metric
-
-    Args:
-        row (pd.Series): A single row from the studies DataFrame.
-        clf_params (dict): Hyperparameters for the classifier.
-        fe_params (dict): Hyperparameters for the feature extractor.
-        ratio (float): Class balance ratio for the Balanced balancer.
-        classifier (str): Name of the classifier to use.
-        feature_extractor (str): Name of the feature extractor to use.
-        metric (str): Metric to compute ("loss" or "ndcg").
-        pre_processed_fms (bool): Whether to use pre-processed feature matrices.
-        data_path (str): The path to the raw data.
-        fms_path (str): The path to the preprocessed fms.
-
-    Returns:
-        tuple[str, float]: Dataset ID and computed metric value.
-    """
-    priors = row["prior_inclusions"] + row["prior_exclusions"]
-
-    # Create balancer with optuna value
-    blc = Balanced(ratio=ratio)
-
-    # Create classifier and feature extractor with params
-    clf = classifiers[classifier](**clf_params)
-
-    if pre_processed_fms:
-        with open(
-            Path(fms_path) / f"{feature_extractor}" / f"{row['dataset_id']}.pkl",
-            "rb",
-        ) as f:
-            X, labels = pickle.load(f)
-
-        labels = pd.Series(labels)
-
-        alc = ActiveLearningCycle(
-            querier=Max(),
-            classifier=clf,
-            balancer=blc,
-            n_query=lambda results: n_query(results, X.shape[0]),
-        )
-    else:
-        X = load_dataset(data_path, row["dataset_id"])
-
-        labels = X["label_included"]
-        fe = feature_extractors[feature_extractor](**fe_params)
-
-        alc = ActiveLearningCycle(
-            querier=Max(),
-            classifier=clf,
-            balancer=blc,
-            feature_extractor=fe,
-            n_query=lambda results: n_query(results, X.shape[0]),
-        )
-
-    simulate = asreview.Simulate(
-        X=X,
-        labels=labels,
-        cycles=[alc],
-        skip_transform=pre_processed_fms,
-        print_progress=False,
-    )
-
-    # Set priors
-    simulate.label(priors)
-
-    # Start simulation
-    simulate.review()
-
-    # Return loss
-    padded_results = list(simulate._results["label"]) + [0] * (
-        len(simulate.labels) - len(simulate._results["label"])
-    )
-    calculated_metric = (
-        loss(padded_results) if metric == "loss" else ndcg(padded_results)
-    )
-    return row["dataset_id"], calculated_metric
+from classifiers import classifier_params
+from feature_extractors import feature_extractor_params
+from simulation import run_studies
 
 
 def objective_report(
@@ -338,8 +146,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--study-set",
         default="demo",
-        choices=["demo", "full"],
-        help="The study set that is used.",
+        choices=["demo", "train"],
+        help="The study set that is used. Test-split data is intentionally not selectable here; use evaluate_test.py.",
     )
     parser.add_argument(
         "--classifier",
@@ -350,8 +158,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--feature-extractor",
         default="tfidf",
-        choices=["tfidf", "onehot"],
-        help="The feature extractor to optimize.",
+        choices=["tfidf", "onehot", "mxbai", "multilingual-e5"],
+        help="The feature extractor to optimize. mxbai and multilingual-e5 have no on-the-fly "
+        "implementation and require --pre-processed-fms.",
     )
     parser.add_argument(
         "--pre-processed-fms",
@@ -367,7 +176,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--parallelize-objective",
         action="store_true",
-        help='If set, run one trial with several threads. Each thread will run 1 study set row at a time. Useful if you have a lot of studies (e.g., study-set="full").',
+        help="If set, run one trial with several processes. Each process will run 1 study set row at a time. Useful if you have a lot of studies.",
     )
     parser.add_argument(
         "--n-workers",
@@ -377,22 +186,38 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--data-path",
-        default="./data",
-        help="The path to the raw data.",
+        required=True,
+        help="The path to the synergy_plus data directory.",
     )
     parser.add_argument(
         "--fms-path",
-        default="./preprocessed_fms",
+        default=str(Path(__file__).resolve().parent / "preprocessed_fms"),
         help="The path to the preprocessed feature matrices.",
     )
     parser.add_argument(
         "--studies-path",
-        default="./studies",
-        help='The path to the studies JSON files, "demo" and "full".',
+        default=str(Path(__file__).resolve().parent / "studies"),
+        help='The path to the studies JSON files, "demo" and "train".',
+    )
+    parser.add_argument(
+        "--seed",
+        default=42,
+        type=int,
+        help="Seed for the Optuna sampler (TPESampler), for a reproducible hyperparameter search order.",
     )
     args = parser.parse_args()
 
-    study_name = f"[{datetime.datetime.now().strftime('%b-%d-%H:%M')}] {args.classifier}-{args.feature_extractor}-{args.study_set}-{args.metric}"
+    if (
+        args.feature_extractor not in feature_extractor_params
+        and not args.pre_processed_fms
+    ):
+        parser.error(
+            f"--feature-extractor {args.feature_extractor} has no on-the-fly implementation; "
+            "it can only be used together with --pre-processed-fms."
+        )
+
+    timestamp = datetime.datetime.now().strftime("%b-%d-%H:%M")
+    study_name = f"[{timestamp}] {args.classifier}-{args.feature_extractor}-{args.study_set}-{args.metric}"
     studies = pd.read_json(
         Path(args.studies_path) / f"synergy_studies_{args.study_set}.jsonl", lines=True
     )
@@ -411,6 +236,7 @@ preprocessed_fms   : {args.pre_processed_fms}
 parallel_objective : {args.parallelize_objective}
 max_workers        : {args.n_workers if args.parallelize_objective else 1}
 n_trials           : {args.n_trials}
+seed               : {args.seed}
 data_path          : {args.data_path}
 fms_path           : {args.fms_path}
 studies_path       : {args.studies_path}
@@ -419,9 +245,9 @@ DB                 : {"local" if os.getenv("DB_URI", "sqlite:///db.sqlite3") == 
     """)
 
     study = optuna.create_study(
-        sampler=optuna.samplers.TPESampler(),
+        sampler=optuna.samplers.TPESampler(seed=args.seed),
         direction="minimize" if args.metric == "loss" else "maximize",
-        study_name=f"[{datetime.datetime.now().strftime('%b-%d-%H:%M')}] {args.classifier}-{args.feature_extractor}-{args.study_set}-{args.metric}",
+        study_name=study_name,
         storage=os.getenv("DB_URI", "sqlite:///db.sqlite3"),
         load_if_exists=True,
     )
