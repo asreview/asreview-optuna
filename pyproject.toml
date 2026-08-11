@@ -1,0 +1,38 @@
+[project]
+name = "asreview-optuna"
+description = "ASReview Optimization Framework"
+readme = "README.md"
+authors = [
+    { name = "ASReview LAB developers", email = "asreview@uu.nl" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.13"
+dynamic = ["version"]
+dependencies = [
+    "asreview>=3.0",
+    "numpy",
+    "optuna",
+    "optuna-dashboard",
+    "pandas",
+    "psycopg2-binary",
+    "scikit-learn",
+    "sentence-transformers",
+    "synergy_dataset",
+    "tqdm"
+]
+
+[project.urls]
+Issues = "https://github.com/asreview/asreview-optuna/issues"
+Repository = "https://github.com/asreview/asreview-optuna/"
+
+[build-system]
+build-backend = 'setuptools.build_meta'
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+
+[tool.ruff]
+select = ["E", "F", "UP", "B"]
+
+[tool.ruff.isort]
+force-single-line = true

@@ -7,12 +7,12 @@ import torch
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
-MODEL_NAME = "mixedbread-ai/mxbai-embed-large-v1"
+MODEL_NAME = "intfloat/multilingual-e5-large"
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Precompute mxbai embeddings for synergy_plus datasets."
+        description="Precompute multilingual-e5 embeddings for synergy_plus datasets."
     )
     parser.add_argument(
         "--data-path",
@@ -37,7 +37,7 @@ def main():
     )
     args = parser.parse_args()
 
-    out_dir = Path(args.fms_path) / "mxbai"
+    out_dir = Path(args.fms_path) / "multilingual-e5"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if args.dataset_id:
@@ -57,7 +57,10 @@ def main():
             continue
 
         df = pd.read_csv(Path(args.data_path) / f"{dataset_id}.csv")
-        combined_texts = (df["title"].fillna("") + " " + df["abstract"].fillna("")).tolist()
+        # E5 models expect an asymmetric "passage: " prefix for corpus/document text.
+        combined_texts = (
+            "passage: " + df["title"].fillna("") + " " + df["abstract"].fillna("")
+        ).tolist()
 
         X = model.encode(
             combined_texts,

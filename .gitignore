@@ -1,6 +1,3 @@
-
-synergy-dataset/
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -167,5 +164,4 @@ cython_debug/
 *.pdf
 *.asreview
 *.csv
-!Moran_2021_corrected_shuffled_raw.csv
-!Muthu_2021_corrected_shuffled_raw.csv
+/analysis/*

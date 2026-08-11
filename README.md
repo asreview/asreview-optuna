@@ -2,9 +2,7 @@
 
 This repository provides tools for testing and optimizing the models found in ASReview via the Optuna package. It includes a Makita template that will generate a folder infrastructure with a jobs file to run the optimizations for a specific model.
 
-![Cool image with lots of optimization](images/all.png)
-
-## Installation
+# Installation
 
 To get started, clone this repository:
 
@@ -15,124 +13,92 @@ git clone https://github.com/asreview/asreview-optuna.git
 Make sure you have all dependencies installed:
 
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
-## Run Local
+# Data
+
+This project tunes against the local [synergy_plus](https://github.com/asreview/synergy-dataset) mirror: one CSV per systematic-review dataset, plus `metadata/review_metadata.csv` which assigns each dataset to a `train` or `test` split (a whole dataset belongs to exactly one split). `--data-path` (required on every script below) must point at this directory.
+
+Before running anything else, generate the random-prior study files once:
+```bash
+python ./src/generate_studies.py --data-path /path/to/synergy_plus
+```
+This writes `synergy_studies_{train,test,demo}.jsonl` into `src/studies/`. Re-run it (optionally with `--n-priors`/`--seed`) to regenerate with a different repeat count or seed.
+
+If you want to tune with `--feature-extractor mxbai` or `--feature-extractor multilingual-e5` (precomputed embeddings, not tuned by Optuna, see the options table below), precompute them once:
+```bash
+sbatch --export=DATA_PATH="/path/to/synergy_plus" ./src/preprocess_fms.sh
+```
+or locally: `python ./src/feature_matrix_scripts/mxbai.py --data-path /path/to/synergy_plus` (and similarly for `multilingual_e5.py`). Both accept a repeatable `--dataset-id` to cheaply precompute just one dataset for smoke testing. `tfidf`/`onehot` need no offline step — they're tuned every trial, so `main.py` fits them on the fly (once per dataset per trial, not once per prior draw).
+
+# Run Local
 Simply execute the `main.py` file:
 ```bash
-python ./src/main.py
+python ./src/main.py --data-path /path/to/synergy_plus
+```
+The cheapest way to sanity-check the whole pipeline is `--study-set demo` (1 dataset, 2 prior draws).
+
+Or check out all options:
+```bash
+python ./src/main.py -h
 ```
 
-And, to see the results, start up the dashboard:
+Once a study finishes, evaluate its best hyperparameters against the held-out test split (never touched during the search):
+```bash
+python ./src/evaluate_test.py --study-name "[the name printed in main.py's banner]" --classifier svm --feature-extractor tfidf --data-path /path/to/synergy_plus
+```
+This prints and writes a per-dataset breakdown CSV. By default it also runs the relevant ASReview-shipped ELAS baseline model(s) against the same test split for comparison — `tfidf` against ELAS u3 and u4, `mxbai` against ELAS h3, `multilingual-e5` against ELAS l2 (`onehot` has no ELAS equivalent) — using their exact shipped hyperparameters (from `asreview.models.models`) rather than this repo's tuning defaults. Pass `--skip-baseline` to omit this.
+
+And, to see the results of your optimization, start up the dashboard:
 ```bash
 optuna-dashboard sqlite:///src/db.sqlite3
 ```
 
-## Run on Exoscale
+# Run on SLURM cluster
 Two options here:
 - A hosted, centralized DB
 - A local DB
 
-### Exoscale Hosted DB
-#### To setup a DB
+## Exoscale Hosted DB
+
+Steps to setup an Exoscale DB:
+
 1. Create a PostgreSQL DB
 2. Get the full URI using [exo cli](https://community.exoscale.com/documentation/tools/exoscale-command-line-interface/#installation) on a local machine `exo dbaas -z [DB ZONE] show [DB NAME] --uri`
 3. Add the IP addresses from your study and dashboard servers to the IP filter
 
-#### To start optuna-dashboard docker
-1. Create a new instance (e.g., Ubuntu 24.04 Standard->Small, 50GIB)
-    - Make sure to set your own SSH key
-2. Update and reboot `sudo apt update && sudo apt upgrade` and `sudo reboot`
-3. Install docker using the [official docker install instructions](https://docs.docker.com/engine/install/ubuntu/)
-4. Check installation: `docker compose version`
-5. Create dir and move into it `mkdir optuna-dashboard && cd optuna-dashboard/`
-6. Create nginx.conf `nano nginx.conf` (example in `dashboard/nginx.conf`)
-7. Install deps `sudo apt install -y apache2-utils`
-8. Create htpasswd file `sudo htpasswd -c ./htpasswd admin`
-9. Create docker-compose.yml `nano docker-compose.yml` (example in `deployment/dashboard/docker-compose.yml`, make sure to fill in the DB URI)
-10. Start docker using docker-compose.yml `docker-compose up -d`
-    
-#### To Start a Study
-1. Create a new instance (e.g., Ubuntu 24.04 CPU->Mega, 50GIB)
-    - Make sure to set your own SSH key
-    - Make sure to set the `asreview-and-optuna-dashboard` security group
-2. Update and reboot `sudo apt update && sudo apt upgrade` and `sudo reboot`
-3. Clone this repo `git clone https://github.com/asreview/asreview-optuna.git`
-4. Move into dir `cd asreview-optuna`
-5. Pull and checkout the correct study branch `git pull && git checkout [BRANCH_NAME]`
-6. Install venv `sudo apt install python3.12-venv`
-7. Create Python venv `python3 -m venv .venv`
-8. Activate venv `source .venv/bin/activate`
-9. Install Python packages `pip3 install -r requirements.txt`
-10. Create dataset pickles `python3 ./src/feature_matrix_scripts/tfidf.py` (± 1.5 minutes)
-11. Set `DB_URI` environment variable `export DB_URI=[FULL DB URI]`
-12. Create a tmux environment so optuna keeps running when we close the connection `tmux new -s optuna`
-    In the `optuna` tmux env run the following commands to start the study:
-    1. `source .venv/bin/activate`
-    2. `python3 src/main.py`
-    3. Detach from the tmux environment using `ctrl` `+` `b` followed by `d` (you can always reattach using `tmux attach -t optuna`)
-13. You are all set! Check the dashboard on your local machine through a browser: `[Exoscale instance ip]:8080`
-14. You can see CPU usage using `htop`
+Then, run ASReview Optuna:
+```bash
+sbatch --export=DATA_PATH="/path/to/synergy_plus",DB_URI="[YOUR DB_URI GOES HERE]" ./src/run_single.sh
+```
 
-### Local DB
-1. Create a new instance (e.g., Ubuntu 24.04 CPU->Mega, 50GIB)
-    - Make sure to set your own SSH key
-    - Make sure to set the `asreview-and-optuna-dashboard` security group
-2. Update and reboot `sudo apt update && sudo apt upgrade` and `sudo reboot`
-3. Clone this repo `git clone https://github.com/asreview/asreview-optuna.git`
-4. Move into dir `cd asreview-optuna`
-5. Install venv `sudo apt install python3.12-venv`
-6. Create Python venv `python3 -m venv .venv`
-7. Activate venv `source .venv/bin/activate`
-8. Install Python packages `pip3 install -r requirements.txt`
-9. Create dataset pickles `python3 ./src/feature_matrix_scripts/tfidf.py` (± 1.5 minutes)
-10. Set your simulation parameters in `main.py` using a cli editor such as `nano main.py`
-11. Create a tmux environment so optuna keeps running when we close the connection `tmux new -s optuna`
-    In the `optuna` tmux env run the following commands to start the study:
-    1. `source .venv/bin/activate`
-    2. `python3 src/main.py`
-    3. Detach from the tmux environment using `ctrl` `+` `b` followed by `d` (you can always reattach using `tmux attach -t optuna`)
-12. Create a tmux environment for the dashboard `tmux new -s dashboard`
-    In the `dashboard` tmux env run the following commands to start the dashboard:
-    1. `optuna-dashboard sqlite:///src/db.sqlite3 --host 0.0.0.0`
-    2. Detach from the tmux environment using `ctrl` `+` `b` followed by `d` (you can always reattach using `tmux attach -t dashboard`)
-13. You are all set! Check the dashboard on your local machine through a browser: `[Exoscale instance ip]:8080`
-14. You can see CPU usage using `htop`
+## Local DB
+When you choose to use a local db (sqlite), you can simply run:
+```bash
+sbatch --export=DATA_PATH="/path/to/synergy_plus" ./src/run_single.sh
+```
 
-## Variables
+To sweep multiple classifier/feature-extractor combinations, edit the constants block at the top of `run_single.sh` (`STUDY_SET`, `CLASSIFIER`, `FEATURE_EXTRACTOR`, `METRIC`, `N_TRIALS`) and submit again — each `sbatch` call is its own independent SLURM job with its own guaranteed resource allocation. Point every submission at the same `DB_URI` (a real client-server DB, not sqlite — see above) to run several combos concurrently: separate jobs get real per-job core isolation from the scheduler, which trying to background multiple runs inside one job's allocation can't guarantee, and a proper DB backend handles the resulting concurrent writes safely (sqlite does not, under concurrent writers).
 
-### Study variables
-- `VERSION` = Version number, reflected in the studyname
-- `METRIC` = The metric used for optimization. Options:
-    - `"loss"`: Loss
-    - `"ndcg"`: Gain
-- `STUDY_SET` = The combinations priors for synergy datasets. Options:
-    - `"demo"`: 2 prior combinations per synergy dataset (14 * 2 simulations)
-    - `"full"`: 10 prior combinations per synergy dataset (24 * 10 simulations)
-- `CLASSIFIER_TYPE` = The ASReview2 classifier to use. Options: 
-    - `"nb"`: Naive-Bayes
-    - `"log"`: Logistic Classifier
-    - `"svm"`: SVM
-    - `"rf"`: Random Forest
-- `FEATURE_EXTRACTOR_TYPE` = The ASReview2 feature extractor to use. Options:
-    - `"tfidf"`: tfidf
-    - `"onehot"`: onehot
-- `PICKLE_FOLDER_PATH` = Path to optional preprocessed feature matrices that can be created using `optuna/feature_matrix_scripts/tfidf.py`
-- `PRE_PROCESSED_FMS` = Flag to decide whether or not to use these preprocessed FMs, or to generate them on the fly.
-- `PARALLELIZE_OBJECTIVE` = Flag to decide whether to parallelize the objective function
-- `AUTO_SHUTDOWN` = Flag to decide whether or not to shut down after finishing a study (useful for exoscale)
+`preprocess_fms.sh` (see [Data](#data) above) needs a GPU partition — its `--partition=gpu` placeholder likely needs adjusting to your cluster's actual GPU partition name.
 
-### Optuna variables
-- `OPTUNA_N_TRIALS` = Number of trials Optuna should run
-- `OPTUNA_TIMEOUT` = Time in seconds, after which the current trial is cleanly finished and the study is wrapped up
-- `OPTUNA_N_JOBS` = Number of Optuna trials to run in parallel (currently decided by `PARALLELIZE_OBJECTIVE`)
-
-### Early stopping condition variables
-- `MIN_TRIALS` = Number of trials before the stopping condition will be checked
-    - If `curr_trial` >= `MIN_TRIALS` -> check stopping condition
-- `N_HISTORY` = How far should the stopping condition look back?
-- `STOPPING_THRESHOLD` = Threshold for checking whether to stop the study or not
+# ASReview Optuna Options
+| Option                                                    | Description                                                                                                          |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `-h, --help`                                               | Show this help message and exit                                                                                     |
+| `--metric {loss,ndcg}`                                     | The metric used as objective during optimization.                                                                   |
+| `--study-set {demo,train}`                                 | The study set that is used. Test-split data is intentionally not selectable here; use `evaluate_test.py`.           |
+| `--classifier {log,nb,rf,svm}`                              | The classifier to optimize.                                                                                        |
+| `--feature-extractor {tfidf,onehot,mxbai,multilingual-e5}`  | The feature extractor to optimize. `mxbai`/`multilingual-e5` have no on-the-fly implementation and require `--pre-processed-fms`. |
+| `--pre-processed-fms`                                       | If set, use the pre-processed feature matrices.                                                                    |
+| `--n-trials N_TRIALS`                                       | Set the maximum number of trials that will be ran.                                                                 |
+| `--parallelize-objective`                                   | If set, run one trial with several processes. Each process will run 1 study set row at a time.                    |
+| `--n-workers N_WORKERS`                                     | Set the number of workers used for parallelizing the objective.                                                    |
+| `--data-path DATA_PATH`                                     | The path to the synergy_plus data directory (required).                                                            |
+| `--fms-path FMS_PATH`                                       | The path to the preprocessed feature matrices (default: `src/preprocessed_fms`).                                   |
+| `--studies-path STUDIES_PATH`                               | The path to the studies JSON files, `demo` and `train` (default: `src/studies`).                                   |
+| `--seed SEED`                                               | Seed for the Optuna sampler, for a reproducible hyperparameter search order (default: `42`).                       |
 
 # Questions and Contributions
 
