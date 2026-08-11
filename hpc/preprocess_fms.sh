@@ -2,7 +2,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gpus=1
-#SBATCH --partition=gpu
+#SBATCH --partition=gpu_a100
 #SBATCH --time=48:00:00
 
 # Load modules (modify these as needed)
