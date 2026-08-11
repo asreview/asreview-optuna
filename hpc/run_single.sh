@@ -19,7 +19,7 @@ STUDY_SET="train"
 CLASSIFIER="svm"
 FEATURE_EXTRACTOR="tfidf"
 METRIC="loss"
-N_TRIALS=2
+N_TRIALS=500
 # ------------------------------------------------------------------------------------------------
 
 # Derived from --cpus-per-task above, not hardcoded, so it can't drift out of sync.
