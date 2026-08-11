@@ -12,5 +12,5 @@ source $HOME/venvs/optuna/bin/activate
 
 export DATA_PATH="./synergy_plus"
 
-srun -n 1 python feature_matrix_scripts/mxbai.py --data-path "$DATA_PATH"
-srun -n 1 python feature_matrix_scripts/multilingual_e5.py --data-path "$DATA_PATH"
+srun -n 1 python ./src/feature_matrix_scripts/mxbai.py --data-path "$DATA_PATH"
+srun -n 1 python ./src/feature_matrix_scripts/multilingual_e5.py --data-path "$DATA_PATH"

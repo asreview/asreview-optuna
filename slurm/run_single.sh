@@ -32,7 +32,7 @@ if [[ "$FEATURE_EXTRACTOR" == "mxbai" || "$FEATURE_EXTRACTOR" == "multilingual-e
     EXTRA_ARGS+=(--pre-processed-fms)
 fi
 
-srun -n 1 python main.py \
+srun -n 1 python ./src/main.py \
             --metric "$METRIC" \
             --study-set "$STUDY_SET" \
             --classifier "$CLASSIFIER" \
