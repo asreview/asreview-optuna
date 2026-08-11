@@ -10,16 +10,35 @@ module load 2025 Python/3.13.1-GCCcore-14.2.0
 
 source $HOME/venvs/optuna/bin/activate
 
-# DATA_PATH must point at the synergy_plus data directory, e.g.:
-#   sbatch --export=DATA_PATH="/path/to/synergy_plus",DB_URI="..." ./src/run_single.sh
+export DATA_PATH="./synergy_plus"
+export DB_URI=""
 
-# --pre-processed-fms \
+# ---- Edit these, then submit: sbatch ./src/run_single.sh ----
+STUDY_SET="train"
+CLASSIFIER="svm"
+FEATURE_EXTRACTOR="tfidf"
+METRIC="loss"
+N_TRIALS=2
+# ------------------------------------------------------------------------------------------------
+
+# Derived from --cpus-per-task above, not hardcoded, so it can't drift out of sync.
+N_WORKERS=$((SLURM_CPUS_PER_TASK - 1))
+
+# mxbai/multilingual-e5 have no on-the-fly implementation and require
+# precomputed embeddings; tfidf is tuned every trial and must NOT be
+# pointed at (nonexistent) precomputed features.
+EXTRA_ARGS=()
+if [[ "$FEATURE_EXTRACTOR" == "mxbai" || "$FEATURE_EXTRACTOR" == "multilingual-e5" ]]; then
+    EXTRA_ARGS+=(--pre-processed-fms)
+fi
+
 srun -n 1 python main.py \
-            --metric loss \
-            --study-set train \
-            --classifier svm \
-            --feature-extractor tfidf \
-            --n-trials 20 \
+            --metric "$METRIC" \
+            --study-set "$STUDY_SET" \
+            --classifier "$CLASSIFIER" \
+            --feature-extractor "$FEATURE_EXTRACTOR" \
+            --n-trials "$N_TRIALS" \
             --parallelize-objective \
-            --n-workers 47 \
-            --data-path "$DATA_PATH"
+            --n-workers "$N_WORKERS" \
+            --data-path "$DATA_PATH" \
+            "${EXTRA_ARGS[@]}"

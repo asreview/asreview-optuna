@@ -79,7 +79,9 @@ When you choose to use a local db (sqlite), you can simply run:
 sbatch --export=DATA_PATH="/path/to/synergy_plus" ./src/run_single.sh
 ```
 
-`run_matrix_sequential.sh`/`run_matrix_parallel.sh` sweep all classifier x feature-extractor combinations and take `DATA_PATH`/`DB_URI` the same way. `preprocess_fms.sh` (see [Data](#data) above) needs a GPU partition — its `--partition=gpu` placeholder likely needs adjusting to your cluster's actual GPU partition name.
+To sweep multiple classifier/feature-extractor combinations, edit the constants block at the top of `run_single.sh` (`STUDY_SET`, `CLASSIFIER`, `FEATURE_EXTRACTOR`, `METRIC`, `N_TRIALS`) and submit again — each `sbatch` call is its own independent SLURM job with its own guaranteed resource allocation. Point every submission at the same `DB_URI` (a real client-server DB, not sqlite — see above) to run several combos concurrently: separate jobs get real per-job core isolation from the scheduler, which trying to background multiple runs inside one job's allocation can't guarantee, and a proper DB backend handles the resulting concurrent writes safely (sqlite does not, under concurrent writers).
+
+`preprocess_fms.sh` (see [Data](#data) above) needs a GPU partition — its `--partition=gpu` placeholder likely needs adjusting to your cluster's actual GPU partition name.
 
 # ASReview Optuna Options
 | Option                                                    | Description                                                                                                          |
