@@ -6,10 +6,13 @@ from pathlib import Path
 import optuna
 import pandas as pd
 from asreview.models.models import get_ai_config
+from dotenv import load_dotenv
 
 from classifiers import classifier_kwargs_from_trial_params
 from feature_extractors import feature_extractor_kwargs_from_trial_params
 from simulation import run_studies
+
+load_dotenv()
 
 
 BASELINE_MODELS = {
