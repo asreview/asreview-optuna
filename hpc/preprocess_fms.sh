@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=preprocess_fms
-#SBATCH --output=logs/%j.out
-#SBATCH --error=logs/%j.err
+#SBATCH --output=logs/preprocess_fms_%j.out
+#SBATCH --error=logs/preprocess_fms_%j.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gpus=1

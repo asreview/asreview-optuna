@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=run_mxbai
-#SBATCH --output=logs/%j.out
-#SBATCH --error=logs/%j.err
+#SBATCH --output=logs/run_mxbai_%j.out
+#SBATCH --error=logs/run_mxbai_%j.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
