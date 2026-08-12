@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=run_e5
-#SBATCH --output=logs/%j.out
-#SBATCH --error=logs/%j.err
+#SBATCH --output=logs/run_e5_%j.out
+#SBATCH --error=logs/run_e5_%j.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
@@ -13,9 +13,7 @@ module load 2025 Python/3.13.1-GCCcore-14.2.0
 
 source $HOME/venvs/optuna/bin/activate
 
-if [ -f .env ]; then set -a; source .env; set +a; fi
-
-export DATA_PATH="./synergy_plus"
+DATA_PATH="./synergy_plus"
 
 # ---- Edit these, then submit: sbatch ./src/run_single.sh ----
 STUDY_SET="train"
