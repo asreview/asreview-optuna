@@ -2,10 +2,13 @@ import argparse
 import pickle
 from pathlib import Path
 
+from dotenv import load_dotenv
 import pandas as pd
 import torch
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
+
+load_dotenv()
 
 MODEL_NAME = "mixedbread-ai/mxbai-embed-large-v1"
 

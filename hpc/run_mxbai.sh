@@ -13,9 +13,7 @@ module load 2025 Python/3.13.1-GCCcore-14.2.0
 
 source $HOME/venvs/optuna/bin/activate
 
-if [ -f .env ]; then set -a; source .env; set +a; fi
-
-export DATA_PATH="./synergy_plus"
+DATA_PATH="./synergy_plus"
 
 # ---- Edit these, then submit: sbatch ./src/run_single.sh ----
 STUDY_SET="train"
