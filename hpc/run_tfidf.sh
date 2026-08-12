@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
 #SBATCH --partition=genoa
-#SBATCH --time=48:00:00
+#SBATCH --time=24:00:00
 
 # Load modules (modify these as needed)
 module load 2025 Python/3.13.1-GCCcore-14.2.0
@@ -23,6 +23,10 @@ CLASSIFIER="svm"
 FEATURE_EXTRACTOR="tfidf"
 METRIC="loss"
 N_TRIALS=500
+# Leave empty to start a fresh study. To continue a previous run, paste its exact
+# study_name here (printed at the top of that run's log) and set N_TRIALS to the
+# number of ADDITIONAL trials to run, not the new total.
+STUDY_NAME="[Aug-11-16:40] svm-tfidf-train-loss"
 # ------------------------------------------------------------------------------------------------
 
 # Derived from --cpus-per-task above, not hardcoded, so it can't drift out of sync.
@@ -34,6 +38,9 @@ N_WORKERS=$((SLURM_CPUS_PER_TASK - 1))
 EXTRA_ARGS=()
 if [[ "$FEATURE_EXTRACTOR" == "mxbai" || "$FEATURE_EXTRACTOR" == "multilingual-e5" ]]; then
     EXTRA_ARGS+=(--pre-processed-fms)
+fi
+if [[ -n "$STUDY_NAME" ]]; then
+    EXTRA_ARGS+=(--study-name "$STUDY_NAME")
 fi
 
 srun -n 1 python ./src/main.py \

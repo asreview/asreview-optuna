@@ -16,11 +16,15 @@ dependencies = [
     "optuna",
     "optuna-dashboard",
     "pandas",
+    "python-dotenv",
     "psycopg2-binary",
     "scikit-learn",
     "sentence-transformers",
     "synergy_dataset",
-    "tqdm"
+    "tqdm",
+    "jupyter>=1.1.1",
+    "seaborn>=0.13.2",
+    "matplotlib>=3.11.1",
 ]
 
 [project.urls]

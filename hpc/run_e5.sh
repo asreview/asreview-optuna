@@ -23,6 +23,10 @@ CLASSIFIER="svm"
 FEATURE_EXTRACTOR="multilingual-e5"
 METRIC="loss"
 N_TRIALS=500
+# Leave empty to start a fresh study. To continue a previous run, paste its exact
+# study_name here (printed at the top of that run's log) and set N_TRIALS to the
+# number of ADDITIONAL trials to run, not the new total.
+STUDY_NAME=""
 # ------------------------------------------------------------------------------------------------
 
 # Derived from --cpus-per-task above, not hardcoded, so it can't drift out of sync.
@@ -34,6 +38,9 @@ N_WORKERS=$((SLURM_CPUS_PER_TASK - 1))
 EXTRA_ARGS=()
 if [[ "$FEATURE_EXTRACTOR" == "mxbai" || "$FEATURE_EXTRACTOR" == "multilingual-e5" ]]; then
     EXTRA_ARGS+=(--pre-processed-fms)
+fi
+if [[ -n "$STUDY_NAME" ]]; then
+    EXTRA_ARGS+=(--study-name "$STUDY_NAME")
 fi
 
 srun -n 1 python ./src/main.py \

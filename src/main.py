@@ -7,10 +7,13 @@ from collections.abc import Callable
 import numpy as np
 import optuna
 import pandas as pd
+from dotenv import load_dotenv
 
 from classifiers import classifier_params
 from feature_extractors import feature_extractor_params
 from simulation import run_studies
+
+load_dotenv()
 
 
 def objective_report(
@@ -205,6 +208,13 @@ if __name__ == "__main__":
         type=int,
         help="Seed for the Optuna sampler (TPESampler), for a reproducible hyperparameter search order.",
     )
+    parser.add_argument(
+        "--study-name",
+        default=None,
+        help="Resume an existing study by passing its exact study_name (as printed at "
+        "the start of the run you want to continue), using the same DB_URI storage. "
+        "Omit to start a fresh, timestamped study.",
+    )
     args = parser.parse_args()
 
     if (
@@ -216,8 +226,14 @@ if __name__ == "__main__":
             "it can only be used together with --pre-processed-fms."
         )
 
-    timestamp = datetime.datetime.now().strftime("%b-%d-%H:%M")
-    study_name = f"[{timestamp}] {args.classifier}-{args.feature_extractor}-{args.study_set}-{args.metric}"
+    if args.study_name:
+        study_name = args.study_name
+    else:
+        timestamp = datetime.datetime.now().strftime("%b-%d-%H:%M")
+        study_name = (
+            f"[{timestamp}] {args.classifier}-{args.feature_extractor}"
+            f"-{args.study_set}-{args.metric}"
+        )
     studies = pd.read_json(
         Path(args.studies_path) / f"synergy_studies_{args.study_set}.jsonl", lines=True
     )
