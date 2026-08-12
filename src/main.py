@@ -282,6 +282,6 @@ DB                 : {"local" if os.getenv("DB_URI", "sqlite:///db.sqlite3") == 
         ),
         n_trials=args.n_trials,
         callbacks=[
-            StopWhenOptimumReached(min_trials=400, threshold=0.0001, n_history=5)
+            StopWhenOptimumReached(min_trials=400, threshold=0.00005, n_history=10)
         ],
     )
