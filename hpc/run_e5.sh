@@ -19,11 +19,14 @@ DATA_PATH="./synergy_plus"
 STUDY_SET="train"
 CLASSIFIER="svm"
 FEATURE_EXTRACTOR="multilingual-e5"
+BALANCER="double"
 METRIC="loss"
 N_TRIALS=500
 # Leave empty to start a fresh study. To continue a previous run, paste its exact
 # study_name here (printed at the top of that run's log) and set N_TRIALS to the
-# number of ADDITIONAL trials to run, not the new total.
+# number of ADDITIONAL trials to run, not the new total. Must be empty when switching
+# BALANCER to a value that study wasn't tuned with -- resuming under a different
+# balancer mixes incompatible hyperparameters into one study.
 STUDY_NAME=""
 # ------------------------------------------------------------------------------------------------
 
@@ -46,6 +49,7 @@ srun -n 1 python ./src/main.py \
             --study-set "$STUDY_SET" \
             --classifier "$CLASSIFIER" \
             --feature-extractor "$FEATURE_EXTRACTOR" \
+            --balancer "$BALANCER" \
             --n-trials "$N_TRIALS" \
             --parallelize-objective \
             --n-workers "$N_WORKERS" \

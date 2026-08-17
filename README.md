@@ -91,6 +91,7 @@ To sweep multiple classifier/feature-extractor combinations, edit the constants 
 | `--study-set {demo,train}`                                 | The study set that is used. Test-split data is intentionally not selectable here; use `evaluate_test.py`.           |
 | `--classifier {log,nb,rf,svm}`                              | The classifier to optimize.                                                                                        |
 | `--feature-extractor {tfidf,onehot,mxbai,multilingual-e5}`  | The feature extractor to optimize. `mxbai`/`multilingual-e5` have no on-the-fly implementation and require `--pre-processed-fms`. |
+| `--balancer {ratio,double}`                                 | The balancer to optimize (default: `ratio`).                                                                       |
 | `--pre-processed-fms`                                       | If set, use the pre-processed feature matrices.                                                                    |
 | `--n-trials N_TRIALS`                                       | Set the maximum number of trials that will be ran.                                                                 |
 | `--parallelize-objective`                                   | If set, run one trial with several processes. Each process will run 1 study set row at a time.                    |
