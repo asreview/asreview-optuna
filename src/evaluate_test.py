@@ -8,6 +8,7 @@ import pandas as pd
 from asreview.models.models import get_ai_config
 from dotenv import load_dotenv
 
+from balancers import balancer_kwargs_from_trial_params
 from classifiers import classifier_kwargs_from_trial_params
 from feature_extractors import feature_extractor_kwargs_from_trial_params
 from simulation import run_studies
@@ -41,6 +42,7 @@ def build_report(
     run: str,
     classifier: str,
     feature_extractor: str,
+    balancer: str,
 ) -> pd.DataFrame:
     """
     Build a per-dataset breakdown report, plus a final OVERALL row using the
@@ -64,6 +66,7 @@ def build_report(
                 "run": run,
                 "classifier": classifier,
                 "feature_extractor": feature_extractor,
+                "balancer": balancer,
                 "dataset_id": dataset_id,
                 "n_priors": len(values),
                 f"{metric}_mean": series.mean(),
@@ -80,6 +83,7 @@ def build_report(
             "run": run,
             "classifier": classifier,
             "feature_extractor": feature_extractor,
+            "balancer": balancer,
             "dataset_id": "OVERALL",
             "n_priors": len(all_values),
             f"{metric}_mean": overall_series.mean(),
@@ -123,7 +127,8 @@ def run_baseline(
         clf_params=dict(alc.classifier_param),
         feature_extractor=fe_folder,
         fe_params={} if pre_processed else dict(alc.feature_extractor_param),
-        ratio=alc.balancer_param["ratio"],
+        balancer="ratio",
+        balancer_kwargs={"ratio": alc.balancer_param["ratio"]},
         metric=metric,
         pre_processed_fms=pre_processed,
         data_path=data_path,
@@ -158,6 +163,13 @@ if __name__ == "__main__":
         required=True,
         choices=["tfidf", "onehot", "mxbai", "multilingual-e5"],
         help="Must match what the study was tuned with.",
+    )
+    parser.add_argument(
+        "--balancer",
+        required=True,
+        choices=["ratio", "double"],
+        help="Must match what the study was tuned with. Pass 'ratio' for studies run "
+        "before --balancer existed.",
     )
     parser.add_argument(
         "--metric",
@@ -223,7 +235,7 @@ if __name__ == "__main__":
         "loss" if study.direction == optuna.study.StudyDirection.MINIMIZE else "ndcg"
     )
 
-    ratio = best.params["ratio"]
+    balancer_kwargs = balancer_kwargs_from_trial_params(args.balancer, best.params)
     clf_params = classifier_kwargs_from_trial_params(args.classifier, best.params)
     fe_params = feature_extractor_kwargs_from_trial_params(
         args.feature_extractor, best.params
@@ -248,7 +260,7 @@ study_name         : {args.study_name}
 best_trial         : #{best.number} (value={best.value})
 classifier         : {args.classifier} ({clf_params})
 feature_extractor  : {args.feature_extractor} ({fe_params})
-ratio              : {ratio}
+balancer           : {args.balancer} ({balancer_kwargs})
 metric             : {metric}
 test studies       : {len(test_studies)} row(s) / {test_studies["dataset_id"].nunique()} dataset(s)
 baseline           : {baseline_desc}
@@ -263,7 +275,8 @@ baseline           : {baseline_desc}
         clf_params=clf_params,
         feature_extractor=args.feature_extractor,
         fe_params=fe_params,
-        ratio=ratio,
+        balancer=args.balancer,
+        balancer_kwargs=balancer_kwargs,
         metric=metric,
         pre_processed_fms=args.pre_processed_fms,
         data_path=args.data_path,
@@ -278,6 +291,7 @@ baseline           : {baseline_desc}
             "Tuned",
             args.classifier,
             args.feature_extractor,
+            args.balancer,
         )
     ]
 
@@ -300,6 +314,7 @@ baseline           : {baseline_desc}
                 label,
                 b_classifier,
                 b_feature_extractor,
+                "ratio",  # ELAS baseline configs always use Balanced(ratio=...)
             )
         )
 

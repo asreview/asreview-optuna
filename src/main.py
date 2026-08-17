@@ -9,6 +9,7 @@ import optuna
 import pandas as pd
 from dotenv import load_dotenv
 
+from balancers import balancer_params
 from classifiers import classifier_params
 from feature_extractors import feature_extractor_params
 from simulation import run_studies
@@ -20,6 +21,7 @@ def objective_report(
     studies: pd.DataFrame,
     classifier: str,
     feature_extractor: str,
+    balancer: str,
     parallelize_objective: bool,
     metric: str,
     pre_processed_fms: bool,
@@ -40,6 +42,7 @@ def objective_report(
         studies (pd.DataFrame): DataFrame containing all study configurations.
         classifier (str): Name of the classifier to optimize.
         feature_extractor (str): Name of the feature extractor to optimize.
+        balancer (str): Name of the balancer to optimize.
         parallelize_objective (bool): Whether to run studies in parallel.
         metric (str): Optimization metric ("loss" or "ndcg").
         pre_processed_fms (bool): Whether to use pre-processed feature matrices.
@@ -52,8 +55,7 @@ def objective_report(
     """
 
     def objective(trial: optuna.trial.Trial) -> float:
-        # Use normal distribution for ratio (ratio effect is linear)
-        ratio = trial.suggest_float("ratio", 1.0, 10.0)
+        balancer_kwargs = balancer_params[balancer](trial)
 
         clf_params = classifier_params[classifier](trial)
         fe_params = (
@@ -70,7 +72,8 @@ def objective_report(
             clf_params=clf_params,
             feature_extractor=feature_extractor,
             fe_params=fe_params,
-            ratio=ratio,
+            balancer=balancer,
+            balancer_kwargs=balancer_kwargs,
             metric=metric,
             pre_processed_fms=pre_processed_fms,
             data_path=data_path,
@@ -166,6 +169,12 @@ if __name__ == "__main__":
         "implementation and require --pre-processed-fms.",
     )
     parser.add_argument(
+        "--balancer",
+        default="ratio",
+        choices=["ratio", "double"],
+        help="The balancer to optimize.",
+    )
+    parser.add_argument(
         "--pre-processed-fms",
         action="store_true",
         help="If set, use the pre-processed feature matrices.",
@@ -232,7 +241,7 @@ if __name__ == "__main__":
         timestamp = datetime.datetime.now().strftime("%b-%d-%H:%M")
         study_name = (
             f"[{timestamp}] {args.classifier}-{args.feature_extractor}"
-            f"-{args.study_set}-{args.metric}"
+            f"-{args.balancer}-{args.study_set}-{args.metric}"
         )
     studies = pd.read_json(
         Path(args.studies_path) / f"synergy_studies_{args.study_set}.jsonl", lines=True
@@ -247,6 +256,7 @@ study_set          : {args.study_set}
 studies            : {n_studies} row(s) / {n_datasets} dataset(s)
 classifier         : {args.classifier}
 feature_extractor  : {args.feature_extractor}
+balancer           : {args.balancer}
 metric             : {args.metric}
 preprocessed_fms   : {args.pre_processed_fms}
 parallel_objective : {args.parallelize_objective}
@@ -273,6 +283,7 @@ DB                 : {"local" if os.getenv("DB_URI", "sqlite:///db.sqlite3") == 
             studies=studies,
             classifier=args.classifier,
             feature_extractor=args.feature_extractor,
+            balancer=args.balancer,
             parallelize_objective=args.parallelize_objective,
             metric=args.metric,
             pre_processed_fms=args.pre_processed_fms,

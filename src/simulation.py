@@ -7,9 +7,9 @@ import asreview
 import pandas as pd
 from asreview.learner import ActiveLearningCycle
 from asreview.metrics import loss, ndcg
-from asreview.models.balancers import Balanced
 from asreview.models.queriers import Max
 
+from balancers import balancers
 from classifiers import classifiers
 from feature_extractors import feature_extractors
 
@@ -100,7 +100,8 @@ def process_row(
     X,
     labels,
     clf_params: dict,
-    ratio: float,
+    balancer: str,
+    balancer_kwargs: dict,
     classifier: str,
     metric: str,
 ) -> tuple[str, float]:
@@ -118,7 +119,8 @@ def process_row(
         X: Feature matrix for the dataset (from `featurize_dataset`).
         labels: Labels for the dataset (from `featurize_dataset`).
         clf_params (dict): Hyperparameters for the classifier.
-        ratio (float): Class balance ratio for the Balanced balancer.
+        balancer (str): Name of the balancer to use.
+        balancer_kwargs (dict): Hyperparameters for the balancer.
         classifier (str): Name of the classifier to use.
         metric (str): Metric to compute ("loss" or "ndcg").
 
@@ -127,7 +129,7 @@ def process_row(
     """
     priors = row["prior_inclusions"] + row["prior_exclusions"]
 
-    blc = Balanced(ratio=ratio)
+    blc = balancers[balancer](**balancer_kwargs)
     clf = classifiers[classifier](**clf_params)
 
     alc = ActiveLearningCycle(
@@ -167,7 +169,8 @@ def run_studies(
     n_workers: int,
     clf_params: dict,
     fe_params: dict,
-    ratio: float,
+    balancer: str,
+    balancer_kwargs: dict,
     classifier: str,
     feature_extractor: str,
     metric: str,
@@ -188,7 +191,8 @@ def run_studies(
         n_workers (int): Number of workers used to parallelize the objective.
         clf_params (dict): Hyperparameters for the classifier.
         fe_params (dict): Hyperparameters for the feature extractor.
-        ratio (float): Class balance ratio for the Balanced balancer.
+        balancer (str): Name of the balancer to use.
+        balancer_kwargs (dict): Hyperparameters for the balancer.
         classifier (str): Name of the classifier to use.
         feature_extractor (str): Name of the feature extractor to use.
         metric (str): Metric to compute ("loss" or "ndcg").
@@ -221,7 +225,8 @@ def run_studies(
                     row,
                     *featurized[row["dataset_id"]],
                     clf_params,
-                    ratio,
+                    balancer,
+                    balancer_kwargs,
                     classifier,
                     metric,
                 ): i
@@ -237,7 +242,8 @@ def run_studies(
                 row,
                 *featurized[row["dataset_id"]],
                 clf_params,
-                ratio,
+                balancer,
+                balancer_kwargs,
                 classifier,
                 metric,
             )

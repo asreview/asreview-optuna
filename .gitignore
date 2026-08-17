@@ -165,3 +165,4 @@ cython_debug/
 *.asreview
 *.csv
 /analysis/*
+*.pkl
