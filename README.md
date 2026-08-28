@@ -26,6 +26,12 @@ python ./src/generate_studies.py --data-path /path/to/synergy_plus
 ```
 This writes `synergy_studies_{train,test,demo}.jsonl` into `src/studies/`. Re-run it (optionally with `--n-priors`/`--seed`) to regenerate with a different repeat count or seed.
 
+To test whether different preconditions (known ahead of screening) call for different hyperparameters, add `--stratify-by`:
+```bash
+python ./src/generate_studies.py --data-path /path/to/synergy_plus --stratify-by domain search_size
+```
+This additionally partitions the `train` split into `synergy_studies_train-domain-{health,nonhealth}.jsonl` and `synergy_studies_train-size-{small,medium,large}.jsonl` (size tertiles computed from the train split's `n_records`), plus `stratification_manifest.json` recording every dataset's stratum on every axis computed so far. `domain` requires the extended metadata variant (`primary_topic_domain` column) — by default expected at `<data-path>_extended/metadata/review_metadata.csv`, overridable with `--extended-metadata-path`. Running `--stratify-by` for one axis and later for another (against the same `--studies-path`) merges into the same manifest rather than overwriting it, so it's safe to add axes incrementally.
+
 If you want to tune with `--feature-extractor mxbai` or `--feature-extractor multilingual-e5` (precomputed embeddings, not tuned by Optuna, see the options table below), precompute them once:
 ```bash
 sbatch --export=DATA_PATH="/path/to/synergy_plus" ./src/preprocess_fms.sh
@@ -70,25 +76,34 @@ Steps to setup an Exoscale DB:
 
 Then, run ASReview Optuna:
 ```bash
-sbatch --export=DATA_PATH="/path/to/synergy_plus",DB_URI="[YOUR DB_URI GOES HERE]" ./src/run_single.sh
+sbatch --export=ALL,DATA_PATH="/path/to/synergy_plus",DB_URI="[YOUR DB_URI GOES HERE]" ./src/run_single.sh
 ```
 
 ## Local DB
 When you choose to use a local db (sqlite), you can simply run:
 ```bash
-sbatch --export=DATA_PATH="/path/to/synergy_plus" ./src/run_single.sh
+sbatch --export=ALL,DATA_PATH="/path/to/synergy_plus" ./src/run_single.sh
 ```
 
 To sweep multiple classifier/feature-extractor combinations, edit the constants block at the top of `run_single.sh` (`STUDY_SET`, `CLASSIFIER`, `FEATURE_EXTRACTOR`, `METRIC`, `N_TRIALS`) and submit again — each `sbatch` call is its own independent SLURM job with its own guaranteed resource allocation. Point every submission at the same `DB_URI` (a real client-server DB, not sqlite — see above) to run several combos concurrently: separate jobs get real per-job core isolation from the scheduler, which trying to background multiple runs inside one job's allocation can't guarantee, and a proper DB backend handles the resulting concurrent writes safely (sqlite does not, under concurrent writers).
 
 `preprocess_fms.sh` (see [Data](#data) above) needs a GPU partition — its `--partition=gpu` placeholder likely needs adjusting to your cluster's actual GPU partition name.
 
+Note the `ALL,` prefix on `--export`: without it, Slurm restricts the job's environment to *only* the variables listed, dropping `PATH` and breaking `module load`/venv activation.
+
+## Stratified sweep
+To tune per-stratum instead of over the whole `train` split (see [Data](#data) above for `--stratify-by`), use `hpc/run_stratum.sh` — same hand-edited-constants-block pattern as `run_tfidf.sh`, but with `STUDY_SET` set to a stratum name and `CLASSIFIER`/`FEATURE_EXTRACTOR` fixed to `svm`/`tfidf` for fast iteration. Edit `STUDY_SET` to each of `train-domain-health`, `train-domain-nonhealth`, `train-size-small`, `train-size-medium`, `train-size-large` in turn and submit after each edit:
+```bash
+sbatch --export=ALL,DATA_PATH="/path/to/synergy_plus",DB_URI="[YOUR DB_URI GOES HERE]" hpc/run_stratum.sh
+```
+As above, point every job at the same real `DB_URI` since they run concurrently.
+
 # ASReview Optuna Options
 | Option                                                    | Description                                                                                                          |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `-h, --help`                                               | Show this help message and exit                                                                                     |
 | `--metric {loss,ndcg}`                                     | The metric used as objective during optimization.                                                                   |
-| `--study-set {demo,train}`                                 | The study set that is used. Test-split data is intentionally not selectable here; use `evaluate_test.py`.           |
+| `--study-set STUDY_SET`                                    | The study set to use: `demo`, `train`, or a stratum name produced by `generate_studies.py --stratify-by` (e.g. `train-domain-health`). Test-split data is intentionally not selectable here; use `evaluate_test.py`. |
 | `--classifier {log,nb,rf,svm}`                              | The classifier to optimize.                                                                                        |
 | `--feature-extractor {tfidf,onehot,mxbai,multilingual-e5}`  | The feature extractor to optimize. `mxbai`/`multilingual-e5` have no on-the-fly implementation and require `--pre-processed-fms`. |
 | `--balancer {ratio,double}`                                 | The balancer to optimize (default: `ratio`).                                                                       |
