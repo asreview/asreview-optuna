@@ -152,8 +152,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--study-set",
         default="demo",
-        choices=["demo", "train"],
-        help="The study set that is used. Test-split data is intentionally not selectable here; use evaluate_test.py.",
+        help="The study set to use: 'demo', 'train', or a stratum name produced "
+        "by generate_studies.py --stratify-by (e.g. 'train-domain-health', "
+        "'train-size-small'). Must match an existing "
+        "synergy_studies_<study-set>.jsonl file in --studies-path. Test-split "
+        "data is intentionally not selectable here; use evaluate_test.py.",
     )
     parser.add_argument(
         "--classifier",
@@ -235,6 +238,17 @@ if __name__ == "__main__":
             "it can only be used together with --pre-processed-fms."
         )
 
+    studies_file = Path(args.studies_path) / f"synergy_studies_{args.study_set}.jsonl"
+    if not studies_file.exists():
+        available = sorted(
+            p.stem.removeprefix("synergy_studies_")
+            for p in Path(args.studies_path).glob("synergy_studies_*.jsonl")
+        )
+        parser.error(
+            f"--study-set {args.study_set!r}: no such file {studies_file}. "
+            f"Available study sets in {args.studies_path}: {available}"
+        )
+
     if args.study_name:
         study_name = args.study_name
     else:
@@ -243,9 +257,7 @@ if __name__ == "__main__":
             f"[{timestamp}] {args.classifier}-{args.feature_extractor}"
             f"-{args.balancer}-{args.study_set}-{args.metric}"
         )
-    studies = pd.read_json(
-        Path(args.studies_path) / f"synergy_studies_{args.study_set}.jsonl", lines=True
-    )
+    studies = pd.read_json(studies_file, lines=True)
     n_studies = len(studies)
     n_datasets = studies["dataset_id"].nunique()
 
