@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=run_stratum
-#SBATCH --output=logs/run_stratum_%A_%a.out
-#SBATCH --error=logs/run_stratum_%A_%a.err
+#SBATCH --job-name=run_stratum_continue
+#SBATCH --output=logs/run_stratum_continue_%A_%a.out
+#SBATCH --error=logs/run_stratum_continue_%A_%a.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
@@ -32,19 +32,32 @@ STUDY_SETS=(
     "train-baseline_loss-mid"
     "train-baseline_loss-high"
 )
+STUDY_NAMES=(
+    "[Aug-28-10:46] svm-tfidf-ratio-train-domain-health-loss"
+    "[Aug-28-10:48] svm-tfidf-ratio-train-domain-nonhealth-loss"
+    "[Aug-28-10:49] svm-tfidf-ratio-train-size-small-loss"
+    "[Aug-28-10:50] svm-tfidf-ratio-train-size-medium-loss"
+    "[Aug-28-10:50] svm-tfidf-ratio-train-size-large-loss"
+    "[Aug-31-12:28] svm-tfidf-ratio-train-inclusion_ratio-low-loss"
+    "[Aug-31-12:28] svm-tfidf-ratio-train-inclusion_ratio-mid-loss"
+    "[Aug-31-12:28] svm-tfidf-ratio-train-inclusion_ratio-high-loss"
+    "[Aug-31-12:28] svm-tfidf-ratio-train-n_databases-low-loss"
+    "[Aug-31-12:28] svm-tfidf-ratio-train-n_databases-mid-loss"
+    "[Aug-31-12:28] svm-tfidf-ratio-train-n_databases-high-loss"
+    "[Aug-31-12:28] svm-tfidf-ratio-train-protocol-protocol-loss"
+    "[Aug-31-12:28] svm-tfidf-ratio-train-protocol-no_protocol-loss"
+    "[Aug-31-12:28] svm-tfidf-ratio-train-baseline_loss-low-loss"
+    "[Aug-31-12:28] svm-tfidf-ratio-train-baseline_loss-mid-loss"
+    "[Aug-31-12:28] svm-tfidf-ratio-train-baseline_loss-high-loss"
+)
 STUDY_SET="${STUDY_SETS[$SLURM_ARRAY_TASK_ID]}"
+STUDY_NAME="${STUDY_NAMES[$SLURM_ARRAY_TASK_ID]}"
 CLASSIFIER="svm"
 FEATURE_EXTRACTOR="tfidf"
 BALANCER="ratio"
 METRIC="loss"
 N_TRIALS=500
-STUDY_NAME=""
 N_WORKERS=$((SLURM_CPUS_PER_TASK - 1))
-
-EXTRA_ARGS=()
-if [[ -n "$STUDY_NAME" ]]; then
-    EXTRA_ARGS+=(--study-name "$STUDY_NAME")
-fi
 
 srun -n 1 python ./src/main.py \
             --metric "$METRIC" \
@@ -56,4 +69,4 @@ srun -n 1 python ./src/main.py \
             --parallelize-objective \
             --n-workers "$N_WORKERS" \
             --data-path "$DATA_PATH" \
-            "${EXTRA_ARGS[@]}"
+            --study-name "$STUDY_NAME"
