@@ -1,690 +1,1163 @@
 {
   "axes_computed": [
+    "baseline_loss",
     "domain",
+    "inclusion_ratio",
+    "n_databases",
+    "protocol",
     "search_size"
   ],
+  "baseline_loss_axis": {
+    "computed_from_split": "train",
+    "labels": [
+      "low",
+      "mid",
+      "high"
+    ],
+    "source_path": "src/baseline_loss_combined.csv",
+    "tertile_boundaries": [
+      0.04183252543054669,
+      0.096728914380454
+    ]
+  },
   "datasets": {
     "Abgaz_2023": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "high",
       "n_records": 288,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "test"
     },
     "Adamo_2021": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "high",
       "n_records": 1151,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Ali_2024": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "mid",
       "n_records": 515,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Anmarkrud_2021": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 593,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Aouad_2024": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 714,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Appenzeller-Herzog_2019": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 582,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Attai_2022": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "high",
       "n_records": 1726,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "test"
     },
     "Bakker-Jacobs_2022": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "high",
       "n_records": 549,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Bech_2019": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "high",
       "n_records": 556,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Bindoli_2024a": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 1449,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Bindoli_2024b": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 341,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Boersma-van_Dam_2024": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "high",
       "n_records": 578,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "test"
     },
     "Bos_2018": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 2241,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "test"
     },
     "Bosch_2021": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "mid",
       "n_records": 1716,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "test"
     },
     "Bosch_2023": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 2341,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Brons_2024": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 172,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Brouwer_2019": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "mid",
       "n_records": 11440,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Burska_2023": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 3247,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Butink_2023": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "mid",
       "n_records": 3090,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Chakraborty_2023": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "mid",
       "n_records": 2233,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "test"
     },
     "Chueca_2023": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "mid",
       "n_records": 609,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "test"
     },
     "Cinquin_2018": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "high",
       "n_records": 290,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Clarinval_2021": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "mid",
       "n_records": 446,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Clark_2021": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "high",
       "n_records": 199,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Cozim-Melges_2024": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 630,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Deckers_2022": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 106,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Dolinska_2022": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "high",
       "n_records": 3231,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Donners_2021": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 119,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "test"
     },
     "Dornauer_2023": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "mid",
       "n_records": 259,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Eggmann_2023": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "high",
       "n_records": 266,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "test"
     },
     "Endedijk_2021": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "mid",
       "n_records": 1092,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Farisogullari_2023": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "high",
       "n_records": 1439,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Fejza_2023": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 1499,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Ferreira_2022": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "high",
       "n_records": 223,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Filges_2018": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "high",
       "n_records": 925,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Filges_2022": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "high",
       "n_records": 781,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Fong_2021": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 489,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Giesen_2021": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "high",
       "n_records": 1293,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Greca_2023": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "high",
       "n_records": 328,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Hall_2011": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 340,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "test"
     },
     "Hamaker_2022": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 1313,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Hanlon_2022": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "mid",
       "n_records": 77,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Harms_2024": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 840,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "test"
     },
     "Hilfiker_2017": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 7573,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Kapuka_2021": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 151,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Kerschbaumer_2022": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "mid",
       "n_records": 2605,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Kerschbaumer_2024a": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "mid",
       "n_records": 1949,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Kerschbaumer_2024b": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "mid",
       "n_records": 1146,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "test"
     },
     "Lauper_2021": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 5691,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Leenaars_2019": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 1395,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Leenaars_2020": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 1956,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Lewowski_2021": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 329,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "test"
     },
     "Low_2023": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 556,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Maciel_2024": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "mid",
       "n_records": 274,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Marques_2021": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "high",
       "n_records": 713,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Meijboom_2021": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 464,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Mejean_2024": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 486,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Menon_2022": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 485,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "test"
     },
     "Mohamed_2023": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "high",
       "n_records": 2699,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Monschau_2025": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "mid",
       "n_records": 7384,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Moran_2020": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 1992,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "test"
     },
     "Moseng_2024": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "high",
       "n_records": 3556,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Muthu_2020": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 923,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Nobrega-Dos_Santos_2023": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 277,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Noetel_2021": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "mid",
       "n_records": 444,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Oliveira_2021": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "mid",
       "n_records": 184,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Oud_2018": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "high",
       "n_records": 243,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Parodis_2023a": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "mid",
       "n_records": 4125,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Parodis_2023b": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "mid",
       "n_records": 1679,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "test"
     },
     "Pijls_2017": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "high",
       "n_records": 54,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Pijls_2018": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "mid",
       "n_records": 301,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Pinos-Cisneros_2023": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 109,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Quevedo_2023": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "mid",
       "n_records": 199,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Ramiro_2015": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 338,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Rinne_2021": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 815,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Roberts_2021": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 883,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "test"
     },
     "Ruggeri_2019": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "high",
       "n_records": 2265,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Sanchez-Acedo_2023": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 345,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Sanchez-Alvarez_2023": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 2289,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Sanchez-Gomez_2024": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "mid",
       "n_records": 385,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Santos_2018": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "mid",
       "n_records": 488,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Seghers_2022": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 1759,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "test"
     },
     "Sep_2021": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 147,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Sepriano_2020": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 1908,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Sepriano_2022": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "mid",
       "n_records": 1760,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Smid_2019": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 770,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Taschner_2024": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 1323,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Tektonidou_2019": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 1251,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Theobald_2021": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "mid",
       "n_records": 70,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "test"
     },
     "Toffalini_2021": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 328,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "test"
     },
     "Tumkaya_2018": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 481,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "test"
     },
     "Verdugo-Castro_2022": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 1245,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Viguie_2020": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 1978,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Walker_2018": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 11735,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "test"
     },
     "Ward_2020": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "high",
       "n_records": 374,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Wassenaar_2017": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 1523,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Webers_2022": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "high",
       "n_records": 8078,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Wijnen_2024": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 399,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Williamson_2023": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 258,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "Wolters_2018": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 1683,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Xu_2022": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "high",
       "n_records": 960,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Zakeri-Nasrabadi_2023a": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "high",
       "n_records": 627,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "Zakeri-Nasrabadi_2023b": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "mid",
       "n_records": 1720,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Zanframundo_2022": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 1334,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "Zinsser_2022": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 125,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "de_Matteis_2024a": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "low",
       "n_records": 140,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "de_Matteis_2024b": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 553,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "van_Ballegooijen_2024": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "mid",
+      "n_databases_stratum": "high",
       "n_records": 3295,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "van_Dis_2019": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "high",
       "n_records": 3154,
+      "protocol_stratum": "protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "van_Heugten_Breurkes_2022": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "low",
       "n_records": 303,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "van_Hoorn_2020": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "high",
       "n_records": 1154,
+      "protocol_stratum": "protocol",
       "size_stratum": "medium",
       "split": "train"
     },
     "van_de_Schoot_2025": {
+      "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "mid",
       "n_records": 6948,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "large",
       "split": "train"
     },
     "van_der_Valk_2021": {
+      "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "high",
+      "n_databases_stratum": "high",
       "n_records": 362,
+      "protocol_stratum": "protocol",
       "size_stratum": "small",
       "split": "train"
     },
     "van_der_Waal_2022": {
+      "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "inclusion_ratio_stratum": "low",
+      "n_databases_stratum": "low",
       "n_records": 1158,
+      "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
       "split": "test"
     }
@@ -697,7 +1170,41 @@
       "nonhealth"
     ]
   },
+  "inclusion_ratio_axis": {
+    "column": "n_records_included / n_records",
+    "computed_from_split": "train",
+    "labels": [
+      "low",
+      "mid",
+      "high"
+    ],
+    "tertile_boundaries": [
+      0.015101772816808929,
+      0.04260089686098654
+    ]
+  },
+  "n_databases_axis": {
+    "column": "number_of_databases",
+    "computed_from_split": "train",
+    "labels": [
+      "low",
+      "mid",
+      "high"
+    ],
+    "tertile_boundaries": [
+      3.0,
+      4.0
+    ]
+  },
   "n_priors": 10,
+  "protocol_axis": {
+    "column": "protocol",
+    "labels": [
+      "protocol",
+      "no_protocol"
+    ],
+    "protocol_value": 1
+  },
   "seed": 42,
   "size_axis": {
     "column": "n_records",

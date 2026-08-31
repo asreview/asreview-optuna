@@ -54,31 +54,55 @@ def sample_priors_for_dataset(
     ]
 
 
-def compute_size_strata(
-    metadata: pd.DataFrame, train_split_value: str = "train"
+def compute_tertile_strata(
+    values: pd.Series, train_mask: pd.Series, labels: list[str]
 ) -> tuple[pd.Series, tuple[float, float]]:
     """
-    Label every row in `metadata` (all splits) small/medium/large by
-    n_records, using tertile boundaries computed only from the rows where
-    metadata["split"] == train_split_value.
+    Label every entry in `values` by tertile, using boundaries computed only
+    from the entries where `train_mask` is True.
 
     Args:
-        metadata (pd.DataFrame): Must contain "split" and "n_records" columns.
-        train_split_value (str): The split label whose n_records distribution
-            defines the tertile cut points.
+        values (pd.Series): Numeric values to stratify (aligned to train_mask).
+        train_mask (pd.Series): Boolean mask selecting the rows whose
+            distribution defines the tertile cut points.
+        labels (list[str]): The 3 stratum labels, low-to-high.
 
     Returns:
         tuple[pd.Series, tuple[float, float]]: Labels aligned to
-        metadata.index, and the (q1, q2) tertile boundary values.
+        values.index, and the (q1, q2) tertile boundary values.
     """
-    train_n_records = metadata.loc[metadata["split"] == train_split_value, "n_records"]
-    q1, q2 = train_n_records.quantile([1 / 3, 2 / 3])
-    labels = pd.cut(
-        metadata["n_records"],
-        bins=[-np.inf, q1, q2, np.inf],
-        labels=["small", "medium", "large"],
-    )
-    return labels, (float(q1), float(q2))
+    q1, q2 = values[train_mask].quantile([1 / 3, 2 / 3])
+    strata = pd.cut(values, bins=[-np.inf, q1, q2, np.inf], labels=labels)
+    return strata, (float(q1), float(q2))
+
+
+def load_external_column(
+    path: Path, key_column: str, value_column: str, base_metadata: pd.DataFrame
+) -> pd.Series:
+    """
+    Read a CSV with `key_column`/`value_column` columns and return
+    `value_column`'s values aligned to base_metadata.index, joined against
+    base_metadata's "key" column.
+
+    Args:
+        path (Path): Path to a CSV containing `key_column` and `value_column`.
+        key_column (str): Name of the join-key column in that CSV (its values
+            must match base_metadata["key"]; the column itself may be named
+            differently, e.g. "dataset_id").
+        value_column (str): Name of the column to pull.
+        base_metadata (pd.DataFrame): Must contain a "key" column.
+
+    Returns:
+        pd.Series: `value_column`'s values aligned to base_metadata.index.
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"External column file not found: {path}")
+    ext = pd.read_csv(path)[[key_column, value_column]].rename(columns={key_column: "key"})
+    merged = base_metadata[["key"]].merge(ext, on="key", how="left", validate="one_to_one")
+    missing = merged.loc[merged[value_column].isna(), "key"].tolist()
+    if missing:
+        raise ValueError(f"{value_column} missing in {path} for key(s): {missing}")
+    return merged.set_index(base_metadata.index)[value_column]
 
 
 def load_domain_labels(
@@ -201,7 +225,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--stratify-by",
         nargs="+",
-        choices=["domain", "search_size"],
+        choices=[
+            "domain",
+            "search_size",
+            "inclusion_ratio",
+            "n_databases",
+            "protocol",
+            "baseline_loss",
+        ],
         default=[],
         help="Opt-in: also partition the TRAIN split by the given axis/axes "
         "(each axis partitioned independently, not crossed) into extra "
@@ -217,7 +248,24 @@ if __name__ == "__main__":
         "'<data-path>_extended/metadata/review_metadata.csv'. Only read "
         "when --stratify-by includes 'domain'.",
     )
+    parser.add_argument(
+        "--baseline-loss-path",
+        default=None,
+        help="Path to a CSV with 'dataset_id'/'loss_mean' columns covering ALL "
+        "datasets in both splits (e.g. concatenating `evaluate_test.py "
+        "--study-set train --skip-baseline` output for train with an existing "
+        "test_results_*.csv's 'Tuned' rows for test) -- each dataset's loss "
+        "under a baseline study's tuned hyperparameters. Required when "
+        "--stratify-by includes 'baseline_loss'; has no default since there's "
+        "no fixed baseline study to derive one from.",
+    )
     args = parser.parse_args()
+
+    if "baseline_loss" in args.stratify_by and not args.baseline_loss_path:
+        parser.error(
+            "--stratify-by baseline_loss requires --baseline-loss-path (a CSV "
+            "with dataset_id/loss_mean columns for the train split)."
+        )
 
     studies_path = (
         Path(args.studies_path)
@@ -277,8 +325,12 @@ if __name__ == "__main__":
             }
         strat_metadata = metadata.copy()
 
+        train_mask = strat_metadata["split"] == "train"
+
         if "search_size" in args.stratify_by:
-            strat_metadata["size_stratum"], (q1, q2) = compute_size_strata(strat_metadata)
+            strat_metadata["size_stratum"], (q1, q2) = compute_tertile_strata(
+                strat_metadata["n_records"], train_mask, ["small", "medium", "large"]
+            )
             manifest["size_axis"] = {
                 "computed_from_split": "train",
                 "column": "n_records",
@@ -289,6 +341,90 @@ if __name__ == "__main__":
                 strat_metadata,
                 "size_stratum",
                 "size",
+                args.data_path,
+                args.n_priors,
+                args.seed,
+                studies_path,
+            )
+
+        if "inclusion_ratio" in args.stratify_by:
+            inclusion_ratio = strat_metadata["n_records_included"] / strat_metadata["n_records"]
+            strat_metadata["inclusion_ratio_stratum"], (q1, q2) = compute_tertile_strata(
+                inclusion_ratio, train_mask, ["low", "mid", "high"]
+            )
+            manifest["inclusion_ratio_axis"] = {
+                "computed_from_split": "train",
+                "column": "n_records_included / n_records",
+                "tertile_boundaries": [q1, q2],
+                "labels": ["low", "mid", "high"],
+            }
+            write_stratum_files(
+                strat_metadata,
+                "inclusion_ratio_stratum",
+                "inclusion_ratio",
+                args.data_path,
+                args.n_priors,
+                args.seed,
+                studies_path,
+            )
+
+        if "n_databases" in args.stratify_by:
+            strat_metadata["n_databases_stratum"], (q1, q2) = compute_tertile_strata(
+                strat_metadata["number_of_databases"], train_mask, ["low", "mid", "high"]
+            )
+            manifest["n_databases_axis"] = {
+                "computed_from_split": "train",
+                "column": "number_of_databases",
+                "tertile_boundaries": [q1, q2],
+                "labels": ["low", "mid", "high"],
+            }
+            write_stratum_files(
+                strat_metadata,
+                "n_databases_stratum",
+                "n_databases",
+                args.data_path,
+                args.n_priors,
+                args.seed,
+                studies_path,
+            )
+
+        if "protocol" in args.stratify_by:
+            strat_metadata["protocol_stratum"] = strat_metadata["protocol"].map(
+                {1: "protocol", 0: "no_protocol"}
+            )
+            manifest["protocol_axis"] = {
+                "column": "protocol",
+                "protocol_value": 1,
+                "labels": ["protocol", "no_protocol"],
+            }
+            write_stratum_files(
+                strat_metadata,
+                "protocol_stratum",
+                "protocol",
+                args.data_path,
+                args.n_priors,
+                args.seed,
+                studies_path,
+            )
+
+        if "baseline_loss" in args.stratify_by:
+            baseline_loss_path = Path(args.baseline_loss_path)
+            baseline_loss = load_external_column(
+                baseline_loss_path, "dataset_id", "loss_mean", strat_metadata
+            )
+            strat_metadata["baseline_loss_stratum"], (q1, q2) = compute_tertile_strata(
+                baseline_loss, train_mask, ["low", "mid", "high"]
+            )
+            manifest["baseline_loss_axis"] = {
+                "computed_from_split": "train",
+                "source_path": str(baseline_loss_path),
+                "tertile_boundaries": [q1, q2],
+                "labels": ["low", "mid", "high"],
+            }
+            write_stratum_files(
+                strat_metadata,
+                "baseline_loss_stratum",
+                "baseline_loss",
                 args.data_path,
                 args.n_priors,
                 args.seed,
@@ -318,14 +454,14 @@ if __name__ == "__main__":
                 studies_path,
             )
 
+        stratum_columns = [c for c in strat_metadata.columns if c.endswith("_stratum")]
         for _, row in strat_metadata.iterrows():
             entry = manifest["datasets"].setdefault(row["key"], {})
             entry["split"] = row["split"]
             entry["n_records"] = int(row["n_records"])
-            if "size_stratum" in strat_metadata.columns:
-                entry["size_stratum"] = str(row["size_stratum"])
-            if "domain_stratum" in strat_metadata.columns:
-                entry["domain_stratum"] = str(row["domain_stratum"])
+            for col in stratum_columns:
+                if pd.notna(row[col]):
+                    entry[col] = str(row[col])
 
         with open(manifest_path, "w") as f:
             json.dump(manifest, f, indent=2, sort_keys=True)

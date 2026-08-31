@@ -120,11 +120,11 @@ def mean_metric(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="ASReview Optuna strata comparison",
-        description="Compare a baseline (pooled-train) study against domain-stratified "
-        "(health/nonhealth) studies: for each study's best hyperparameters, evaluate "
-        "against the full test split and against each domain's test subset, to see "
-        "whether stratum-specific tuning helps on its own stratum and how it transfers "
-        "to the other.",
+        description="Compare a baseline (pooled-train) study against stratified studies "
+        "for a chosen axis (domain: health/nonhealth, or size: small/medium/large): for "
+        "each study's best hyperparameters, evaluate against the full test split and "
+        "against each stratum's test subset, to see whether stratum-specific tuning "
+        "helps on its own stratum and how it transfers to the others.",
     )
     parser.add_argument(
         "--storage",
@@ -137,22 +137,34 @@ if __name__ == "__main__":
         help="Exact study name of the pooled/global baseline study.",
     )
     parser.add_argument(
-        "--health-study-name",
-        default=None,
-        help="Exact study name of the domain-health study. Auto-discovered via "
-        "--date-tag if omitted.",
+        "--axis",
+        default="domain",
+        help="Stratification axis to compare against the baseline (any axis "
+        "generate_studies.py --stratify-by produced, e.g. domain, size, "
+        "inclusion_ratio, n_databases, protocol, baseline_loss). Pass --strata "
+        "explicitly for axes without a built-in default stratum list.",
     )
     parser.add_argument(
-        "--nonhealth-study-name",
+        "--strata",
+        nargs="+",
         default=None,
-        help="Exact study name of the domain-nonhealth study. Auto-discovered via "
-        "--date-tag if omitted.",
+        help="Stratum values to compare for --axis (default: health nonhealth for "
+        "domain; small medium large for size).",
+    )
+    parser.add_argument(
+        "--study-name",
+        action="append",
+        default=[],
+        metavar="STRATUM=NAME",
+        help="Override auto-discovery for one stratum's study name, e.g. "
+        "'health=[Aug-28-10:46] svm-tfidf-ratio-train-domain-health-loss'. "
+        "Repeatable. Strata not overridden are auto-discovered via --date-tag.",
     )
     parser.add_argument(
         "--date-tag",
         default="Aug-28",
-        help="Substring used to auto-discover today's stratum study names when "
-        "--health-study-name/--nonhealth-study-name are omitted.",
+        help="Substring used to auto-discover today's stratum study names for "
+        "strata not covered by --study-name.",
     )
     parser.add_argument("--classifier", default="svm", choices=["log", "nb", "svm", "rf"])
     parser.add_argument(
@@ -180,7 +192,12 @@ if __name__ == "__main__":
     )
     parser.add_argument("--parallel", action="store_true")
     parser.add_argument("--n-workers", default=1, type=int)
-    parser.add_argument("--output", default="./strata_comparison.csv")
+    parser.add_argument(
+        "--output",
+        default=None,
+        help="Output CSV path (default: ./strata_comparison_<axis>.csv, so "
+        "different axes don't overwrite each other's results).",
+    )
     args = parser.parse_args()
 
     if (
@@ -196,37 +213,43 @@ if __name__ == "__main__":
     with open(manifest_path) as f:
         manifest = json.load(f)
 
-    health_study_name = args.health_study_name or find_study_name(
-        args.storage, [args.date_tag, "-domain-health-"]
-    )
-    nonhealth_study_name = args.nonhealth_study_name or find_study_name(
-        args.storage, [args.date_tag, "-domain-nonhealth-"]
-    )
-
-    studies_to_compare = {
-        "baseline": args.baseline_study_name,
-        "health": health_study_name,
-        "nonhealth": nonhealth_study_name,
+    default_strata = {
+        "domain": ["health", "nonhealth"],
+        "size": ["small", "medium", "large"],
+        "inclusion_ratio": ["low", "mid", "high"],
+        "n_databases": ["low", "mid", "high"],
+        "protocol": ["protocol", "no_protocol"],
+        "baseline_loss": ["low", "mid", "high"],
     }
+    strata = args.strata or default_strata.get(args.axis)
+    if strata is None:
+        parser.error(
+            f"--axis {args.axis!r} has no built-in default stratum list; "
+            "pass --strata explicitly (e.g. --strata low mid high)."
+        )
+    overrides = dict(s.split("=", 1) for s in args.study_name)
+
+    studies_to_compare = {"baseline": args.baseline_study_name}
+    for stratum in strata:
+        studies_to_compare[stratum] = overrides.get(stratum) or find_study_name(
+            args.storage, [args.date_tag, f"-{args.axis}-{stratum}-"]
+        )
 
     test_studies = pd.read_json(Path(args.studies_path) / "synergy_studies_test.jsonl", lines=True)
-    eval_subsets = {
-        "all_test": test_studies,
-        "health_test": test_studies[
+    eval_subsets = {"all_test": test_studies}
+    for stratum in strata:
+        eval_subsets[f"{stratum}_test"] = test_studies[
             test_studies["dataset_id"].isin(
-                dataset_ids_for_stratum(manifest, "domain", "health", "test")
+                dataset_ids_for_stratum(manifest, args.axis, stratum, "test")
             )
-        ],
-        "nonhealth_test": test_studies[
-            test_studies["dataset_id"].isin(
-                dataset_ids_for_stratum(manifest, "domain", "nonhealth", "test")
-            )
-        ],
-    }
+        ]
 
-    n_all = eval_subsets["all_test"]["dataset_id"].nunique()
-    n_health = eval_subsets["health_test"]["dataset_id"].nunique()
-    n_nonhealth = eval_subsets["nonhealth_test"]["dataset_id"].nunique()
+    subset_counts = ", ".join(
+        f"{name}={subset['dataset_id'].nunique()}" for name, subset in eval_subsets.items()
+    )
+    study_lines = "\n".join(
+        f"{tuned_on:15s}: {name}" for tuned_on, name in studies_to_compare.items()
+    )
 
     print(f"""
 === ASReview Optuna strata comparison ===
@@ -235,10 +258,11 @@ metric             : {args.metric}
 classifier         : {args.classifier}
 feature_extractor  : {args.feature_extractor}
 balancer           : {args.balancer}
-baseline study     : {studies_to_compare["baseline"]}
-health study       : {studies_to_compare["health"]}
-nonhealth study    : {studies_to_compare["nonhealth"]}
-eval subsets       : all_test={n_all} health_test={n_health} nonhealth_test={n_nonhealth} dataset(s)
+axis               : {args.axis}
+strata             : {strata}
+studies:
+{study_lines}
+eval subsets       : {subset_counts} dataset(s)
 ==========================================
     """)
 
@@ -290,5 +314,6 @@ eval subsets       : all_test={n_all} health_test={n_health} nonhealth_test={n_n
         .to_string()
     )
 
-    report.to_csv(args.output, index=False)
-    print(f"\nWrote {args.output}")
+    output_path = args.output or f"./strata_comparison_{args.axis}.csv"
+    report.to_csv(output_path, index=False)
+    print(f"\nWrote {output_path}")

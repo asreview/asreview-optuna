@@ -140,7 +140,8 @@ def run_baseline(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="ASReview Optuna test evaluation",
-        description="Evaluate a finished Optuna study's best hyperparameters against the held-out test split.",
+        description="Evaluate a finished Optuna study's best hyperparameters against a "
+        "study set (the held-out test split by default; see --study-set).",
     )
     parser.add_argument(
         "--storage",
@@ -195,7 +196,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "--studies-path",
         default=str(Path(__file__).resolve().parent / "studies"),
-        help="Directory containing the studies JSON files (always reads synergy_studies_test.jsonl from here).",
+        help="Directory containing the studies JSONL files.",
+    )
+    parser.add_argument(
+        "--study-set",
+        default="test",
+        help="Which synergy_studies_<study-set>.jsonl to evaluate against (default: "
+        "'test', the held-out split). Pass e.g. 'train' to evaluate a study's "
+        "hyperparameters against the (non-held-out) train split instead -- useful "
+        "for producing a per-dataset baseline-loss file to feed back into "
+        "generate_studies.py --stratify-by baseline_loss.",
     )
     parser.add_argument(
         "--parallel",
@@ -211,7 +221,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output",
         default=None,
-        help="Output CSV path (default: ./test_results_<study_name>.csv).",
+        help="Output CSV path (default: ./test_results_<study_name>.csv, or "
+        "..._<study_name>_<study_set>.csv when --study-set isn't 'test').",
     )
     parser.add_argument(
         "--skip-baseline",
@@ -242,7 +253,7 @@ if __name__ == "__main__":
     )
 
     test_studies = pd.read_json(
-        Path(args.studies_path) / "synergy_studies_test.jsonl", lines=True
+        Path(args.studies_path) / f"synergy_studies_{args.study_set}.jsonl", lines=True
     )
 
     baseline_names = (
@@ -262,7 +273,8 @@ classifier         : {args.classifier} ({clf_params})
 feature_extractor  : {args.feature_extractor} ({fe_params})
 balancer           : {args.balancer} ({balancer_kwargs})
 metric             : {metric}
-test studies       : {len(test_studies)} row(s) / {test_studies["dataset_id"].nunique()} dataset(s)
+study_set          : {args.study_set}
+studies            : {len(test_studies)} row(s) / {test_studies["dataset_id"].nunique()} dataset(s)
 baseline           : {baseline_desc}
 ========================================
     """)
@@ -330,10 +342,14 @@ baseline           : {baseline_desc}
         print(f"\n=== Summary (OVERALL, {metric}, {direction}) ===")
         print(summary.to_string(index=False))
 
+    default_name_suffix = "" if args.study_set == "test" else f"_{args.study_set}"
     output_path = (
         Path(args.output)
         if args.output
-        else Path(f"./test_results_{sanitize_for_filename(args.study_name)}.csv")
+        else Path(
+            f"./test_results_{sanitize_for_filename(args.study_name)}"
+            f"{default_name_suffix}.csv"
+        )
     )
     report.to_csv(output_path, index=False)
     print(f"\nWrote {output_path}")

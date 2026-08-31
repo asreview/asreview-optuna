@@ -26,11 +26,20 @@ python ./src/generate_studies.py --data-path /path/to/synergy_plus
 ```
 This writes `synergy_studies_{train,test,demo}.jsonl` into `src/studies/`. Re-run it (optionally with `--n-priors`/`--seed`) to regenerate with a different repeat count or seed.
 
-To test whether different preconditions (known ahead of screening) call for different hyperparameters, add `--stratify-by`:
+To test whether different preconditions (known ahead of screening, or diagnostic post-hoc ones) call for different hyperparameters, add `--stratify-by`:
 ```bash
-python ./src/generate_studies.py --data-path /path/to/synergy_plus --stratify-by domain search_size
+python ./src/generate_studies.py --data-path /path/to/synergy_plus --stratify-by domain search_size inclusion_ratio n_databases protocol
 ```
-This additionally partitions the `train` split into `synergy_studies_train-domain-{health,nonhealth}.jsonl` and `synergy_studies_train-size-{small,medium,large}.jsonl` (size tertiles computed from the train split's `n_records`), plus `stratification_manifest.json` recording every dataset's stratum on every axis computed so far. `domain` requires the extended metadata variant (`primary_topic_domain` column) — by default expected at `<data-path>_extended/metadata/review_metadata.csv`, overridable with `--extended-metadata-path`. Running `--stratify-by` for one axis and later for another (against the same `--studies-path`) merges into the same manifest rather than overwriting it, so it's safe to add axes incrementally.
+This additionally partitions the `train` split into one `synergy_studies_train-<axis>-<stratum>.jsonl` per stratum, plus `stratification_manifest.json` recording every dataset's stratum on every axis computed so far. Running `--stratify-by` for one axis and later for another (against the same `--studies-path`) merges into the same manifest rather than overwriting it, so it's safe to add axes incrementally. Available axes:
+
+| Axis | Strata | Notes |
+| --- | --- | --- |
+| `domain` | `health`, `nonhealth` | Requires the extended metadata variant (`primary_topic_domain` column) — by default expected at `<data-path>_extended/metadata/review_metadata.csv`, overridable with `--extended-metadata-path`. |
+| `search_size` | `small`, `medium`, `large` | Tertiles of `n_records` (total search size), computed from the train split. |
+| `inclusion_ratio` | `low`, `mid`, `high` | Tertiles of `n_records_included / n_records`. Not knowable ahead of screening — a post-hoc diagnostic axis, not an actionable precondition. |
+| `n_databases` | `low`, `mid`, `high` | Tertiles of `number_of_databases`. Since this is a clustered discrete integer (most reviews search 3-4 databases), the tertiles can come out uneven — check `stratification_manifest.json`'s `n_databases_axis.tertile_boundaries` before reading too much into strata sizes. |
+| `protocol` | `protocol`, `no_protocol` | Direct split on the `protocol` (pre-registered) flag — no tertile computation. |
+| `baseline_loss` | `low`, `mid`, `high` | Tertiles of a baseline study's per-dataset loss. Requires `--baseline-loss-path`, a CSV with `dataset_id`/`loss_mean` columns covering **every** dataset in both splits — produce the train-side half with `evaluate_test.py --study-set train --skip-baseline` (see below) and concatenate it with an existing `test_results_*.csv`'s `Tuned` rows for the test-side half. Also a post-hoc diagnostic axis, not an actionable precondition. |
 
 If you want to tune with `--feature-extractor mxbai` or `--feature-extractor multilingual-e5` (precomputed embeddings, not tuned by Optuna, see the options table below), precompute them once:
 ```bash
@@ -55,6 +64,8 @@ Once a study finishes, evaluate its best hyperparameters against the held-out te
 python ./src/evaluate_test.py --study-name "[the name printed in main.py's banner]" --classifier svm --feature-extractor tfidf --data-path /path/to/synergy_plus
 ```
 This prints and writes a per-dataset breakdown CSV. By default it also runs the relevant ASReview-shipped ELAS baseline model(s) against the same test split for comparison — `tfidf` against ELAS u3 and u4, `mxbai` against ELAS h3, `multilingual-e5` against ELAS l2 (`onehot` has no ELAS equivalent) — using their exact shipped hyperparameters (from `asreview.models.models`) rather than this repo's tuning defaults. Pass `--skip-baseline` to omit this.
+
+`--study-set` (default `test`) can point this at any other `synergy_studies_*.jsonl` instead — e.g. `--study-set train --skip-baseline` evaluates a study's tuned hyperparameters against the (non-held-out) train split, which is how you produce the per-dataset loss CSV `generate_studies.py --stratify-by baseline_loss` needs.
 
 And, to see the results of your optimization, start up the dashboard:
 ```bash
@@ -92,11 +103,11 @@ To sweep multiple classifier/feature-extractor combinations, edit the constants 
 Note the `ALL,` prefix on `--export`: without it, Slurm restricts the job's environment to *only* the variables listed, dropping `PATH` and breaking `module load`/venv activation.
 
 ## Stratified sweep
-To tune per-stratum instead of over the whole `train` split (see [Data](#data) above for `--stratify-by`), use `hpc/run_stratum.sh` — same hand-edited-constants-block pattern as `run_tfidf.sh`, but with `STUDY_SET` set to a stratum name and `CLASSIFIER`/`FEATURE_EXTRACTOR` fixed to `svm`/`tfidf` for fast iteration. Edit `STUDY_SET` to each of `train-domain-health`, `train-domain-nonhealth`, `train-size-small`, `train-size-medium`, `train-size-large` in turn and submit after each edit:
+To tune per-stratum instead of over the whole `train` split (see [Data](#data) above for `--stratify-by`), use `hpc/run_stratum.sh` — a Slurm **array job**: `STUDY_SETS` is a hand-edited bash array listing every stratum's study-set name, and `#SBATCH --array=0-N` (N = number of entries minus one — Slurm parses `#SBATCH` lines before the script runs, so this can't be derived from the list automatically; keep the two in sync) launches one task per entry, each picking its own `STUDY_SET` via `$SLURM_ARRAY_TASK_ID`. `CLASSIFIER`/`FEATURE_EXTRACTOR` are fixed to `svm`/`tfidf` for fast iteration. One edit, one submission, regardless of how many strata are listed:
 ```bash
 sbatch --export=ALL,DATA_PATH="/path/to/synergy_plus",DB_URI="[YOUR DB_URI GOES HERE]" hpc/run_stratum.sh
 ```
-As above, point every job at the same real `DB_URI` since they run concurrently.
+Each array task still gets its own independent resource allocation and log file (`logs/run_stratum_<jobid>_<taskindex>.out`/`.err`), same as separate `sbatch` calls would — Slurm just handles the queueing. Point every job at the same real `DB_URI` since they run concurrently. To retry or rerun just one stratum without resubmitting the whole array, override the range at submission time, e.g. `sbatch --array=3 ... hpc/run_stratum.sh`.
 
 # ASReview Optuna Options
 | Option                                                    | Description                                                                                                          |
