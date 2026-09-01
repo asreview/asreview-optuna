@@ -17,9 +17,9 @@ DATA_PATH="./synergy_plus"
 
 # ---- Edit these, then submit: sbatch ./src/run_single.sh ----
 STUDY_SET="train"
-CLASSIFIER="svm"
+CLASSIFIER="nb"
 FEATURE_EXTRACTOR="tfidf"
-BALANCER="double"
+BALANCER="ratio"
 METRIC="loss"
 N_TRIALS=500
 # Leave empty to start a fresh study. To continue a previous run, paste its exact

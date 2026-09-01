@@ -33,7 +33,7 @@ STUDY_SETS=(
     "train-baseline_loss-high"
 )
 STUDY_SET="${STUDY_SETS[$SLURM_ARRAY_TASK_ID]}"
-CLASSIFIER="svm"
+CLASSIFIER="nb"
 FEATURE_EXTRACTOR="tfidf"
 BALANCER="ratio"
 METRIC="loss"
