@@ -82,6 +82,21 @@ def best_hyperparams(
     return clf_params, fe_params, balancer_kwargs, n_completed, best.value
 
 
+DEFAULT_STRATA = {
+    "domain": ["health", "nonhealth"],
+    "size": ["small", "medium", "large"],
+    "inclusion_ratio": ["low", "mid", "high"],
+    "n_databases": ["low", "mid", "high"],
+    "protocol": ["protocol", "no_protocol"],
+    "baseline_loss": ["low", "mid", "high"],
+}
+
+DEFAULT_DATE_TAGS = {
+    "domain": "Aug-28",
+    "size": "Aug-28",
+}
+
+
 def mean_metric(
     test_studies: pd.DataFrame,
     classifier: str,
@@ -117,130 +132,28 @@ def mean_metric(
     return float(pd.Series(all_values, dtype=float).mean())
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        prog="ASReview Optuna strata comparison",
-        description="Compare a baseline (pooled-train) study against stratified studies "
-        "for a chosen axis (domain: health/nonhealth, or size: small/medium/large): for "
-        "each study's best hyperparameters, evaluate against the full test split and "
-        "against each stratum's test subset, to see whether stratum-specific tuning "
-        "helps on its own stratum and how it transfers to the others.",
-    )
-    parser.add_argument(
-        "--storage",
-        default=os.getenv("DB_URI", "sqlite:///db.sqlite3"),
-        help="Optuna storage URI (defaults to the same DB_URI/sqlite convention as main.py).",
-    )
-    parser.add_argument(
-        "--baseline-study-name",
-        default="[Aug-11-16:40] svm-tfidf-train-loss",
-        help="Exact study name of the pooled/global baseline study.",
-    )
-    parser.add_argument(
-        "--axis",
-        default="domain",
-        help="Stratification axis to compare against the baseline (any axis "
-        "generate_studies.py --stratify-by produced, e.g. domain, size, "
-        "inclusion_ratio, n_databases, protocol, baseline_loss). Pass --strata "
-        "explicitly for axes without a built-in default stratum list.",
-    )
-    parser.add_argument(
-        "--strata",
-        nargs="+",
-        default=None,
-        help="Stratum values to compare for --axis (default: health nonhealth for "
-        "domain; small medium large for size).",
-    )
-    parser.add_argument(
-        "--study-name",
-        action="append",
-        default=[],
-        metavar="STRATUM=NAME",
-        help="Override auto-discovery for one stratum's study name, e.g. "
-        "'health=[Aug-28-10:46] svm-tfidf-ratio-train-domain-health-loss'. "
-        "Repeatable. Strata not overridden are auto-discovered via --date-tag.",
-    )
-    parser.add_argument(
-        "--date-tag",
-        default="Aug-28",
-        help="Substring used to auto-discover today's stratum study names for "
-        "strata not covered by --study-name.",
-    )
-    parser.add_argument("--classifier", default="svm", choices=["log", "nb", "svm", "rf"])
-    parser.add_argument(
-        "--feature-extractor", default="tfidf", choices=["tfidf", "onehot", "mxbai", "multilingual-e5"]
-    )
-    parser.add_argument("--balancer", default="ratio", choices=["ratio", "double"])
-    parser.add_argument("--metric", default="loss", choices=["loss", "ndcg"])
-    parser.add_argument("--data-path", required=True, help="Path to the synergy_plus data directory.")
-    parser.add_argument(
-        "--pre-processed-fms",
-        action="store_true",
-        help="If set, use the pre-processed feature matrices. Required for "
-        "--feature-extractor mxbai/multilingual-e5.",
-    )
-    parser.add_argument(
-        "--fms-path", default=str(Path(__file__).resolve().parent / "preprocessed_fms")
-    )
-    parser.add_argument(
-        "--studies-path", default=str(Path(__file__).resolve().parent / "studies")
-    )
-    parser.add_argument(
-        "--manifest-path",
-        default=None,
-        help="Path to stratification_manifest.json (default: <studies-path>/stratification_manifest.json).",
-    )
-    parser.add_argument("--parallel", action="store_true")
-    parser.add_argument("--n-workers", default=1, type=int)
-    parser.add_argument(
-        "--output",
-        default=None,
-        help="Output CSV path (default: ./strata_comparison_<axis>.csv, so "
-        "different axes don't overwrite each other's results).",
-    )
-    args = parser.parse_args()
-
-    if (
-        args.feature_extractor in ("mxbai", "multilingual-e5")
-        and not args.pre_processed_fms
-    ):
-        parser.error(
-            f"--feature-extractor {args.feature_extractor} has no on-the-fly implementation; "
-            "it can only be used together with --pre-processed-fms."
-        )
-
-    manifest_path = Path(args.manifest_path or Path(args.studies_path) / "stratification_manifest.json")
-    with open(manifest_path) as f:
-        manifest = json.load(f)
-
-    default_strata = {
-        "domain": ["health", "nonhealth"],
-        "size": ["small", "medium", "large"],
-        "inclusion_ratio": ["low", "mid", "high"],
-        "n_databases": ["low", "mid", "high"],
-        "protocol": ["protocol", "no_protocol"],
-        "baseline_loss": ["low", "mid", "high"],
-    }
-    strata = args.strata or default_strata.get(args.axis)
-    if strata is None:
-        parser.error(
-            f"--axis {args.axis!r} has no built-in default stratum list; "
-            "pass --strata explicitly (e.g. --strata low mid high)."
-        )
-    overrides = dict(s.split("=", 1) for s in args.study_name)
-
+def run_axis_comparison(
+    args: argparse.Namespace,
+    axis: str,
+    strata: list[str],
+    manifest: dict,
+    test_studies: pd.DataFrame,
+    study_name_overrides: dict,
+    output_path: str,
+    date_tag: str,
+) -> pd.DataFrame:
+    """Run the baseline-vs-strata comparison for one axis and write its report CSV."""
     studies_to_compare = {"baseline": args.baseline_study_name}
     for stratum in strata:
-        studies_to_compare[stratum] = overrides.get(stratum) or find_study_name(
-            args.storage, [args.date_tag, f"-{args.axis}-{stratum}-"]
-        )
+        studies_to_compare[stratum] = study_name_overrides.get(
+            stratum
+        ) or find_study_name(args.storage, [date_tag, f"-{axis}-{stratum}-"])
 
-    test_studies = pd.read_json(Path(args.studies_path) / "synergy_studies_test.jsonl", lines=True)
     eval_subsets = {"all_test": test_studies}
     for stratum in strata:
         eval_subsets[f"{stratum}_test"] = test_studies[
             test_studies["dataset_id"].isin(
-                dataset_ids_for_stratum(manifest, args.axis, stratum, "test")
+                dataset_ids_for_stratum(manifest, axis, stratum, "test")
             )
         ]
 
@@ -258,8 +171,9 @@ metric             : {args.metric}
 classifier         : {args.classifier}
 feature_extractor  : {args.feature_extractor}
 balancer           : {args.balancer}
-axis               : {args.axis}
+axis               : {axis}
 strata             : {strata}
+date_tag           : {date_tag}
 studies:
 {study_lines}
 eval subsets       : {subset_counts} dataset(s)
@@ -308,12 +222,173 @@ eval subsets       : {subset_counts} dataset(s)
             )
 
     report = pd.DataFrame(rows)
-    print("\n=== Transfer matrix (tuned_on x evaluated_on) ===")
+    print(f"\n=== Transfer matrix (tuned_on x evaluated_on) [{axis}] ===")
     print(
         report.pivot(index="tuned_on", columns="evaluated_on", values=f"{args.metric}_mean")
         .to_string()
     )
 
-    output_path = args.output or f"./strata_comparison_{args.axis}.csv"
     report.to_csv(output_path, index=False)
     print(f"\nWrote {output_path}")
+    return report
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        prog="ASReview Optuna strata comparison",
+        description="Compare a baseline (pooled-train) study against stratified studies "
+        "for a chosen axis (domain: health/nonhealth, or size: small/medium/large): for "
+        "each study's best hyperparameters, evaluate against the full test split and "
+        "against each stratum's test subset, to see whether stratum-specific tuning "
+        "helps on its own stratum and how it transfers to the others.",
+    )
+    parser.add_argument(
+        "--storage",
+        default=os.getenv("DB_URI", "sqlite:///db.sqlite3"),
+        help="Optuna storage URI (defaults to the same DB_URI/sqlite convention as main.py).",
+    )
+    parser.add_argument(
+        "--baseline-study-name",
+        default="[Aug-11-16:40] svm-tfidf-train-loss",
+        help="Exact study name of the pooled/global baseline study.",
+    )
+    parser.add_argument(
+        "--axis",
+        default="domain",
+        help="Stratification axis to compare against the baseline (any axis "
+        "generate_studies.py --stratify-by produced, e.g. domain, size, "
+        "inclusion_ratio, n_databases, protocol, baseline_loss). Pass --strata "
+        "explicitly for axes without a built-in default stratum list. Ignored "
+        "when --all-axes is set.",
+    )
+    parser.add_argument(
+        "--all-axes",
+        action="store_true",
+        help="Run-and-forget mode: loop over every axis in DEFAULT_STRATA (16 "
+        "strata across 6 axes) instead of just --axis, auto-discovering each "
+        "stratum's study name via --date-tag and writing one CSV per axis into "
+        "--output-dir. Ignores --axis/--strata/--study-name/--output.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=".",
+        help="Directory to write the per-axis CSVs into when --all-axes is set "
+        "(default: current directory). Files are named strata_comparison_<axis>.csv.",
+    )
+    parser.add_argument(
+        "--strata",
+        nargs="+",
+        default=None,
+        help="Stratum values to compare for --axis (default: health nonhealth for "
+        "domain; small medium large for size).",
+    )
+    parser.add_argument(
+        "--study-name",
+        action="append",
+        default=[],
+        metavar="STRATUM=NAME",
+        help="Override auto-discovery for one stratum's study name, e.g. "
+        "'health=[Aug-28-10:46] svm-tfidf-ratio-train-domain-health-loss'. "
+        "Repeatable. Strata not overridden are auto-discovered via --date-tag.",
+    )
+    parser.add_argument(
+        "--date-tag",
+        default=None,
+        help="Substring used to auto-discover stratum study names. If passed "
+        "explicitly, it overrides DEFAULT_DATE_TAGS for every axis; if omitted, "
+        "each axis falls back to its DEFAULT_DATE_TAGS entry (domain/size: "
+        "Aug-28), or 'Aug-31' for axes with no entry.",
+    )
+    parser.add_argument(
+        "--axis-date-tag",
+        action="append",
+        default=[],
+        metavar="AXIS=TAG",
+        help="Override the date-tag used to auto-discover study names for one "
+        "axis, e.g. 'domain=Aug-28'. Repeatable. Takes precedence over "
+        "--date-tag and DEFAULT_DATE_TAGS. Only relevant with --all-axes "
+        "(single-axis mode already lets --date-tag cover the one axis).",
+    )
+    parser.add_argument("--classifier", default="svm", choices=["log", "nb", "svm", "rf"])
+    parser.add_argument(
+        "--feature-extractor", default="tfidf", choices=["tfidf", "onehot", "mxbai", "multilingual-e5"]
+    )
+    parser.add_argument("--balancer", default="ratio", choices=["ratio", "double"])
+    parser.add_argument("--metric", default="loss", choices=["loss", "ndcg"])
+    parser.add_argument("--data-path", required=True, help="Path to the synergy_plus data directory.")
+    parser.add_argument(
+        "--pre-processed-fms",
+        action="store_true",
+        help="If set, use the pre-processed feature matrices. Required for "
+        "--feature-extractor mxbai/multilingual-e5.",
+    )
+    parser.add_argument(
+        "--fms-path", default=str(Path(__file__).resolve().parent / "preprocessed_fms")
+    )
+    parser.add_argument(
+        "--studies-path", default=str(Path(__file__).resolve().parent / "studies")
+    )
+    parser.add_argument(
+        "--manifest-path",
+        default=None,
+        help="Path to stratification_manifest.json (default: <studies-path>/stratification_manifest.json).",
+    )
+    parser.add_argument("--parallel", action="store_true")
+    parser.add_argument("--n-workers", default=1, type=int)
+    parser.add_argument(
+        "--output",
+        default=None,
+        help="Output CSV path (default: ./strata_comparison_<axis>.csv, so "
+        "different axes don't overwrite each other's results).",
+    )
+    args = parser.parse_args()
+
+    if (
+        args.feature_extractor in ("mxbai", "multilingual-e5")
+        and not args.pre_processed_fms
+    ):
+        parser.error(
+            f"--feature-extractor {args.feature_extractor} has no on-the-fly implementation; "
+            "it can only be used together with --pre-processed-fms."
+        )
+
+    manifest_path = Path(
+        args.manifest_path or Path(args.studies_path) / "stratification_manifest.json"
+    )
+    with open(manifest_path) as f:
+        manifest = json.load(f)
+
+    test_studies = pd.read_json(
+        Path(args.studies_path) / "synergy_studies_test.jsonl", lines=True
+    )
+
+    axis_date_tag_overrides = dict(s.split("=", 1) for s in args.axis_date_tag)
+
+    def date_tag_for(axis: str) -> str:
+        return (
+            axis_date_tag_overrides.get(axis)
+            or args.date_tag
+            or DEFAULT_DATE_TAGS.get(axis)
+            or "Aug-31"
+        )
+
+    if args.all_axes:
+        for axis, strata in DEFAULT_STRATA.items():
+            output_path = str(Path(args.output_dir) / f"strata_comparison_{axis}.csv")
+            run_axis_comparison(
+                args, axis, strata, manifest, test_studies, {}, output_path,
+                date_tag_for(axis),
+            )
+    else:
+        strata = args.strata or DEFAULT_STRATA.get(args.axis)
+        if strata is None:
+            parser.error(
+                f"--axis {args.axis!r} has no built-in default stratum list; "
+                "pass --strata explicitly (e.g. --strata low mid high)."
+            )
+        overrides = dict(s.split("=", 1) for s in args.study_name)
+        output_path = args.output or f"./strata_comparison_{args.axis}.csv"
+        run_axis_comparison(
+            args, args.axis, strata, manifest, test_studies, overrides, output_path,
+            date_tag_for(args.axis),
+        )
