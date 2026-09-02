@@ -13,6 +13,11 @@ module load 2025 Python/3.13.1-GCCcore-14.2.0
 
 source $HOME/venvs/optuna/bin/activate
 
+export OMP_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+
 DATA_PATH="./synergy_plus"
 
 # ---- Edit these, then submit: sbatch ./src/run_single.sh ----
