@@ -17,7 +17,7 @@ DATA_PATH="./synergy_plus"
 
 # ---- Edit these, then submit: sbatch ./src/run_single.sh ----
 STUDY_SET="train"
-CLASSIFIER="nb"
+CLASSIFIER="log"
 FEATURE_EXTRACTOR="tfidf"
 BALANCER="ratio"
 METRIC="loss"
