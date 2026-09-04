@@ -138,6 +138,46 @@ def load_domain_labels(
     )
 
 
+def load_field_labels(
+    extended_metadata_path: Path, base_metadata: pd.DataFrame
+) -> pd.Series:
+    """
+    Read the extended metadata CSV and return "medicine"/"non_medicine" labels
+    aligned to base_metadata.index, joined on `key`.
+
+    Finer-grained than `domain`: "Health Sciences" (the `domain` axis's
+    "health") is itself ~87% "Medicine" at the OpenAlex field level, with the
+    remainder split across fields too small to stratify on individually
+    (Health Professions, Nursing, Dentistry). "Medicine" is the only
+    non-domain field large enough to be its own stratum (~38 train datasets);
+    every other field has well under half that.
+
+    Args:
+        extended_metadata_path (Path): Path to the extended review_metadata.csv
+            containing a "primary_topic_field" column.
+        base_metadata (pd.DataFrame): Must contain a "key" column.
+
+    Returns:
+        pd.Series: "medicine"/"non_medicine" labels aligned to base_metadata.index.
+    """
+    if not extended_metadata_path.exists():
+        raise FileNotFoundError(
+            f"--extended-metadata-path not found: {extended_metadata_path}"
+        )
+    ext = pd.read_csv(extended_metadata_path)[["key", "primary_topic_field"]]
+    merged = base_metadata[["key"]].merge(
+        ext, on="key", how="left", validate="one_to_one"
+    )
+    missing = merged.loc[merged["primary_topic_field"].isna(), "key"].tolist()
+    if missing:
+        raise ValueError(
+            f"primary_topic_field missing in {extended_metadata_path} for key(s): {missing}"
+        )
+    return merged.set_index(base_metadata.index)["primary_topic_field"].map(
+        lambda v: "medicine" if v == "Medicine" else "non_medicine"
+    )
+
+
 def write_stratum_files(
     metadata: pd.DataFrame,
     stratum_column: str,
@@ -227,6 +267,7 @@ if __name__ == "__main__":
         nargs="+",
         choices=[
             "domain",
+            "field",
             "search_size",
             "inclusion_ratio",
             "n_databases",
@@ -244,9 +285,9 @@ if __name__ == "__main__":
         "--extended-metadata-path",
         default=None,
         help="Path to the extended review_metadata.csv containing "
-        "primary_topic_domain (joined on `key`). Defaults to "
-        "'<data-path>_extended/metadata/review_metadata.csv'. Only read "
-        "when --stratify-by includes 'domain'.",
+        "primary_topic_domain/primary_topic_field (joined on `key`). Defaults "
+        "to '<data-path>_extended/metadata/review_metadata.csv'. Only read "
+        "when --stratify-by includes 'domain' and/or 'field'.",
     )
     parser.add_argument(
         "--baseline-loss-path",
@@ -448,6 +489,29 @@ if __name__ == "__main__":
                 strat_metadata,
                 "domain_stratum",
                 "domain",
+                args.data_path,
+                args.n_priors,
+                args.seed,
+                studies_path,
+            )
+
+        if "field" in args.stratify_by:
+            extended_metadata_path = Path(
+                args.extended_metadata_path
+                or f"{str(args.data_path).rstrip('/')}_extended/metadata/review_metadata.csv"
+            )
+            strat_metadata["field_stratum"] = load_field_labels(
+                extended_metadata_path, strat_metadata
+            )
+            manifest["field_axis"] = {
+                "extended_metadata_path": str(extended_metadata_path),
+                "medicine_label_value": "Medicine",
+                "labels": ["medicine", "non_medicine"],
+            }
+            write_stratum_files(
+                strat_metadata,
+                "field_stratum",
+                "field",
                 args.data_path,
                 args.n_priors,
                 args.seed,

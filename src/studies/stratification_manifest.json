@@ -2,6 +2,7 @@
   "axes_computed": [
     "baseline_loss",
     "domain",
+    "field",
     "inclusion_ratio",
     "n_databases",
     "protocol",
@@ -24,6 +25,7 @@
     "Abgaz_2023": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "high",
       "n_records": 288,
@@ -34,6 +36,7 @@
     "Adamo_2021": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "high",
       "n_records": 1151,
@@ -44,6 +47,7 @@
     "Ali_2024": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "mid",
       "n_records": 515,
@@ -54,6 +58,7 @@
     "Anmarkrud_2021": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 593,
@@ -64,6 +69,7 @@
     "Aouad_2024": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 714,
@@ -74,6 +80,7 @@
     "Appenzeller-Herzog_2019": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 582,
@@ -84,6 +91,7 @@
     "Attai_2022": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "high",
       "n_records": 1726,
@@ -94,6 +102,7 @@
     "Bakker-Jacobs_2022": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "high",
       "n_records": 549,
@@ -104,6 +113,7 @@
     "Bech_2019": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "high",
       "n_records": 556,
@@ -114,6 +124,7 @@
     "Bindoli_2024a": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 1449,
@@ -124,6 +135,7 @@
     "Bindoli_2024b": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 341,
@@ -134,6 +146,7 @@
     "Boersma-van_Dam_2024": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "high",
       "n_records": 578,
@@ -144,6 +157,7 @@
     "Bos_2018": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 2241,
@@ -154,6 +168,7 @@
     "Bosch_2021": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "mid",
       "n_records": 1716,
@@ -164,6 +179,7 @@
     "Bosch_2023": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 2341,
@@ -174,6 +190,7 @@
     "Brons_2024": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 172,
@@ -184,6 +201,7 @@
     "Brouwer_2019": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "mid",
       "n_records": 11440,
@@ -194,6 +212,7 @@
     "Burska_2023": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 3247,
@@ -204,6 +223,7 @@
     "Butink_2023": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "mid",
       "n_records": 3090,
@@ -214,6 +234,7 @@
     "Chakraborty_2023": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "mid",
       "n_records": 2233,
@@ -224,6 +245,7 @@
     "Chueca_2023": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "mid",
       "n_records": 609,
@@ -234,6 +256,7 @@
     "Cinquin_2018": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "high",
       "n_records": 290,
@@ -244,6 +267,7 @@
     "Clarinval_2021": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "mid",
       "n_records": 446,
@@ -254,6 +278,7 @@
     "Clark_2021": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "high",
       "n_records": 199,
@@ -264,6 +289,7 @@
     "Cozim-Melges_2024": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 630,
@@ -274,6 +300,7 @@
     "Deckers_2022": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 106,
@@ -284,6 +311,7 @@
     "Dolinska_2022": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "high",
       "n_records": 3231,
@@ -294,6 +322,7 @@
     "Donners_2021": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 119,
@@ -304,6 +333,7 @@
     "Dornauer_2023": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "mid",
       "n_records": 259,
@@ -314,6 +344,7 @@
     "Eggmann_2023": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "high",
       "n_records": 266,
@@ -324,6 +355,7 @@
     "Endedijk_2021": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "mid",
       "n_records": 1092,
@@ -334,6 +366,7 @@
     "Farisogullari_2023": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "high",
       "n_records": 1439,
@@ -344,6 +377,7 @@
     "Fejza_2023": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 1499,
@@ -354,6 +388,7 @@
     "Ferreira_2022": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "high",
       "n_records": 223,
@@ -364,6 +399,7 @@
     "Filges_2018": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "high",
       "n_records": 925,
@@ -374,6 +410,7 @@
     "Filges_2022": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "high",
       "n_records": 781,
@@ -384,6 +421,7 @@
     "Fong_2021": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 489,
@@ -394,6 +432,7 @@
     "Giesen_2021": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "high",
       "n_records": 1293,
@@ -404,6 +443,7 @@
     "Greca_2023": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "high",
       "n_records": 328,
@@ -414,6 +454,7 @@
     "Hall_2011": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 340,
@@ -424,6 +465,7 @@
     "Hamaker_2022": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 1313,
@@ -434,6 +476,7 @@
     "Hanlon_2022": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "mid",
       "n_records": 77,
@@ -444,6 +487,7 @@
     "Harms_2024": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 840,
@@ -454,6 +498,7 @@
     "Hilfiker_2017": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 7573,
@@ -464,6 +509,7 @@
     "Kapuka_2021": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 151,
@@ -474,6 +520,7 @@
     "Kerschbaumer_2022": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "mid",
       "n_records": 2605,
@@ -484,6 +531,7 @@
     "Kerschbaumer_2024a": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "mid",
       "n_records": 1949,
@@ -494,6 +542,7 @@
     "Kerschbaumer_2024b": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "mid",
       "n_records": 1146,
@@ -504,6 +553,7 @@
     "Lauper_2021": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 5691,
@@ -514,6 +564,7 @@
     "Leenaars_2019": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 1395,
@@ -524,6 +575,7 @@
     "Leenaars_2020": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 1956,
@@ -534,6 +586,7 @@
     "Lewowski_2021": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 329,
@@ -544,6 +597,7 @@
     "Low_2023": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 556,
@@ -554,6 +608,7 @@
     "Maciel_2024": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "mid",
       "n_records": 274,
@@ -564,6 +619,7 @@
     "Marques_2021": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "high",
       "n_records": 713,
@@ -574,6 +630,7 @@
     "Meijboom_2021": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 464,
@@ -584,6 +641,7 @@
     "Mejean_2024": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 486,
@@ -594,6 +652,7 @@
     "Menon_2022": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 485,
@@ -604,6 +663,7 @@
     "Mohamed_2023": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "high",
       "n_records": 2699,
@@ -614,6 +674,7 @@
     "Monschau_2025": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "mid",
       "n_records": 7384,
@@ -624,6 +685,7 @@
     "Moran_2020": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 1992,
@@ -634,6 +696,7 @@
     "Moseng_2024": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "high",
       "n_records": 3556,
@@ -644,6 +707,7 @@
     "Muthu_2020": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 923,
@@ -654,6 +718,7 @@
     "Nobrega-Dos_Santos_2023": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 277,
@@ -664,6 +729,7 @@
     "Noetel_2021": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "mid",
       "n_records": 444,
@@ -674,6 +740,7 @@
     "Oliveira_2021": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "mid",
       "n_records": 184,
@@ -684,6 +751,7 @@
     "Oud_2018": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "high",
       "n_records": 243,
@@ -694,6 +762,7 @@
     "Parodis_2023a": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "mid",
       "n_records": 4125,
@@ -704,6 +773,7 @@
     "Parodis_2023b": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "mid",
       "n_records": 1679,
@@ -714,6 +784,7 @@
     "Pijls_2017": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "high",
       "n_records": 54,
@@ -724,6 +795,7 @@
     "Pijls_2018": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "mid",
       "n_records": 301,
@@ -734,6 +806,7 @@
     "Pinos-Cisneros_2023": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 109,
@@ -744,6 +817,7 @@
     "Quevedo_2023": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "mid",
       "n_records": 199,
@@ -754,6 +828,7 @@
     "Ramiro_2015": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 338,
@@ -764,6 +839,7 @@
     "Rinne_2021": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 815,
@@ -774,6 +850,7 @@
     "Roberts_2021": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 883,
@@ -784,6 +861,7 @@
     "Ruggeri_2019": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "high",
       "n_records": 2265,
@@ -794,6 +872,7 @@
     "Sanchez-Acedo_2023": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 345,
@@ -804,6 +883,7 @@
     "Sanchez-Alvarez_2023": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 2289,
@@ -814,6 +894,7 @@
     "Sanchez-Gomez_2024": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "mid",
       "n_records": 385,
@@ -824,6 +905,7 @@
     "Santos_2018": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "mid",
       "n_records": 488,
@@ -834,6 +916,7 @@
     "Seghers_2022": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 1759,
@@ -844,6 +927,7 @@
     "Sep_2021": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 147,
@@ -854,6 +938,7 @@
     "Sepriano_2020": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 1908,
@@ -864,6 +949,7 @@
     "Sepriano_2022": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "mid",
       "n_records": 1760,
@@ -874,6 +960,7 @@
     "Smid_2019": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 770,
@@ -884,6 +971,7 @@
     "Taschner_2024": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 1323,
@@ -894,6 +982,7 @@
     "Tektonidou_2019": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 1251,
@@ -904,6 +993,7 @@
     "Theobald_2021": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "mid",
       "n_records": 70,
@@ -914,6 +1004,7 @@
     "Toffalini_2021": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 328,
@@ -924,6 +1015,7 @@
     "Tumkaya_2018": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 481,
@@ -934,6 +1026,7 @@
     "Verdugo-Castro_2022": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 1245,
@@ -944,6 +1037,7 @@
     "Viguie_2020": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 1978,
@@ -954,6 +1048,7 @@
     "Walker_2018": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 11735,
@@ -964,6 +1059,7 @@
     "Ward_2020": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "high",
       "n_records": 374,
@@ -974,6 +1070,7 @@
     "Wassenaar_2017": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 1523,
@@ -984,6 +1081,7 @@
     "Webers_2022": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "high",
       "n_records": 8078,
@@ -994,6 +1092,7 @@
     "Wijnen_2024": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 399,
@@ -1004,6 +1103,7 @@
     "Williamson_2023": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 258,
@@ -1014,6 +1114,7 @@
     "Wolters_2018": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 1683,
@@ -1024,6 +1125,7 @@
     "Xu_2022": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "high",
       "n_records": 960,
@@ -1034,6 +1136,7 @@
     "Zakeri-Nasrabadi_2023a": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "high",
       "n_records": 627,
@@ -1044,6 +1147,7 @@
     "Zakeri-Nasrabadi_2023b": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "mid",
       "n_records": 1720,
@@ -1054,6 +1158,7 @@
     "Zanframundo_2022": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 1334,
@@ -1064,6 +1169,7 @@
     "Zinsser_2022": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 125,
@@ -1074,6 +1180,7 @@
     "de_Matteis_2024a": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "low",
       "n_records": 140,
@@ -1084,6 +1191,7 @@
     "de_Matteis_2024b": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 553,
@@ -1094,6 +1202,7 @@
     "van_Ballegooijen_2024": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "mid",
       "n_databases_stratum": "high",
       "n_records": 3295,
@@ -1104,6 +1213,7 @@
     "van_Dis_2019": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "high",
       "n_records": 3154,
@@ -1114,6 +1224,7 @@
     "van_Heugten_Breurkes_2022": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "nonhealth",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "low",
       "n_records": 303,
@@ -1124,6 +1235,7 @@
     "van_Hoorn_2020": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "high",
       "n_records": 1154,
@@ -1134,6 +1246,7 @@
     "van_de_Schoot_2025": {
       "baseline_loss_stratum": "low",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "mid",
       "n_records": 6948,
@@ -1144,6 +1257,7 @@
     "van_der_Valk_2021": {
       "baseline_loss_stratum": "high",
       "domain_stratum": "health",
+      "field_stratum": "medicine",
       "inclusion_ratio_stratum": "high",
       "n_databases_stratum": "high",
       "n_records": 362,
@@ -1154,6 +1268,7 @@
     "van_der_Waal_2022": {
       "baseline_loss_stratum": "mid",
       "domain_stratum": "health",
+      "field_stratum": "non_medicine",
       "inclusion_ratio_stratum": "low",
       "n_databases_stratum": "low",
       "n_records": 1158,
@@ -1169,6 +1284,14 @@
       "health",
       "nonhealth"
     ]
+  },
+  "field_axis": {
+    "extended_metadata_path": "/Users/Kuil0004/Documents/data/synergy_plus_extended/metadata/review_metadata.csv",
+    "labels": [
+      "medicine",
+      "non_medicine"
+    ],
+    "medicine_label_value": "Medicine"
   },
   "inclusion_ratio_axis": {
     "column": "n_records_included / n_records",

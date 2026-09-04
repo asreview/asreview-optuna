@@ -84,6 +84,7 @@ def best_hyperparams(
 
 DEFAULT_STRATA = {
     "domain": ["health", "nonhealth"],
+    "field": ["medicine", "non_medicine"],
     "size": ["small", "medium", "large"],
     "inclusion_ratio": ["low", "mid", "high"],
     "n_databases": ["low", "mid", "high"],
@@ -144,10 +145,13 @@ def run_axis_comparison(
 ) -> pd.DataFrame:
     """Run the baseline-vs-strata comparison for one axis and write its report CSV."""
     studies_to_compare = {"baseline": args.baseline_study_name}
+    run_prefix = f"] {args.classifier}-{args.feature_extractor}-{args.balancer}-"
     for stratum in strata:
         studies_to_compare[stratum] = study_name_overrides.get(
             stratum
-        ) or find_study_name(args.storage, [date_tag, f"-{axis}-{stratum}-"])
+        ) or find_study_name(
+            args.storage, [date_tag, run_prefix, f"-{axis}-{stratum}-"]
+        )
 
     eval_subsets = {"all_test": test_studies}
     for stratum in strata:
