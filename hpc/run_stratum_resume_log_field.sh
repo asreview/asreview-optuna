@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=run_stratum_resume_log_2
-#SBATCH --output=logs/run_stratum_resume_log_2_%A_%a.out
-#SBATCH --error=logs/run_stratum_resume_log_2_%A_%a.err
+#SBATCH --job-name=run_stratum_resume_log_field
+#SBATCH --output=logs/run_stratum_resume_log_field_%A_%a.out
+#SBATCH --error=logs/run_stratum_resume_log_field_%A_%a.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
 #SBATCH --partition=genoa
 #SBATCH --time=24:00:00
-#SBATCH --array=0-3
+#SBATCH --array=0-1
 
 module load 2025 Python/3.13.1-GCCcore-14.2.0
 
@@ -18,25 +18,19 @@ export OPENBLAS_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
 
-# Second top-up round for `log`: covers the pooled baseline (never resumed
-# after its own 24h timeout) plus the 3 stratum studies whose first resume
-# attempt (run_stratum_resume_log.sh) got killed by the overnight Exoscale
-# DB maintenance window (~05:00-05:02 on 2026-09-04, visible in the DB as a
-# FAIL trial on each of the 3). Checked against the DB on 2026-09-04.
+# Resume for `log`'s 2 field strata (medicine / non_medicine), both timed out
+# with an orphaned RUNNING trial (~2 days old). Checked against the DB on
+# 2026-09-07.
 DATA_PATH="./synergy_plus"
 STUDY_SETS=(
-    "train"
-    "train-inclusion_ratio-high"
-    "train-inclusion_ratio-low"
-    "train-protocol-no_protocol"
+    "train-field-medicine"
+    "train-field-non_medicine"
 )
 STUDY_NAMES=(
-    "[Sep-02-15:13] log-tfidf-ratio-train-loss"
-    "[Sep-02-15:24] log-tfidf-ratio-train-inclusion_ratio-high-loss"
-    "[Sep-02-15:24] log-tfidf-ratio-train-inclusion_ratio-low-loss"
-    "[Sep-02-15:24] log-tfidf-ratio-train-protocol-no_protocol-loss"
+    "[Sep-04-11:03] log-tfidf-ratio-train-field-medicine-loss"
+    "[Sep-04-11:03] log-tfidf-ratio-train-field-non_medicine-loss"
 )
-N_TRIALS_LIST=(276 127 202 211)
+N_TRIALS_LIST=(84 200)
 
 STUDY_SET="${STUDY_SETS[$SLURM_ARRAY_TASK_ID]}"
 STUDY_NAME="${STUDY_NAMES[$SLURM_ARRAY_TASK_ID]}"

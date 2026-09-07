@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=48
 #SBATCH --partition=genoa
 #SBATCH --time=24:00:00
-#SBATCH --array=0-15
+#SBATCH --array=0-17
 
 module load 2025 Python/3.13.1-GCCcore-14.2.0
 
@@ -36,9 +36,13 @@ STUDY_SETS=(
     "train-baseline_loss-low"
     "train-baseline_loss-mid"
     "train-baseline_loss-high"
+    "train-field-medicine"
+    "train-field-non_medicine"
 )
 STUDY_SET="${STUDY_SETS[$SLURM_ARRAY_TASK_ID]}"
+# ---- EDIT THIS before every submission: "svm", "nb", or "log" ----
 CLASSIFIER="log"
+# --------------------------------------------------------------------
 FEATURE_EXTRACTOR="tfidf"
 BALANCER="ratio"
 METRIC="loss"
