@@ -62,20 +62,39 @@ def dataset_ids_for_stratum(
 
 
 def best_hyperparams(
-    storage: str, study_name: str, classifier: str, feature_extractor: str, balancer: str
+    storage: str,
+    study_name: str,
+    classifier: str,
+    feature_extractor: str,
+    balancer: str,
+    max_trial_number: int | None = None,
 ) -> tuple[dict, dict, dict, int, float]:
     """
     Load a study and reconstruct its best trial's classifier/feature-extractor/
     balancer kwargs.
 
+    Args:
+        max_trial_number (int | None): If set, only trials with
+            `trial.number < max_trial_number` are eligible for "best" --
+            caps every study's search at a matched trial budget regardless
+            of how many trials it eventually ran (e.g. 500), so a study that
+            happened to run longer isn't implicitly given a bigger budget.
+
     Returns:
         tuple: (clf_params, fe_params, balancer_kwargs, n_completed_trials, best_value)
     """
     study = optuna.load_study(study_name=study_name, storage=storage)
-    best = study.best_trial
-    n_completed = sum(
-        1 for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE
-    )
+    completed = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
+    if max_trial_number is not None:
+        completed = [t for t in completed if t.number < max_trial_number]
+    if not completed:
+        raise ValueError(
+            f"{study_name}: no completed trials"
+            + (f" with number < {max_trial_number}" if max_trial_number is not None else "")
+        )
+    minimize = study.direction == optuna.study.StudyDirection.MINIMIZE
+    best = min(completed, key=lambda t: t.value) if minimize else max(completed, key=lambda t: t.value)
+    n_completed = len(completed)
     clf_params = classifier_kwargs_from_trial_params(classifier, best.params)
     fe_params = feature_extractor_kwargs_from_trial_params(feature_extractor, best.params)
     balancer_kwargs = balancer_kwargs_from_trial_params(balancer, best.params)
@@ -178,6 +197,7 @@ balancer           : {args.balancer}
 axis               : {axis}
 strata             : {strata}
 date_tag           : {date_tag}
+max_trial_number   : {args.max_trial_number if args.max_trial_number is not None else "unlimited"}
 studies:
 {study_lines}
 eval subsets       : {subset_counts} dataset(s)
@@ -187,7 +207,8 @@ eval subsets       : {subset_counts} dataset(s)
     rows = []
     for tuned_on, study_name in studies_to_compare.items():
         clf_params, fe_params, balancer_kwargs, n_completed, best_value = best_hyperparams(
-            args.storage, study_name, args.classifier, args.feature_extractor, args.balancer
+            args.storage, study_name, args.classifier, args.feature_extractor, args.balancer,
+            max_trial_number=args.max_trial_number,
         )
         print(
             f"[{tuned_on}] {study_name}: {n_completed} completed trial(s), "
@@ -340,12 +361,25 @@ if __name__ == "__main__":
     parser.add_argument("--parallel", action="store_true")
     parser.add_argument("--n-workers", default=1, type=int)
     parser.add_argument(
+        "--max-trial-number",
+        default=500,
+        type=int,
+        help="Cap every study's search at its first N trials (by trial "
+        "number, i.e. as if the search had stopped there) before picking "
+        "'best' -- a study that happened to run more trials than another "
+        "isn't implicitly given a bigger effective budget. No-op for any "
+        "study that never exceeded N trials. Pass 0 or a negative number to "
+        "disable capping (use every completed trial, i.e. the old behavior).",
+    )
+    parser.add_argument(
         "--output",
         default=None,
         help="Output CSV path (default: ./strata_comparison_<axis>.csv, so "
         "different axes don't overwrite each other's results).",
     )
     args = parser.parse_args()
+    if args.max_trial_number is not None and args.max_trial_number <= 0:
+        args.max_trial_number = None
 
     if (
         args.feature_extractor in ("mxbai", "multilingual-e5")
