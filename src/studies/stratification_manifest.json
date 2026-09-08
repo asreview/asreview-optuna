@@ -2,6 +2,7 @@
   "axes_computed": [
     "baseline_loss",
     "domain",
+    "domain_size",
     "field",
     "inclusion_ratio",
     "n_databases",
@@ -42,7 +43,8 @@
       "n_records": 1151,
       "protocol_stratum": "protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Ali_2024": {
       "baseline_loss_stratum": "high",
@@ -53,7 +55,8 @@
       "n_records": 515,
       "protocol_stratum": "protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Anmarkrud_2021": {
       "baseline_loss_stratum": "low",
@@ -64,7 +67,8 @@
       "n_records": 593,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Aouad_2024": {
       "baseline_loss_stratum": "mid",
@@ -75,7 +79,8 @@
       "n_records": 714,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-medium"
     },
     "Appenzeller-Herzog_2019": {
       "baseline_loss_stratum": "mid",
@@ -86,7 +91,8 @@
       "n_records": 582,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-medium"
     },
     "Attai_2022": {
       "baseline_loss_stratum": "mid",
@@ -108,7 +114,8 @@
       "n_records": 549,
       "protocol_stratum": "protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-medium"
     },
     "Bech_2019": {
       "baseline_loss_stratum": "high",
@@ -119,7 +126,8 @@
       "n_records": 556,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-medium"
     },
     "Bindoli_2024a": {
       "baseline_loss_stratum": "mid",
@@ -130,7 +138,8 @@
       "n_records": 1449,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Bindoli_2024b": {
       "baseline_loss_stratum": "high",
@@ -141,7 +150,8 @@
       "n_records": 341,
       "protocol_stratum": "protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-small"
     },
     "Boersma-van_Dam_2024": {
       "baseline_loss_stratum": "mid",
@@ -185,7 +195,8 @@
       "n_records": 2341,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Brons_2024": {
       "baseline_loss_stratum": "high",
@@ -196,7 +207,8 @@
       "n_records": 172,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-small"
     },
     "Brouwer_2019": {
       "baseline_loss_stratum": "low",
@@ -207,7 +219,8 @@
       "n_records": 11440,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-large"
     },
     "Burska_2023": {
       "baseline_loss_stratum": "low",
@@ -218,7 +231,8 @@
       "n_records": 3247,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Butink_2023": {
       "baseline_loss_stratum": "low",
@@ -229,7 +243,8 @@
       "n_records": 3090,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Chakraborty_2023": {
       "baseline_loss_stratum": "mid",
@@ -262,7 +277,8 @@
       "n_records": 290,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Clarinval_2021": {
       "baseline_loss_stratum": "mid",
@@ -273,7 +289,8 @@
       "n_records": 446,
       "protocol_stratum": "protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Clark_2021": {
       "baseline_loss_stratum": "low",
@@ -284,7 +301,8 @@
       "n_records": 199,
       "protocol_stratum": "protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Cozim-Melges_2024": {
       "baseline_loss_stratum": "high",
@@ -295,7 +313,8 @@
       "n_records": 630,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Deckers_2022": {
       "baseline_loss_stratum": "mid",
@@ -306,7 +325,8 @@
       "n_records": 106,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Dolinska_2022": {
       "baseline_loss_stratum": "low",
@@ -317,7 +337,8 @@
       "n_records": 3231,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Donners_2021": {
       "baseline_loss_stratum": "mid",
@@ -339,7 +360,8 @@
       "n_records": 259,
       "protocol_stratum": "protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Eggmann_2023": {
       "baseline_loss_stratum": "low",
@@ -361,7 +383,8 @@
       "n_records": 1092,
       "protocol_stratum": "protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Farisogullari_2023": {
       "baseline_loss_stratum": "low",
@@ -372,7 +395,8 @@
       "n_records": 1439,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Fejza_2023": {
       "baseline_loss_stratum": "mid",
@@ -383,7 +407,8 @@
       "n_records": 1499,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Ferreira_2022": {
       "baseline_loss_stratum": "high",
@@ -394,7 +419,8 @@
       "n_records": 223,
       "protocol_stratum": "protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-small"
     },
     "Filges_2018": {
       "baseline_loss_stratum": "mid",
@@ -405,7 +431,8 @@
       "n_records": 925,
       "protocol_stratum": "protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Filges_2022": {
       "baseline_loss_stratum": "mid",
@@ -416,7 +443,8 @@
       "n_records": 781,
       "protocol_stratum": "protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Fong_2021": {
       "baseline_loss_stratum": "mid",
@@ -427,7 +455,8 @@
       "n_records": 489,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Giesen_2021": {
       "baseline_loss_stratum": "high",
@@ -438,7 +467,8 @@
       "n_records": 1293,
       "protocol_stratum": "protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-medium"
     },
     "Greca_2023": {
       "baseline_loss_stratum": "high",
@@ -449,7 +479,8 @@
       "n_records": 328,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Hall_2011": {
       "baseline_loss_stratum": "low",
@@ -471,7 +502,8 @@
       "n_records": 1313,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-medium"
     },
     "Hanlon_2022": {
       "baseline_loss_stratum": "mid",
@@ -482,7 +514,8 @@
       "n_records": 77,
       "protocol_stratum": "protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-small"
     },
     "Harms_2024": {
       "baseline_loss_stratum": "high",
@@ -504,7 +537,8 @@
       "n_records": 7573,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Kapuka_2021": {
       "baseline_loss_stratum": "mid",
@@ -515,7 +549,8 @@
       "n_records": 151,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Kerschbaumer_2022": {
       "baseline_loss_stratum": "mid",
@@ -526,7 +561,8 @@
       "n_records": 2605,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-large"
     },
     "Kerschbaumer_2024a": {
       "baseline_loss_stratum": "low",
@@ -537,7 +573,8 @@
       "n_records": 1949,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Kerschbaumer_2024b": {
       "baseline_loss_stratum": "mid",
@@ -559,7 +596,8 @@
       "n_records": 5691,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Leenaars_2019": {
       "baseline_loss_stratum": "low",
@@ -570,7 +608,8 @@
       "n_records": 1395,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-large"
     },
     "Leenaars_2020": {
       "baseline_loss_stratum": "high",
@@ -581,7 +620,8 @@
       "n_records": 1956,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Lewowski_2021": {
       "baseline_loss_stratum": "low",
@@ -603,7 +643,8 @@
       "n_records": 556,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Maciel_2024": {
       "baseline_loss_stratum": "high",
@@ -614,7 +655,8 @@
       "n_records": 274,
       "protocol_stratum": "protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Marques_2021": {
       "baseline_loss_stratum": "mid",
@@ -625,7 +667,8 @@
       "n_records": 713,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-medium"
     },
     "Meijboom_2021": {
       "baseline_loss_stratum": "mid",
@@ -636,7 +679,8 @@
       "n_records": 464,
       "protocol_stratum": "protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Mejean_2024": {
       "baseline_loss_stratum": "high",
@@ -647,7 +691,8 @@
       "n_records": 486,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Menon_2022": {
       "baseline_loss_stratum": "high",
@@ -669,7 +714,8 @@
       "n_records": 2699,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Monschau_2025": {
       "baseline_loss_stratum": "low",
@@ -680,7 +726,8 @@
       "n_records": 7384,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Moran_2020": {
       "baseline_loss_stratum": "mid",
@@ -702,7 +749,8 @@
       "n_records": 3556,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Muthu_2020": {
       "baseline_loss_stratum": "high",
@@ -713,7 +761,8 @@
       "n_records": 923,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-medium"
     },
     "Nobrega-Dos_Santos_2023": {
       "baseline_loss_stratum": "low",
@@ -724,7 +773,8 @@
       "n_records": 277,
       "protocol_stratum": "protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Noetel_2021": {
       "baseline_loss_stratum": "mid",
@@ -735,7 +785,8 @@
       "n_records": 444,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Oliveira_2021": {
       "baseline_loss_stratum": "high",
@@ -746,7 +797,8 @@
       "n_records": 184,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Oud_2018": {
       "baseline_loss_stratum": "mid",
@@ -757,7 +809,8 @@
       "n_records": 243,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Parodis_2023a": {
       "baseline_loss_stratum": "low",
@@ -768,7 +821,8 @@
       "n_records": 4125,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Parodis_2023b": {
       "baseline_loss_stratum": "low",
@@ -790,7 +844,8 @@
       "n_records": 54,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Pijls_2018": {
       "baseline_loss_stratum": "mid",
@@ -801,7 +856,8 @@
       "n_records": 301,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-small"
     },
     "Pinos-Cisneros_2023": {
       "baseline_loss_stratum": "high",
@@ -812,7 +868,8 @@
       "n_records": 109,
       "protocol_stratum": "protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-small"
     },
     "Quevedo_2023": {
       "baseline_loss_stratum": "mid",
@@ -823,7 +880,8 @@
       "n_records": 199,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Ramiro_2015": {
       "baseline_loss_stratum": "low",
@@ -834,7 +892,8 @@
       "n_records": 338,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-small"
     },
     "Rinne_2021": {
       "baseline_loss_stratum": "high",
@@ -845,7 +904,8 @@
       "n_records": 815,
       "protocol_stratum": "protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Roberts_2021": {
       "baseline_loss_stratum": "low",
@@ -867,7 +927,8 @@
       "n_records": 2265,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-large"
     },
     "Sanchez-Acedo_2023": {
       "baseline_loss_stratum": "high",
@@ -878,7 +939,8 @@
       "n_records": 345,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Sanchez-Alvarez_2023": {
       "baseline_loss_stratum": "mid",
@@ -889,7 +951,8 @@
       "n_records": 2289,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Sanchez-Gomez_2024": {
       "baseline_loss_stratum": "low",
@@ -900,7 +963,8 @@
       "n_records": 385,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Santos_2018": {
       "baseline_loss_stratum": "low",
@@ -911,7 +975,8 @@
       "n_records": 488,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Seghers_2022": {
       "baseline_loss_stratum": "mid",
@@ -933,7 +998,8 @@
       "n_records": 147,
       "protocol_stratum": "protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Sepriano_2020": {
       "baseline_loss_stratum": "low",
@@ -944,7 +1010,8 @@
       "n_records": 1908,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Sepriano_2022": {
       "baseline_loss_stratum": "high",
@@ -955,7 +1022,8 @@
       "n_records": 1760,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Smid_2019": {
       "baseline_loss_stratum": "low",
@@ -966,7 +1034,8 @@
       "n_records": 770,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Taschner_2024": {
       "baseline_loss_stratum": "high",
@@ -977,7 +1046,8 @@
       "n_records": 1323,
       "protocol_stratum": "protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Tektonidou_2019": {
       "baseline_loss_stratum": "mid",
@@ -988,7 +1058,8 @@
       "n_records": 1251,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-medium"
     },
     "Theobald_2021": {
       "baseline_loss_stratum": "high",
@@ -1032,7 +1103,8 @@
       "n_records": 1245,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Viguie_2020": {
       "baseline_loss_stratum": "low",
@@ -1043,7 +1115,8 @@
       "n_records": 1978,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-large"
     },
     "Walker_2018": {
       "baseline_loss_stratum": "low",
@@ -1065,7 +1138,8 @@
       "n_records": 374,
       "protocol_stratum": "protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-small"
     },
     "Wassenaar_2017": {
       "baseline_loss_stratum": "low",
@@ -1076,7 +1150,8 @@
       "n_records": 1523,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-large"
     },
     "Webers_2022": {
       "baseline_loss_stratum": "low",
@@ -1087,7 +1162,8 @@
       "n_records": 8078,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Wijnen_2024": {
       "baseline_loss_stratum": "high",
@@ -1098,7 +1174,8 @@
       "n_records": 399,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Williamson_2023": {
       "baseline_loss_stratum": "low",
@@ -1109,7 +1186,8 @@
       "n_records": 258,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "Wolters_2018": {
       "baseline_loss_stratum": "high",
@@ -1120,7 +1198,8 @@
       "n_records": 1683,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Xu_2022": {
       "baseline_loss_stratum": "high",
@@ -1131,7 +1210,8 @@
       "n_records": 960,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Zakeri-Nasrabadi_2023a": {
       "baseline_loss_stratum": "low",
@@ -1142,7 +1222,8 @@
       "n_records": 627,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-medium"
     },
     "Zakeri-Nasrabadi_2023b": {
       "baseline_loss_stratum": "mid",
@@ -1153,7 +1234,8 @@
       "n_records": 1720,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-large"
     },
     "Zanframundo_2022": {
       "baseline_loss_stratum": "mid",
@@ -1164,7 +1246,8 @@
       "n_records": 1334,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "Zinsser_2022": {
       "baseline_loss_stratum": "low",
@@ -1175,7 +1258,8 @@
       "n_records": 125,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "de_Matteis_2024a": {
       "baseline_loss_stratum": "high",
@@ -1186,7 +1270,8 @@
       "n_records": 140,
       "protocol_stratum": "protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-small"
     },
     "de_Matteis_2024b": {
       "baseline_loss_stratum": "low",
@@ -1197,7 +1282,8 @@
       "n_records": 553,
       "protocol_stratum": "no_protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-medium"
     },
     "van_Ballegooijen_2024": {
       "baseline_loss_stratum": "mid",
@@ -1208,7 +1294,8 @@
       "n_records": 3295,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-large"
     },
     "van_Dis_2019": {
       "baseline_loss_stratum": "high",
@@ -1219,7 +1306,8 @@
       "n_records": 3154,
       "protocol_stratum": "protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-large"
     },
     "van_Heugten_Breurkes_2022": {
       "baseline_loss_stratum": "mid",
@@ -1230,7 +1318,8 @@
       "n_records": 303,
       "protocol_stratum": "no_protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "nonhealth-small"
     },
     "van_Hoorn_2020": {
       "baseline_loss_stratum": "mid",
@@ -1241,7 +1330,8 @@
       "n_records": 1154,
       "protocol_stratum": "protocol",
       "size_stratum": "medium",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-medium"
     },
     "van_de_Schoot_2025": {
       "baseline_loss_stratum": "low",
@@ -1252,7 +1342,8 @@
       "n_records": 6948,
       "protocol_stratum": "no_protocol",
       "size_stratum": "large",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-large"
     },
     "van_der_Valk_2021": {
       "baseline_loss_stratum": "high",
@@ -1263,7 +1354,8 @@
       "n_records": 362,
       "protocol_stratum": "protocol",
       "size_stratum": "small",
-      "split": "train"
+      "split": "train",
+      "domain_size_stratum": "health-small"
     },
     "van_der_Waal_2022": {
       "baseline_loss_stratum": "mid",
@@ -1340,6 +1432,20 @@
     "tertile_boundaries": [
       446.0,
       1333.9999999999998
+    ]
+  },
+  "domain_size_axis": {
+    "derived_from": [
+      "domain",
+      "size"
+    ],
+    "labels": [
+      "health-large",
+      "health-medium",
+      "health-small",
+      "nonhealth-large",
+      "nonhealth-medium",
+      "nonhealth-small"
     ]
   }
 }
