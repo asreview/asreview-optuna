@@ -1,13 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=run_stratum_resume_log_field
-#SBATCH --output=logs/run_stratum_resume_log_field_%A_%a.out
-#SBATCH --error=logs/run_stratum_resume_log_field_%A_%a.err
+#SBATCH --job-name=run_stratum_resume_log_inclusion_ratio
+#SBATCH --output=logs/run_stratum_resume_log_inclusion_ratio_%j.out
+#SBATCH --error=logs/run_stratum_resume_log_inclusion_ratio_%j.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
 #SBATCH --partition=genoa
 #SBATCH --time=24:00:00
-#SBATCH --array=0-1
 
 module load 2025 Python/3.13.1-GCCcore-14.2.0
 
@@ -18,23 +17,15 @@ export OPENBLAS_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
 
-# Resume for `log`'s 2 field strata (medicine / non_medicine), both timed out
-# with an orphaned RUNNING trial (~2 days old). Checked against the DB on
-# 2026-09-07.
+# Resume for `log`'s last remaining straggler: inclusion_ratio-low, dead again
+# (364/500 complete) after a dropped DB connection during Optuna's
+# trial-finalization commit killed the whole process (see .err log:
+# psycopg2.OperationalError: SSL SYSCALL error: EOF detected). Checked
+# against the DB on 2026-09-08.
 DATA_PATH="./synergy_plus"
-STUDY_SETS=(
-    "train-field-medicine"
-    "train-field-non_medicine"
-)
-STUDY_NAMES=(
-    "[Sep-04-11:03] log-tfidf-ratio-train-field-medicine-loss"
-    "[Sep-04-11:03] log-tfidf-ratio-train-field-non_medicine-loss"
-)
-N_TRIALS_LIST=(84 200)
-
-STUDY_SET="${STUDY_SETS[$SLURM_ARRAY_TASK_ID]}"
-STUDY_NAME="${STUDY_NAMES[$SLURM_ARRAY_TASK_ID]}"
-N_TRIALS="${N_TRIALS_LIST[$SLURM_ARRAY_TASK_ID]}"
+STUDY_SET="train-inclusion_ratio-low"
+STUDY_NAME="[Sep-02-15:24] log-tfidf-ratio-train-inclusion_ratio-low-loss"
+N_TRIALS=136
 CLASSIFIER="log"
 FEATURE_EXTRACTOR="tfidf"
 BALANCER="ratio"
