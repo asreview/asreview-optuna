@@ -74,19 +74,26 @@ def best_hyperparams(
     balancer kwargs.
 
     Args:
-        max_trial_number (int | None): If set, only trials with
-            `trial.number < max_trial_number` are eligible for "best" --
-            caps every study's search at a matched trial budget regardless
-            of how many trials it eventually ran (e.g. 500), so a study that
-            happened to run longer isn't implicitly given a bigger budget.
+        max_trial_number (int | None): If set, only the first `max_trial_number`
+            *completed* trials (sorted by trial.number) are eligible for "best" --
+            caps every study's search at a matched trial budget regardless of how
+            many trials it eventually ran, so a study that happened to run longer
+            isn't implicitly given a bigger budget. Trials are selected by
+            completion order rather than by filtering on `trial.number <
+            max_trial_number` directly, because some studies have permanently
+            stuck RUNNING trials (zombies from crashed/killed workers) interspersed
+            among their early trial numbers -- filtering on raw trial.number would
+            undercount real completions for those studies even though the study
+            genuinely has `max_trial_number` completed trials.
 
     Returns:
         tuple: (clf_params, fe_params, balancer_kwargs, n_completed_trials, best_value)
     """
     study = optuna.load_study(study_name=study_name, storage=storage)
     completed = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
+    completed.sort(key=lambda t: t.number)
     if max_trial_number is not None:
-        completed = [t for t in completed if t.number < max_trial_number]
+        completed = completed[:max_trial_number]
     if not completed:
         raise ValueError(
             f"{study_name}: no completed trials"

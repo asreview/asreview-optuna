@@ -28,13 +28,14 @@ This writes `synergy_studies_{train,test,demo}.jsonl` into `src/studies/`. Re-ru
 
 To test whether different preconditions (known ahead of screening, or diagnostic post-hoc ones) call for different hyperparameters, add `--stratify-by`:
 ```bash
-python ./src/generate_studies.py --data-path /path/to/synergy_plus --stratify-by domain search_size inclusion_ratio n_databases protocol
+python ./src/generate_studies.py --data-path /path/to/synergy_plus --stratify-by domain field search_size inclusion_ratio n_databases protocol
 ```
 This additionally partitions the `train` split into one `synergy_studies_train-<axis>-<stratum>.jsonl` per stratum, plus `stratification_manifest.json` recording every dataset's stratum on every axis computed so far. Running `--stratify-by` for one axis and later for another (against the same `--studies-path`) merges into the same manifest rather than overwriting it, so it's safe to add axes incrementally. Available axes:
 
 | Axis | Strata | Notes |
 | --- | --- | --- |
 | `domain` | `health`, `nonhealth` | Requires the extended metadata variant (`primary_topic_domain` column) — by default expected at `<data-path>_extended/metadata/review_metadata.csv`, overridable with `--extended-metadata-path`. |
+| `field` | `medicine`, `non_medicine` | Finer-grained than `domain`: `primary_topic_field == "Medicine"` vs. everything else. `domain`'s `health` is ~87% `Medicine` at this level, with the remainder split across fields too small to stratify on individually — `Medicine` is the only non-domain field with enough datasets (~38 train) to be its own stratum. Same extended-metadata requirement as `domain`. |
 | `search_size` | `small`, `medium`, `large` | Tertiles of `n_records` (total search size), computed from the train split. |
 | `inclusion_ratio` | `low`, `mid`, `high` | Tertiles of `n_records_included / n_records`. Not knowable ahead of screening — a post-hoc diagnostic axis, not an actionable precondition. |
 | `n_databases` | `low`, `mid`, `high` | Tertiles of `number_of_databases`. Since this is a clustered discrete integer (most reviews search 3-4 databases), the tertiles can come out uneven — check `stratification_manifest.json`'s `n_databases_axis.tertile_boundaries` before reading too much into strata sizes. |
