@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
 #SBATCH --partition=genoa
-#SBATCH --time=48:00:00
+#SBATCH --time=24:00:00
 #SBATCH --array=0-14
 
 module load 2025 Python/3.13.1-GCCcore-14.2.0
