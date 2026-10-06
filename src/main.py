@@ -28,6 +28,7 @@ def objective_report(
     n_workers: int,
     data_path: str,
     fms_path: str,
+    dataset_weights: dict[str, float] | None = None,
 ) -> Callable[[optuna.trial.Trial], float]:
     """
     Create an Optuna objective function for hyperparameter optimization.
@@ -36,7 +37,8 @@ def objective_report(
     - Samples hyperparameters using Optuna
     - Runs ASReview simulations for all studies
     - Reports intermediate results per dataset
-    - Returns the aggregated metric across all studies
+    - Returns the aggregated metric across all studies, optionally weighted
+      per dataset (unlisted datasets get weight 1)
 
     Args:
         studies (pd.DataFrame): DataFrame containing all study configurations.
@@ -49,6 +51,9 @@ def objective_report(
         n_workers (int): Number of workers to use when parallelize_objective is True.
         data_path (str): The path to the raw data.
         fms_path (str): The path to the preprocessed fms.
+        dataset_weights (dict[str, float] | None): Per-dataset weights for the
+            returned objective value; datasets not in the dict get weight 1.
+            None gives the plain unweighted mean.
 
     Returns:
         callable: Optuna-compatible objective function.
@@ -82,13 +87,16 @@ def objective_report(
 
         report_order = sorted(set(studies["dataset_id"]))
         all_losses = []
+        all_weights = []
         for i, dataset_id in enumerate(report_order):
             losses = result[dataset_id] if dataset_id in result else [0]
             trial.report(np.mean(losses), i)
             trial.report(np.std(losses), len(report_order) + i)
             all_losses.extend(losses)
+            weight = (dataset_weights or {}).get(dataset_id, 1.0)
+            all_weights.extend([weight] * len(losses))
 
-        return np.mean(all_losses)
+        return np.average(all_losses, weights=all_weights)
 
     return objective
 
@@ -221,6 +229,21 @@ if __name__ == "__main__":
         help="Seed for the Optuna sampler (TPESampler), for a reproducible hyperparameter search order.",
     )
     parser.add_argument(
+        "--upweight-study-set",
+        default=None,
+        help="Optional stratum study set (e.g. 'train-domain-health') whose "
+        "datasets get weight --upweight-factor in the objective, all others "
+        "weight 1. Tunes on the full --study-set (normally 'train') instead of "
+        "only the stratum: a soft version of stratum-specific tuning. Every "
+        "dataset in it must also be in --study-set.",
+    )
+    parser.add_argument(
+        "--upweight-factor",
+        default=2.0,
+        type=float,
+        help="Objective weight for datasets in --upweight-study-set (default: 2).",
+    )
+    parser.add_argument(
         "--study-name",
         default=None,
         help="Resume an existing study by passing its exact study_name (as printed at "
@@ -249,23 +272,48 @@ if __name__ == "__main__":
             f"Available study sets in {args.studies_path}: {available}"
         )
 
+    studies = pd.read_json(studies_file, lines=True)
+    n_studies = len(studies)
+    n_datasets = studies["dataset_id"].nunique()
+
+    dataset_weights = None
+    run_label = args.study_set
+    if args.upweight_study_set:
+        upweight_file = (
+            Path(args.studies_path) / f"synergy_studies_{args.upweight_study_set}.jsonl"
+        )
+        if not upweight_file.exists():
+            parser.error(f"--upweight-study-set {args.upweight_study_set!r}: no such file {upweight_file}.")
+        upweight_ids = set(pd.read_json(upweight_file, lines=True)["dataset_id"])
+        not_in_study_set = sorted(upweight_ids - set(studies["dataset_id"]))
+        if not_in_study_set:
+            parser.error(
+                f"--upweight-study-set {args.upweight_study_set!r} has dataset(s) not in "
+                f"--study-set {args.study_set!r}: {not_in_study_set}"
+            )
+        dataset_weights = {dataset_id: args.upweight_factor for dataset_id in upweight_ids}
+        # e.g. "train-w2-domain-health": keeps compare_strata.py's "-<axis>-<stratum>-"
+        # discovery working, while "-w<factor>-" tells these apart from hard-stratum runs.
+        run_label = (
+            f"{args.study_set}-w{args.upweight_factor:g}-"
+            f"{args.upweight_study_set.removeprefix(args.study_set + '-')}"
+        )
+
     if args.study_name:
         study_name = args.study_name
     else:
         timestamp = datetime.datetime.now().strftime("%b-%d-%H:%M")
         study_name = (
             f"[{timestamp}] {args.classifier}-{args.feature_extractor}"
-            f"-{args.balancer}-{args.study_set}-{args.metric}"
+            f"-{args.balancer}-{run_label}-{args.metric}"
         )
-    studies = pd.read_json(studies_file, lines=True)
-    n_studies = len(studies)
-    n_datasets = studies["dataset_id"].nunique()
 
     print(f"""
 === ASReview Optuna run ===
 study_name         : {study_name}
 study_set          : {args.study_set}
 studies            : {n_studies} row(s) / {n_datasets} dataset(s)
+upweight           : {f"{args.upweight_study_set} ({len(dataset_weights)} dataset(s)) x{args.upweight_factor:g}" if dataset_weights else "none"}
 classifier         : {args.classifier}
 feature_extractor  : {args.feature_extractor}
 balancer           : {args.balancer}
@@ -302,6 +350,7 @@ DB                 : {"local" if os.getenv("DB_URI", "sqlite:///db.sqlite3") == 
             n_workers=args.n_workers,
             data_path=args.data_path,
             fms_path=args.fms_path,
+            dataset_weights=dataset_weights,
         ),
         n_trials=args.n_trials,
         callbacks=[

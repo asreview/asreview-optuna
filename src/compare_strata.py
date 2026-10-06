@@ -176,7 +176,8 @@ def run_axis_comparison(
         studies_to_compare[stratum] = study_name_overrides.get(
             stratum
         ) or find_study_name(
-            args.storage, [date_tag, run_prefix, f"-{axis}-{stratum}-"]
+            args.storage,
+            [date_tag, run_prefix, f"-{axis}-{stratum}-", *args.name_contains],
         )
 
     eval_subsets = {"all_test": test_studies}
@@ -330,6 +331,16 @@ if __name__ == "__main__":
         "explicitly, it overrides DEFAULT_DATE_TAGS for every axis; if omitted, "
         "each axis falls back to its DEFAULT_DATE_TAGS entry (domain/size: "
         "Aug-28), or 'Aug-31' for axes with no entry.",
+    )
+    parser.add_argument(
+        "--name-contains",
+        action="append",
+        default=[],
+        metavar="SUBSTRING",
+        help="Extra substring every auto-discovered stratum study name must "
+        "contain, e.g. '-w5-' to pick the upweight-factor-5 runs from "
+        "main.py --upweight-study-set when several factors share a date tag. "
+        "Repeatable.",
     )
     parser.add_argument(
         "--axis-date-tag",
