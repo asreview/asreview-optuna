@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import json
 import os
 from pathlib import Path
 from collections.abc import Callable
@@ -244,6 +245,15 @@ if __name__ == "__main__":
         help="Objective weight for datasets in --upweight-study-set (default: 2).",
     )
     parser.add_argument(
+        "--dataset-weights",
+        default=None,
+        help="Optional JSON file mapping dataset_id -> objective weight, for "
+        "arbitrary per-dataset weighting (e.g. similarity weights written by "
+        "analysis/generate_similarity_studies.py). Datasets not in the file get "
+        "weight 1; every dataset in it must be in --study-set. Cannot be "
+        "combined with --upweight-study-set.",
+    )
+    parser.add_argument(
         "--study-name",
         default=None,
         help="Resume an existing study by passing its exact study_name (as printed at "
@@ -251,6 +261,9 @@ if __name__ == "__main__":
         "Omit to start a fresh, timestamped study.",
     )
     args = parser.parse_args()
+
+    if args.dataset_weights and args.upweight_study_set:
+        parser.error("--dataset-weights and --upweight-study-set are mutually exclusive.")
 
     if (
         args.feature_extractor not in feature_extractor_params
@@ -298,6 +311,23 @@ if __name__ == "__main__":
             f"{args.study_set}-w{args.upweight_factor:g}-"
             f"{args.upweight_study_set.removeprefix(args.study_set + '-')}"
         )
+        weighting = f"{args.upweight_study_set} ({len(dataset_weights)} dataset(s)) x{args.upweight_factor:g}"
+    elif args.dataset_weights:
+        weights_file = Path(args.dataset_weights)
+        if not weights_file.exists():
+            parser.error(f"--dataset-weights: no such file {weights_file}.")
+        with open(weights_file) as f:
+            dataset_weights = {k: float(v) for k, v in json.load(f).items()}
+        not_in_study_set = sorted(set(dataset_weights) - set(studies["dataset_id"]))
+        if not_in_study_set:
+            parser.error(
+                f"--dataset-weights {weights_file} has dataset(s) not in "
+                f"--study-set {args.study_set!r}: {not_in_study_set}"
+            )
+        run_label = f"{args.study_set}-weights-{weights_file.stem}"
+        weighting = f"{weights_file} ({len(dataset_weights)} dataset(s))"
+    else:
+        weighting = "none"
 
     if args.study_name:
         study_name = args.study_name
@@ -313,7 +343,7 @@ if __name__ == "__main__":
 study_name         : {study_name}
 study_set          : {args.study_set}
 studies            : {n_studies} row(s) / {n_datasets} dataset(s)
-upweight           : {f"{args.upweight_study_set} ({len(dataset_weights)} dataset(s)) x{args.upweight_factor:g}" if dataset_weights else "none"}
+weighting          : {weighting}
 classifier         : {args.classifier}
 feature_extractor  : {args.feature_extractor}
 balancer           : {args.balancer}
