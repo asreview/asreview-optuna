@@ -198,6 +198,15 @@ if __name__ == "__main__":
         help="Set the maximum number of trials that will be ran.",
     )
     parser.add_argument(
+        "--n-trials-total",
+        default=None,
+        type=int,
+        help="Continue the study until it has this many COMPLETED trials, "
+        "running only the remainder (0 if already reached); overrides "
+        "--n-trials. Makes a resume script safe to resubmit as often as needed. "
+        "Trials left RUNNING by killed jobs are not counted.",
+    )
+    parser.add_argument(
         "--parallelize-objective",
         action="store_true",
         help="If set, run one trial with several processes. Each process will run 1 study set row at a time. Useful if you have a lot of studies.",
@@ -368,6 +377,14 @@ DB                 : {"local" if os.getenv("DB_URI", "sqlite:///db.sqlite3") == 
         load_if_exists=True,
     )
 
+    n_trials = args.n_trials
+    if args.n_trials_total is not None:
+        n_completed = len(study.get_trials(deepcopy=False, states=(optuna.trial.TrialState.COMPLETE,)))
+        n_trials = max(0, args.n_trials_total - n_completed)
+        print(f"resume: {n_completed} completed trial(s), running {n_trials} more to reach {args.n_trials_total}")
+        if n_trials == 0:
+            raise SystemExit(0)
+
     study.optimize(
         objective_report(
             studies=studies,
@@ -382,7 +399,7 @@ DB                 : {"local" if os.getenv("DB_URI", "sqlite:///db.sqlite3") == 
             fms_path=args.fms_path,
             dataset_weights=dataset_weights,
         ),
-        n_trials=args.n_trials,
+        n_trials=n_trials,
         callbacks=[
             StopWhenOptimumReached(min_trials=400, threshold=0.00005, n_history=10)
         ],
