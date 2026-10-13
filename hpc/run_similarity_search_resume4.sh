@@ -8,7 +8,7 @@
 #SBATCH --partition=genoa
 #SBATCH --exclude=tcn530
 #SBATCH --time=8:00:00
-#SBATCH --array=25,26,27,29,30,35,36
+#SBATCH --array=27
 
 module load 2025 Python/3.13.1-GCCcore-14.2.0
 
